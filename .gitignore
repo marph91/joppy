@@ -1,0 +1,9 @@
+__pycache__
+.coverage
+.mypy_cache
+htmlcov
+test_profile
+*.egg-info
+*.log
+notes.txt
+*.AppImage
