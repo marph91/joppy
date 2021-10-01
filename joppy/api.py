@@ -11,13 +11,6 @@ import requests
 logging.getLogger("requests").setLevel(logging.WARNING)
 logging.getLogger("urllib3").setLevel(logging.WARNING)
 
-logging.basicConfig(
-    filename="test.log",
-    filemode="w",
-    format="%(asctime)s [%(levelname)s]: %(message)s",
-    level=logging.DEBUG,
-)
-
 
 class ApiBase:
     """Contains the basic requests of the REST API."""

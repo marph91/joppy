@@ -2,6 +2,7 @@
 
 import enum
 import itertools
+import logging
 import os
 import random
 from re import sub
@@ -15,6 +16,14 @@ import requests
 
 from joppy.api import Api
 from . import setup_joplin
+
+
+logging.basicConfig(
+    filename="test.log",
+    filemode="w",
+    format="%(asctime)s [%(levelname)s]: %(message)s",
+    level=logging.DEBUG,
+)
 
 
 SLOW_TESTS = bool(os.getenv("SLOW_TESTS", ""))
