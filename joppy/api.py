@@ -36,11 +36,15 @@ class ApiBase:
         query["token"] = self.token  # TODO: extending the dict may have side effects
         query_str = "&".join([f"{key}={val}" for key, val in query.items()])
 
-        response = getattr(requests, method)(
-            f"{self.url}{path}?{query_str}", json=data, **kwargs
-        )
-        logging.debug(f"API: response {response.text}")
-        response.raise_for_status()
+        try:
+            response = getattr(requests, method)(
+                f"{self.url}{path}?{query_str}", json=data, **kwargs
+            )
+            logging.debug(f"API: response {response.text}")
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as err:
+            err.args = err.args + (response.text,)
+            raise
         return response
 
     def delete(self, *args):
