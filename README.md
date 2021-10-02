@@ -5,7 +5,9 @@ Python interface for the [Joplin data API](https://joplinapp.org/api/references/
 ## Installation
 
 ```bash
-pip install joppy
+git clone https://github.com/marph91/joppy.git
+cd joppy
+pip install .
 ```
 
 ## Usage example
@@ -15,11 +17,25 @@ Start joplin and [get your API token](https://joplinapp.org/api/references/rest_
 ```python
 from joppy.api import Api
 
+# Create a new Api instance.
 api = Api(token=YOUR_TOKEN)
+
+# Add a notebook.
 notebook_id = api.add_notebook(title="My first notebook")
+
+# Add a note in the previously created notebook.
 note_id = api.add_note(title="My first note", body="With some content", parent_id=notebook_id)
-api.add_tag(title="introduction", parent_id=note_id)
+
+# Add a tag, that is not yet attached to a note.
+tag_id = api.add_tag(title="introduction")
+
+# Link the tag to the note.
+api.add_tag_to_note(tag_id=tag_id, note_id=note_id)
 ```
+
+Now you can check joplin. There should be the note, contained by the notebook and decorated by the tag.
+
+For more usage examples, check the [tests](test/test_api.py).
 
 ## Tests
 
