@@ -9,7 +9,7 @@ import requests
 from xvfbwrapper import Xvfb
 
 
-def downloadJoplin(destination: str):
+def download_joplin(destination: str):
     """Download the joplin desktop app if not already done."""
     if not os.path.exists(destination):
         # TODO: How to download the latest release?
