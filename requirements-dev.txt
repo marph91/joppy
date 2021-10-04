@@ -1,5 +1,10 @@
+# tests
 coverage
 parameterized
 pyautogui
 requests
 xvfbwrapper
+# linting
+black
+flake8
+mypy
