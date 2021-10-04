@@ -4,6 +4,14 @@ Python interface for the [Joplin data API](https://joplinapp.org/api/references/
 
 ## Installation
 
+From pypi:
+
+```bash
+pip install joppy
+```
+
+From source:
+
 ```bash
 git clone https://github.com/marph91/joppy.git
 cd joppy
@@ -54,5 +62,5 @@ It's possible to configure the test run via some environment variables:
 
 Short summary about questions I had during the implementation.
 
-* What is the purpose/usecase of "user_created_time"? Isn't "created_time" sufficient? \rightarrow <https://discourse.joplinapp.org/t/importing-notes-from-tiddlywiki-api-feature-request-for-timestamps/1952/7>
-* Why is the token in the query? \rightarrow <https://discourse.joplinapp.org/t/joplin-api-token-in-header-vs-query-parameters/12573/5>
+* What is the purpose/usecase of "user_created_time"? Isn't "created_time" sufficient? &#8594; <https://discourse.joplinapp.org/t/importing-notes-from-tiddlywiki-api-feature-request-for-timestamps/1952/7>
+* Why is the token in the query? &#8594; <https://discourse.joplinapp.org/t/joplin-api-token-in-header-vs-query-parameters/12573/5>
