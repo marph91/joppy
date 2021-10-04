@@ -15,7 +15,7 @@ jobs:
           twine check dist/*
       # Release if there is a new tag.
       - name: Publish to pypi
-        if: ${{ github.event_name == "create" && github.event.ref_type == "tag" }}
+        if: ${{ github.event_name == 'create' && github.event.ref_type == 'tag' }}
         uses: pypa/gh-action-pypi-publish@master
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
