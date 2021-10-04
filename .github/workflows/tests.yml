@@ -1,0 +1,20 @@
+name: tests
+
+on: [push]
+
+jobs:
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install system dependencies
+        run: |
+          sudo apt update &&
+          sudo apt install --yes xvfb python3-tk
+      - name: Install pip dependencies
+        run: pip install -r requirements-dev.txt
+      - name: Run tests
+        run: |
+          touch ~/.Xauthority  # workaround for https://github.com/python-xlib/python-xlib/issues/66
+          coverage run -m unittest -v
+          coverage report

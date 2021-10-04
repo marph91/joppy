@@ -1,0 +1,5 @@
+coverage
+parameterized
+pyautogui
+requests
+xvfbwrapper
