@@ -484,9 +484,7 @@ class Resource(TestBase):
         """Check the extension of a resource."""
         for file_ in ["test/grant_authorization_button.png", filename]:
             id_ = self.api.add_resource(filename=file_)
-            resource = self.api.get_resource(
-                id_=id_, fields="file_extension"
-            )
+            resource = self.api.get_resource(id_=id_, fields="file_extension")
             self.assertEqual(resource["file_extension"], os.path.splitext(file_)[1][1:])
 
 
@@ -512,8 +510,7 @@ class Search(TestBase):
         """Search by notebooks and search endpoint should yield same results."""
         self.api.add_notebook()
         self.assertEqual(
-            self.api.search(query="*", type="folder"),
-            self.api.get_notebooks(),
+            self.api.search(query="*", type="folder"), self.api.get_notebooks(),
         )
 
     def test_sub_notebooks(self):
@@ -525,8 +522,7 @@ class Search(TestBase):
         """Search by resources and search endpoint should yield same results."""
         self.api.add_resource(filename=filename)
         self.assertEqual(
-            self.api.search(query="*", type="resource"),
-            self.api.get_resources(),
+            self.api.search(query="*", type="resource"), self.api.get_resources(),
         )
 
     def test_tags(self):
