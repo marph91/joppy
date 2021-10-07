@@ -13,4 +13,4 @@ jobs:
         run: |
           black --check .
           flake8 .
-          mypy .
+          mypy --install-types .
