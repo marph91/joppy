@@ -162,17 +162,31 @@ class Event(TestBase):
     ]
     default_properties = ["id", "item_type", "item_id", "type", "created_time"]
 
+    def generate_event(self):
+        """Generate an event and wait until it's available."""
+        events_before = len(self.api.get_events(cursor=0)["items"])
+        # For now only notes trigger events:
+        # https://joplinapp.org/api/references/rest_api/#events
+        self.api.add_notebook()
+        self.api.add_note()
+
+        def compare_event_count():
+            event_count = len(self.api.get_events()["items"])
+            return None if event_count == events_before + 1 else event_count
+
+        # Wait until the event is available.
+        setup_joplin.wait_for(compare_event_count, interval=0.1, timeout=1)
+
     def test_get_event(self):
         """Get a specific event."""
-        events = self.api.get_events(cursor=0)
-        random_event = random.choice(events["items"])
-        event = self.api.get_event(id_=random_event["id"])
+        self.generate_event()
+        last_event = self.api.get_events(cursor=0)["items"][-1]
+        event = self.api.get_event(id_=last_event["id"])
 
         self.assertEqual(list(event.keys()), self.default_properties + ["type_"])
         self.assertIn(event["item_type"], ItemType._value2member_map_)
         self.assertTrue(self.is_id_valid(event["item_id"]))
-        # Because of the cleanup before the test.
-        self.assertEqual(event["type"], ChangeType.DELETED.value)
+        self.assertEqual(event["type"], ChangeType.CREATED.value)
         self.assertTrue(self.is_timestamp_valid(event["created_time"]))
         self.assertEqual(event["type_"], ItemType.ITEM_CHANGE.value)
 
@@ -181,9 +195,8 @@ class Event(TestBase):
 
     def test_get_events_by_cursor(self):
         """Get all events by specifying a cursor of 0."""
-        # Events should be filled by previous API calls.
+        self.generate_event()
         events = self.api.get_events(cursor=0)
-        self.assertGreater(len(events["items"]), 0)
 
         previous_created_time = 0
         previous_id = 0
