@@ -89,7 +89,7 @@ def setUpModule():
         app_path = "./joplin.AppImage"
         setup_joplin.download_joplin(app_path)
         APP = setup_joplin.JoplinApp(app_path)
-        API_TOKEN = APP.get_token()
+        API_TOKEN = APP.api_token
 
 
 def tearDownModule():
