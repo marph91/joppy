@@ -7,3 +7,5 @@ xvfbwrapper
 black
 flake8
 mypy
+# TODO: Use "--install-types" when https://github.com/python/mypy/issues/10600 is solved.
+types-requests
