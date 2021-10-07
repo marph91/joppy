@@ -500,17 +500,20 @@ class Search(TestBase):
         self.api.add_notebook()
         self.api.add_note()
         self.assertEqual(
-            self.api.search(query="*"), self.api.get_notes(),
+            self.api.search(query="*"),
+            self.api.get_notes(),
         )
         self.assertEqual(
-            self.api.search(query="*", type="note"), self.api.get_notes(),
+            self.api.search(query="*", type="note"),
+            self.api.get_notes(),
         )
 
     def test_notebooks(self):
         """Search by notebooks and search endpoint should yield same results."""
         self.api.add_notebook()
         self.assertEqual(
-            self.api.search(query="*", type="folder"), self.api.get_notebooks(),
+            self.api.search(query="*", type="folder"),
+            self.api.get_notebooks(),
         )
 
     def test_sub_notebooks(self):
@@ -522,14 +525,16 @@ class Search(TestBase):
         """Search by resources and search endpoint should yield same results."""
         self.api.add_resource(filename=filename)
         self.assertEqual(
-            self.api.search(query="*", type="resource"), self.api.get_resources(),
+            self.api.search(query="*", type="resource"),
+            self.api.get_resources(),
         )
 
     def test_tags(self):
         """Search by tags and search endpoint should yield same results."""
         self.api.add_tag()
         self.assertEqual(
-            self.api.search(query="*", type="tag"), self.api.get_tags(),
+            self.api.search(query="*", type="tag"),
+            self.api.get_tags(),
         )
 
     def test_master_key(self):
