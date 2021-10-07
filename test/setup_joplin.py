@@ -80,7 +80,7 @@ class JoplinApp:
             api_token = settings.get("api.token")
             return api_token
 
-        self.api_token = wait_for(get_token)
+        self.api_token = wait_for(get_token, timeout=20)
 
         # Wait until the API is available.
         # TODO: hardcoded url
