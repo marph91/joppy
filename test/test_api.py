@@ -45,15 +45,6 @@ def with_resource(func):
     return inner_decorator
 
 
-def powerset(iterable):
-    """powerset([1,2,3]) --> (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"""
-    # https://docs.python.org/2/library/itertools.html#recipes
-    list_ = list(iterable)
-    return itertools.chain.from_iterable(
-        itertools.combinations(list_, r) for r in range(1, len(list_) + 1)
-    )
-
-
 class ChangeType(enum.Enum):
     # https://joplinapp.org/api/references/rest_api/#properties-4
     CREATED = 1
@@ -145,11 +136,18 @@ class TestBase(unittest.TestCase):
 
     @staticmethod
     def get_combinations(iterable, max_combinations: int = 100):
-        """Get combinations of an iterable."""
-        combinations = powerset(iterable)
-        # Only chose some combinations.
-        combinations = random.choices(list(combinations), k=max_combinations)
-        return combinations
+        """Get some combinations of an iterable."""
+        # https://stackoverflow.com/a/10465588
+        # TODO: Randomize fully. For now the combinations are sorted by length.
+        list_ = list(iterable)
+        lengths = list(range(1, len(list_) + 1))
+        random.shuffle(lengths)
+        combinations = itertools.chain.from_iterable(
+            itertools.combinations(list_, r)
+            for r in lengths
+            if random.shuffle(list_) is None  # shuffle at each iteration
+        )
+        return itertools.islice(combinations, max_combinations)
 
 
 class Event(TestBase):
@@ -233,8 +231,8 @@ class Note(TestBase):
         "is_todo", "todo_due", "todo_completed", "source", "source_application",
         "application_data", "order", "user_created_time", "user_updated_time",
         "encryption_cipher_text", "encryption_applied", "markup_language",
-        "is_shared", "share_id", "conflict_original_id", "body_html", "base_url",
-        "image_data_url", "crop_rect",
+        "is_shared", "share_id", "conflict_original_id",
+        # "body_html", "base_url", "image_data_url", "crop_rect",
         # fmt: on
     ]
     default_properties = ["id", "parent_id", "title"]
@@ -297,8 +295,6 @@ class Note(TestBase):
 
     def test_get_notes_valid_properties(self):
         """Try to get specific properties of a note."""
-        self.skipTest("TODO: Too many combinations. RAM is fully used.")
-
         self.api.add_notebook()
         self.api.add_note()
         property_combinations = self.get_combinations(self.properties)
