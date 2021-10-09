@@ -16,5 +16,5 @@ jobs:
       - name: Run tests
         run: |
           touch ~/.Xauthority  # workaround for https://github.com/python-xlib/python-xlib/issues/66
-          coverage run -m unittest -v
+          SLOW_TESTS=1 coverage run -m unittest -v
           coverage report

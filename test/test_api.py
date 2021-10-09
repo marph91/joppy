@@ -144,12 +144,11 @@ class TestBase(unittest.TestCase):
         return 0 <= timestamp <= int(time.time() * 1000)  # ms
 
     @staticmethod
-    def get_combinations(iterable):
+    def get_combinations(iterable, max_combinations: int = 100):
         """Get combinations of an iterable."""
         combinations = powerset(iterable)
-        if not SLOW_TESTS:
-            # Only chose some combinations.
-            combinations = random.choices(list(combinations), k=50)
+        # Only chose some combinations.
+        combinations = random.choices(list(combinations), k=max_combinations)
         return combinations
 
 
@@ -685,7 +684,10 @@ class Fuzz(TestBase):
             method = random.choice(("delete", "get", "post", "put"))
             try:
                 self.api._request(method, path)
-            except requests.exceptions.HTTPError:
+            except (
+                requests.exceptions.HTTPError,
+                requests.packages.urllib3.exceptions.LocationParseError,
+            ):
                 pass
         self.api.ping()
 
