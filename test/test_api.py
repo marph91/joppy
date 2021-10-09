@@ -263,13 +263,6 @@ class Note(TestBase):
             context.exception.response.json()["error"],
         )
 
-    def test_add_long_title(self):
-        """Add a note with a long title."""
-        title = self.get_random_string(10 ** 6)
-        self.api.add_notebook()
-        note_id = self.api.add_note(title=title)
-        self.assertEqual(self.api.get_note(id_=note_id)["title"], title)
-
     def test_delete(self):
         """Add and then delete a note."""
         self.api.add_notebook()
@@ -739,6 +732,18 @@ class Miscellaneous(TestBase):
 
 
 class Regression(TestBase):
+    @unittest.skipIf(not SLOW_TESTS, "Generating the long string is slow.")
+    def test_long_body(self):
+        """
+        https://github.com/laurent22/joplin/issues/5543
+        Response HTTP 104: https://stackoverflow.com/a/52826181
+        """
+        # Use only one random character, since it's very slow already.
+        body = self.get_random_string(1) * 10 ** 9
+        self.api.add_notebook()
+        note_id = self.api.add_note(body=body)
+        self.assertEqual(self.api.get_note(id_=note_id)["title"], body)
+
     def test_note_tag_fields(self):
         """https://github.com/laurent22/joplin/issues/4407"""
         self.api.add_notebook()
