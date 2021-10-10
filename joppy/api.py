@@ -2,7 +2,7 @@
 
 import json
 import logging
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
 import requests
 
@@ -26,7 +26,7 @@ class ApiBase:
         query: Optional[dict] = None,
         data: Optional[dict] = None,
         **kwargs,
-    ):
+    ) -> requests.models.Response:
         logging.debug(f"API: {method} request: {path=}, {query=}, {data=}, {kwargs=}")
         if data is not None:
             # "id" is a reserved keyword in python, so don't use it.
@@ -47,19 +47,19 @@ class ApiBase:
             raise
         return response
 
-    def delete(self, *args):
+    def delete(self, *args) -> requests.models.Response:
         """Convenience method to issue a delete request."""
         return self._request("delete", *args)
 
-    def get(self, *args, **kwargs):
+    def get(self, *args, **kwargs) -> requests.models.Response:
         """Convenience method to issue a get request."""
         return self._request("get", *args, **kwargs)
 
-    def post(self, *args, **kwargs):
+    def post(self, *args, **kwargs) -> requests.models.Response:
         """Convenience method to issue a post request."""
         return self._request("post", *args, **kwargs)
 
-    def put(self, *args, **kwargs):
+    def put(self, *args, **kwargs) -> requests.models.Response:
         """Convenience method to issue a put request."""
         return self._request("put", *args, **kwargs)
 
@@ -141,7 +141,7 @@ class Notebook(ApiBase):
 
 
 class Ping(ApiBase):
-    def ping(self):
+    def ping(self) -> requests.models.Response:
         """Ping the API."""
         return self.get("/ping")
 
@@ -243,7 +243,7 @@ class Api(Event, Note, Notebook, Ping, Resource, Search, Tag):
         for tag in tags:
             self.delete_tag(tag["id"])
 
-    def get_all_events(self, **kwargs):
+    def get_all_events(self, **kwargs) -> List[Dict[str, Any]]:
         """Get all events unpaginated."""
         page = 0
         response = self.get_events(**kwargs)
