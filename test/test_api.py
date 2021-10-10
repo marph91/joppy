@@ -497,18 +497,14 @@ class Search(TestBase):
         self.assertEqual(self.api.search(query="*"), self.empty_search)
 
     def test_notes(self):
-        """Search by notebooks and search endpoint should yield same results."""
-        self.skipTest("TODO: Seems to be broken.")
+        """
+        Wildcard search for all notes is disabled, because of performance reasons.
+        See: https://github.com/laurent22/joplin/issues/5546
+        """
         self.api.add_notebook()
         self.api.add_note()
-        self.assertEqual(
-            self.api.search(query="*"),
-            self.api.get_notes(),
-        )
-        self.assertEqual(
-            self.api.search(query="*", type="note"),
-            self.api.get_notes(),
-        )
+        self.assertEqual(self.api.search(query="*"), self.empty_search)
+        self.assertEqual(self.api.search(query="*", type="note"), self.empty_search)
 
     def test_notebooks(self):
         """Search by notebooks and search endpoint should yield same results."""
