@@ -223,6 +223,15 @@ class Api(Event, Note, Notebook, Ping, Resource, Search, Tag):
         note = self.get_note(id_=note_id, fields="id")
         self.add_tag(tag_id=tag_id, id_=note["id"])
 
+    def add_resource_to_note(self, resource_id: str, note_id: str):
+        """Add a resource to a given note."""
+        note = self.get_note(id_=note_id, fields="body")
+        resource = self.get_resource(id_=resource_id, fields="title")
+        body_with_attachment = (
+            f"{note['body']}\n![{resource['title']}](:/{resource_id})"
+        )
+        self.modify_note(note_id, body=body_with_attachment)
+
     def delete_all_notebooks(self):
         """Delete all notebooks."""
         notebooks = self.get_notebooks()["items"]

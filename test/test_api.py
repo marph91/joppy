@@ -15,6 +15,7 @@ from parameterized import parameterized
 import requests
 
 from joppy.api import Api
+from joppy import tools
 from . import setup_joplin
 
 
@@ -253,6 +254,24 @@ class Note(TestBase):
         self.assertEqual(notes[0]["id"], id_)
         self.assertEqual(notes[0]["parent_id"], parent_id)
 
+    def test_add_attach_image(self):
+        """Add a note with an image attached."""
+        self.api.add_notebook()
+        image_data = tools.encode_base64("test/grant_authorization_button.png")
+        note_id = self.api.add_note(
+            image_data_url=f"data:image/png;base64,{image_data}"
+        )
+
+        # Check that there is a resource.
+        resources = self.api.get_resources()["items"]
+        self.assertEqual(len(resources), 1)
+        resource_id = resources[0]["id"]
+
+        # Verify the resource is attached to the note.
+        resources = self.api.get_resources(note_id=note_id)["items"]
+        self.assertEqual(len(resources), 1)
+        self.assertEqual(resources[0]["id"], resource_id)
+
     def test_add_no_notebook(self):
         """A note has to be added to an existing notebook."""
         with self.assertRaises(requests.exceptions.HTTPError) as context:
@@ -427,6 +446,24 @@ class Resource(TestBase):
         self.assertEqual(resources[0]["id"], id_)
 
     @with_resource
+    def test_add_to_note(self, filename: str):
+        """Add a resource to an existing note."""
+        self.api.add_notebook()
+        note_id = self.api.add_note()
+        resource_id = self.api.add_resource(filename=filename)
+        self.api.add_resource_to_note(resource_id=resource_id, note_id=note_id)
+
+        # Verify the resource is attached to the note.
+        resources = self.api.get_resources(note_id=note_id)["items"]
+        self.assertEqual(len(resources), 1)
+        self.assertEqual(resources[0]["id"], resource_id)
+
+        # TODO: Seems to be not working.
+        # notes = self.api.get_notes(resource_id=resource_id)["items"]
+        # self.assertEqual(len(notes), 1)
+        # self.assertEqual(notes[0]["id"], note_id)
+
+    @with_resource
     def test_delete(self, filename: str):
         """Add and then delete a resource."""
         id_ = self.api.add_resource(filename=filename)
@@ -514,10 +551,6 @@ class Search(TestBase):
             self.api.search(query="*", type="folder"),
             self.api.get_notebooks(),
         )
-
-    def test_sub_notebooks(self):
-        """Search for all notebooks, contained by a specific notebook."""
-        self.skipTest("TODO: Not possible yet?")
 
     @with_resource
     def test_resources(self, filename):
@@ -728,6 +761,7 @@ class Miscellaneous(TestBase):
 
 
 class Regression(TestBase):
+    @unittest.skip("Enable when the bug is fixed.")
     @unittest.skipIf(not SLOW_TESTS, "Generating the long string is slow.")
     def test_long_body(self):
         """

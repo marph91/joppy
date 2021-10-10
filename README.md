@@ -22,9 +22,13 @@ cd joppy
 pip install .
 ```
 
+Note: The API is tested with Joplin 2.4.9 and Python 3.8 on Ubuntu 20.04 for now.
+
 ## Usage example
 
 Start joplin and [get your API token](https://joplinapp.org/api/references/rest_api/#authorisation).
+
+Add a tag to a note:
 
 ```python
 from joppy.api import Api
@@ -45,7 +49,30 @@ tag_id = api.add_tag(title="introduction")
 api.add_tag_to_note(tag_id=tag_id, note_id=note_id)
 ```
 
-Now you can check joplin. There should be the note, contained by the notebook and decorated by the tag.
+Add a resource to a note:
+
+```python
+from joppy.api import Api
+from joppy import tools
+
+# Create a new Api instance.
+api = Api(token=YOUR_TOKEN)
+
+# Add a notebook.
+notebook_id = api.add_notebook(title="My first notebook")
+
+# Option 1: Add a note with an image data URL. This works only for images.
+image_data = tools.encode_base64("path/to/image.png")
+api.add_note(
+    title="My first note",
+    image_data_url=f"data:image/png;base64,{image_data}",
+)
+
+# Option 2: Create note and resource separately. Link them later. This works for arbitrary attachments.
+note_id = api.add_note(title="My second note")
+resource_id = api.add_resource(filename="path/to/image.png")
+api.add_resource_to_note(resource_id=resource_id, note_id=note_id)
+```
 
 For more usage examples, check the [tests](test/test_api.py).
 
