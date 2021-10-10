@@ -3,6 +3,7 @@
 import enum
 import itertools
 import logging
+import mimetypes
 import os
 import random
 from re import sub
@@ -512,20 +513,26 @@ class Resource(TestBase):
         self.assertEqual(self.api.get_resource(id_=id_)["title"], new_title)
 
     @with_resource
-    def test_check_property_size(self, filename):
-        """Check the size of a resource."""
+    def test_check_derived_properties(self, filename):
+        """Check the derived properties. I. e. mime type, extension and size."""
         for file_ in ["test/grant_authorization_button.png", filename]:
             id_ = self.api.add_resource(filename=file_)
-            resource = self.api.get_resource(id_=id_, fields="size")
+            resource = self.api.get_resource(id_=id_, fields="mime,file_extension,size")
+            mime_type, _ = mimetypes.guess_type(file_)
+            self.assertEqual(
+                resource["mime"],
+                mime_type if mime_type is not None else "application/octet-stream",
+            )
+            self.assertEqual(resource["file_extension"], os.path.splitext(file_)[1][1:])
             self.assertEqual(resource["size"], os.path.getsize(file_))
 
     @with_resource
-    def test_check_property_extension(self, filename):
-        """Check the extension of a resource."""
-        for file_ in ["test/grant_authorization_button.png", filename]:
-            id_ = self.api.add_resource(filename=file_)
-            resource = self.api.get_resource(id_=id_, fields="file_extension")
-            self.assertEqual(resource["file_extension"], os.path.splitext(file_)[1][1:])
+    def test_check_property_title(self, filename: str):
+        """Check the title of a resource."""
+        title = self.get_random_string()
+        id_ = self.api.add_resource(filename=filename, title=title)
+        resource = self.api.get_resource(id_=id_)
+        self.assertEqual(resource["title"], title)
 
 
 # TODO: Add more tests for the search parameter.

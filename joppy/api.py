@@ -149,12 +149,15 @@ class Ping(ApiBase):
 class Resource(ApiBase):
     def add_resource(self, filename: str, **kwargs) -> str:
         """Add a resource."""
+        # Preserve the filename if there is no title specified.
+        if kwargs.get("title") is None:
+            kwargs["title"] = filename
         with open(filename, "rb") as infile:
             files = {
                 "data": (json.dumps(filename), infile),
                 "props": (None, json.dumps(kwargs)),
             }
-            response = self.post("/resources", files=files, data=kwargs)
+            response = self.post("/resources", files=files)
         return response.json()["id"]
 
     def delete_resource(self, id_: str):

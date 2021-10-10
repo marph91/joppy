@@ -70,7 +70,7 @@ api.add_note(
 
 # Option 2: Create note and resource separately. Link them later. This works for arbitrary attachments.
 note_id = api.add_note(title="My second note")
-resource_id = api.add_resource(filename="path/to/image.png")
+resource_id = api.add_resource(filename="path/to/image.png", title="My first resource")
 api.add_resource_to_note(resource_id=resource_id, note_id=note_id)
 ```
 
