@@ -60,11 +60,10 @@ def wait_for(func, interval: float = 0.5, timeout: int = 5):
 class JoplinApp:
     """Represents a joplin application."""
 
-    def __init__(self, app_path: str):
+    def __init__(self, app_path: str, profile: str = "test_profile"):
         self.xvfb = xvfb = Xvfb()
         xvfb.start()
 
-        profile = "test_profile"
         configure_webclipper_autostart(profile)
         self.joplin_process = subprocess.Popen(
             [app_path, "--profile", profile, "--no-welcome"],

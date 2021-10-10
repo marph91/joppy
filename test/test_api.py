@@ -27,6 +27,7 @@ logging.basicConfig(
 
 
 SLOW_TESTS = bool(os.getenv("SLOW_TESTS", ""))
+PROFILE = "test_profile"
 API_TOKEN = os.getenv("API_TOKEN", "")
 APP = None
 
@@ -79,7 +80,7 @@ def setUpModule():
     if not API_TOKEN:
         app_path = "./joplin.AppImage"
         setup_joplin.download_joplin(app_path)
-        APP = setup_joplin.JoplinApp(app_path)
+        APP = setup_joplin.JoplinApp(app_path, profile=PROFILE)
         API_TOKEN = APP.api_token
 
 
@@ -146,7 +147,8 @@ class TestBase(unittest.TestCase):
         combinations = itertools.chain.from_iterable(
             itertools.combinations(list_, r)
             for r in lengths
-            if random.shuffle(list_) is None  # shuffle at each iteration
+            # shuffle each iteration
+            if random.shuffle(list_) is None  # type: ignore
         )
         return itertools.islice(combinations, max_combinations)
 
@@ -433,8 +435,7 @@ class Resource(TestBase):
 
         self.api.delete_resource(id_=id_)
         self.assertEqual(self.api.get_resources(), self.empty_search)
-        # TODO: How to obtain profile?
-        self.assertEqual(os.listdir("test_profile/resources"), [])
+        self.assertEqual(os.listdir(f"{PROFILE}/resources"), [])
 
     @with_resource
     def test_get_resource(self, filename):
