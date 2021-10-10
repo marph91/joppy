@@ -242,3 +242,14 @@ class Api(Event, Note, Notebook, Ping, Resource, Search, Tag):
         tags = self.get_tags()["items"]
         for tag in tags:
             self.delete_tag(tag["id"])
+
+    def get_all_events(self, **kwargs):
+        """Get all events unpaginated."""
+        page = 0
+        response = self.get_events(**kwargs)
+        events = response["items"]
+        while response["has_more"]:
+            response = self.get_events(page=page, **kwargs)
+            events.append(response["items"])
+            page += 1
+        return events

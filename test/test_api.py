@@ -98,6 +98,7 @@ class TestBase(unittest.TestCase):
         self.api.delete_all_notebooks()
         self.api.delete_all_resources()
         self.api.delete_all_tags()
+        self.current_cursor = self.api.get_events()["cursor"]
 
     @staticmethod
     def get_random_id() -> str:
@@ -161,15 +162,15 @@ class Event(TestBase):
 
     def generate_event(self):
         """Generate an event and wait until it's available."""
-        events_before = len(self.api.get_events(cursor=0)["items"])
+        events_before = len(self.api.get_all_events(cursor=self.current_cursor))
         # For now only notes trigger events:
         # https://joplinapp.org/api/references/rest_api/#events
         self.api.add_notebook()
         self.api.add_note()
 
         def compare_event_count():
-            event_count = len(self.api.get_events()["items"])
-            return None if event_count == events_before + 1 else event_count
+            event_count = len(self.api.get_all_events(cursor=self.current_cursor))
+            return event_count if event_count == events_before + 1 else None
 
         # Wait until the event is available.
         setup_joplin.wait_for(compare_event_count, interval=0.1, timeout=1)
@@ -177,7 +178,7 @@ class Event(TestBase):
     def test_get_event(self):
         """Get a specific event."""
         self.generate_event()
-        last_event = self.api.get_events(cursor=0)["items"][-1]
+        last_event = self.api.get_events(cursor=self.current_cursor)["items"][-1]
         event = self.api.get_event(id_=last_event["id"])
 
         self.assertEqual(list(event.keys()), self.default_properties + ["type_"])
