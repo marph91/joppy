@@ -1,6 +1,7 @@
 __pycache__
 .coverage
 .mypy_cache
+coverage.xml
 htmlcov
 test_profile
 *.egg-info

@@ -18,3 +18,7 @@ jobs:
           touch ~/.Xauthority  # workaround for https://github.com/python-xlib/python-xlib/issues/66
           SLOW_TESTS=1 coverage run -m unittest -v
           coverage report
+          coverage xml
+      - uses: codecov/codecov-action@v2
+        with:
+          files: ./coverage.xml
