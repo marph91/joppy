@@ -29,6 +29,18 @@ Note: The API is tested with Joplin 2.4.9 and Python 3.8 on Ubuntu 20.04 for now
 
 Start joplin and [get your API token](https://joplinapp.org/api/references/rest_api/#authorisation).
 
+Get all notes:
+
+```python
+from joppy.api import Api
+
+# Create a new Api instance.
+api = Api(token=YOUR_TOKEN)
+
+# Get all notes. Note that this method calls get_notes() multiple times to assemble the unpaginated result.
+notes = api.get_all_notes()
+```
+
 Add a tag to a note:
 
 ```python
