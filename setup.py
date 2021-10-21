@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name="joppy",
-    version="0.0.1",
+    version="0.0.2",
     packages=["joppy"],
     description="Python API for Joplin",
     long_description=(pathlib.Path(__file__).parent / "README.md").read_text(),
