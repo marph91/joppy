@@ -311,6 +311,18 @@ class Note(TestBase):
         for note in notes["items"]:
             self.assertEqual(list(note.keys()), self.default_properties)
 
+    def test_get_all_notes(self):
+        """Get all notes, unpaginated."""
+        self.api.add_notebook()
+        # Small limit and count to create/remove as less as possible items.
+        count, limit = random.randint(1, 10), random.randint(1, 10)
+        for _ in range(count):
+            self.api.add_note()
+        self.assertEqual(
+            len(self.api.get_notes(limit=limit)["items"]), min(limit, count)
+        )
+        self.assertEqual(len(self.api.get_all_notes(limit=limit)), count)
+
     def test_get_notes_too_many_ids(self):
         """At maximum one parent ID can be used to obtain notes."""
         with self.assertRaises(ValueError):
@@ -376,6 +388,17 @@ class Notebook(TestBase):
         self.assertFalse(notebooks["has_more"])
         for notebook in notebooks["items"]:
             self.assertEqual(list(notebook.keys()), self.default_properties)
+
+    def test_get_all_notebooks(self):
+        """Get all notebooks, unpaginated."""
+        # Small limit and count to create/remove as less as possible items.
+        count, limit = random.randint(1, 10), random.randint(1, 10)
+        for _ in range(count):
+            self.api.add_notebook()
+        self.assertEqual(
+            len(self.api.get_notebooks(limit=limit)["items"]), min(limit, count)
+        )
+        self.assertEqual(len(self.api.get_all_notebooks(limit=limit)), count)
 
     def test_get_notebooks_invalid_property(self):
         """Try to get an non existent property of notebooks."""
@@ -492,6 +515,18 @@ class Resource(TestBase):
         self.assertFalse(resources["has_more"])
         for resource in resources["items"]:
             self.assertEqual(list(resource.keys()), self.default_properties)
+
+    @with_resource
+    def test_get_all_resources(self, filename):
+        """Get all resources, unpaginated."""
+        # Small limit and count to create/remove as less as possible items.
+        count, limit = random.randint(1, 10), random.randint(1, 10)
+        for _ in range(count):
+            self.api.add_resource(filename=filename)
+        self.assertEqual(
+            len(self.api.get_resources(limit=limit)["items"]), min(limit, count)
+        )
+        self.assertEqual(len(self.api.get_all_resources(limit=limit)), count)
 
     @with_resource
     def test_get_resources_valid_properties(self, filename):
@@ -699,6 +734,17 @@ class Tag(TestBase):
         self.assertFalse(tags["has_more"])
         for tag in tags["items"]:
             self.assertEqual(list(tag.keys()), self.default_properties)
+
+    def test_get_all_tags(self):
+        """Get all tags, unpaginated."""
+        # Small limit and count to create/remove as less as possible items.
+        count, limit = random.randint(1, 10), random.randint(1, 10)
+        for _ in range(count):
+            self.api.add_tag()
+        self.assertEqual(
+            len(self.api.get_tags(limit=limit)["items"]), min(limit, count)
+        )
+        self.assertEqual(len(self.api.get_all_tags(limit=limit)), count)
 
     def test_get_tags_valid_properties(self):
         """Try to get specific properties of a tag."""
