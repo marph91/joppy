@@ -76,7 +76,10 @@ class Event(ApiBase):
         return self.get(f"/events/{id_}", query=kwargs).json()
 
     def get_events(self, **kwargs):
-        """Get all events."""
+        """
+        Get events, paginated. To get all events (unpaginated), use
+        "get_all_events()".
+        """
         return self.get("/events", query=kwargs).json()
 
 
@@ -102,8 +105,9 @@ class Note(ApiBase):
         **kwargs,
     ):
         """
-        Get all notes. If a notebook, resource or tag ID is given,
-        return all corresponding notes.
+        Get notes, paginated. If a notebook, resource or tag ID is given,
+        return the corresponding notes. To get all notes (unpaginated), use
+        "get_all_notes()".
         """
         if [notebook_id, resource_id, tag_id].count(None) < 2:
             raise ValueError("Too many IDs. Specify at most one.")
@@ -132,7 +136,10 @@ class Notebook(ApiBase):
         return self.get(f"/folders/{id_}", query=kwargs).json()
 
     def get_notebooks(self, **kwargs):
-        """Get all notebooks."""
+        """
+        Get notebooks, paginated. To get all notebooks (unpaginated), use
+        "get_all_notebooks()".
+        """
         return self.get("/folders", query=kwargs).json()
 
     def modify_notebook(self, id_: str, **kwargs):
@@ -170,7 +177,10 @@ class Resource(ApiBase):
         return self.get(f"/resources/{id_}{file_}", query=kwargs).json()
 
     def get_resources(self, note_id: Optional[str] = None, **kwargs):
-        """Get all notes. If a note ID is given, return all resources of this note."""
+        """
+        Get resources, paginated. If a note ID is given, return the corresponding
+        resources. To get all resources (unpaginated), use "get_all_resources()".
+        """
         note = "" if note_id is None else f"/notes/{note_id}"
         return self.get(f"{note}/resources", query=kwargs).json()
 
@@ -206,13 +216,19 @@ class Tag(ApiBase):
         return self.get(f"/tags/{id_}", query=kwargs).json()
 
     def get_tags(self, note_id: Optional[str] = None, **kwargs):
-        """Get all tags. If a note is given, return all tags of this note."""
+        """
+        Get tags, paginated. If a note is given, return the corresponding tags.
+        To get all tags (unpaginated), use "get_all_tags()".
+        """
         note = "" if note_id is None else f"/notes/{note_id}"
         return self.get(f"{note}/tags", query=kwargs).json()
 
     def modify_tag(self, id_: str, **kwargs):
         """Modify a tag."""
         self.put(f"/tags/{id_}", data=kwargs)
+
+
+ITEM = Dict[str, Any]
 
 
 class Api(Event, Note, Notebook, Ping, Resource, Search, Tag):
@@ -255,13 +271,34 @@ class Api(Event, Note, Notebook, Ping, Resource, Search, Tag):
         for tag in tags:
             self.delete_tag(tag["id"])
 
-    def get_all_events(self, **kwargs) -> List[Dict[str, Any]]:
-        """Get all events unpaginated."""
-        page = 0
-        response = self.get_events(**kwargs)
-        events = response["items"]
+    @staticmethod
+    def _get_all(func, **kwargs):
+        """Calls an Joplin endpoint until it's response doesn't contain more data."""
+        response = func(**kwargs)
+        items = response["items"]
+        page = 1  # pages are one based
         while response["has_more"]:
-            response = self.get_events(page=page, **kwargs)
-            events.append(response["items"])
             page += 1
-        return events
+            response = func(page=page, **kwargs)
+            items.extend(response["items"])
+        return items
+
+    def get_all_events(self, **kwargs) -> List[ITEM]:
+        """Get all events, unpaginated."""
+        return self._get_all(self.get_events, **kwargs)
+
+    def get_all_notes(self, **kwargs) -> List[ITEM]:
+        """Get all notes, unpaginated."""
+        return self._get_all(self.get_notes, **kwargs)
+
+    def get_all_notebooks(self, **kwargs) -> List[ITEM]:
+        """Get all notebooks, unpaginated."""
+        return self._get_all(self.get_notebooks, **kwargs)
+
+    def get_all_resources(self, **kwargs) -> List[ITEM]:
+        """Get all resources, unpaginated."""
+        return self._get_all(self.get_resources, **kwargs)
+
+    def get_all_tags(self, **kwargs) -> List[ITEM]:
+        """Get all tags, unpaginated."""
+        return self._get_all(self.get_tags, **kwargs)
