@@ -28,9 +28,9 @@ class ApiBase:
         **kwargs,
     ) -> requests.models.Response:
         logging.debug(f"API: {method} request: {path=}, {query=}, {data=}, {kwargs=}")
-        if data is not None:
+        if data is not None and "id_" in data:
             # "id" is a reserved keyword in python, so don't use it.
-            data["id"] = data.pop("id_", None)
+            data["id"] = data["id_"]
         if query is None:
             query = {}
         query["token"] = self.token  # TODO: extending the dict may have side effects
