@@ -47,21 +47,21 @@ class ApiBase:
             raise
         return response
 
-    def delete(self, *args) -> requests.models.Response:
+    def delete(self, path: str) -> requests.models.Response:
         """Convenience method to issue a delete request."""
-        return self._request("delete", *args)
+        return self._request("delete", path)
 
-    def get(self, *args, **kwargs) -> requests.models.Response:
+    def get(self, path: str, **kwargs) -> requests.models.Response:
         """Convenience method to issue a get request."""
-        return self._request("get", *args, **kwargs)
+        return self._request("get", path, **kwargs)
 
-    def post(self, *args, **kwargs) -> requests.models.Response:
+    def post(self, path: str, **kwargs) -> requests.models.Response:
         """Convenience method to issue a post request."""
-        return self._request("post", *args, **kwargs)
+        return self._request("post", path, **kwargs)
 
-    def put(self, *args, **kwargs) -> requests.models.Response:
+    def put(self, path: str, **kwargs) -> requests.models.Response:
         """Convenience method to issue a put request."""
-        return self._request("put", *args, **kwargs)
+        return self._request("put", path, **kwargs)
 
 
 ##############################################################################
