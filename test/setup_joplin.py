@@ -5,13 +5,13 @@ import os
 import stat
 import subprocess
 import time
-from typing import Optional
+from typing import Any, Callable, Optional
 
 import requests
 from xvfbwrapper import Xvfb
 
 
-def download_joplin(destination: str):
+def download_joplin(destination: str) -> None:
     """Download the joplin desktop app if not already done."""
     if not os.path.exists(destination):
         # TODO: How to download the latest release?
@@ -26,7 +26,7 @@ def download_joplin(destination: str):
         os.chmod(destination, os.stat(destination).st_mode | stat.S_IEXEC)
 
 
-def configure_webclipper_autostart(profile: str):
+def configure_webclipper_autostart(profile: str) -> None:
     """
     Configure the webclipper to start at the first autostart.
     See: https://discourse.joplinapp.org/t/how-to-start-webclipper-headless/20789/4
@@ -46,7 +46,7 @@ def configure_webclipper_autostart(profile: str):
         json.dump({webclipper_setting: True, "locale": "en_US"}, outfile)
 
 
-def wait_for(func, interval: float = 0.5, timeout: int = 5):
+def wait_for(func: Callable[..., Any], interval: float = 0.5, timeout: int = 5) -> Any:
     """Wait for an arbitrary function to return something."""
     mustend = time.time() + timeout
     while time.time() < mustend:
@@ -76,7 +76,7 @@ class JoplinApp:
         def get_token() -> Optional[str]:
             with open(f"{profile}/settings.json") as infile:
                 settings = json.loads(infile.read())
-            api_token = settings.get("api.token")
+            api_token: Optional[str] = settings.get("api.token")
             return api_token
 
         self.api_token = wait_for(get_token, timeout=20)
@@ -94,7 +94,7 @@ class JoplinApp:
 
         wait_for(api_available, timeout=20)
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop the joplin app and the corresponding xvfb."""
         self.xvfb.stop()
         self.joplin_process.terminate()
