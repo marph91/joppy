@@ -10,12 +10,13 @@ from re import sub
 import string
 import tempfile
 import time
+from typing import cast, Iterable, Tuple
 import unittest
 
 from parameterized import parameterized
 import requests
 
-from joppy.api import Api
+from joppy.api import Api, JoplinKwargs
 from joppy import tools
 from . import setup_joplin
 
@@ -139,7 +140,9 @@ class TestBase(unittest.TestCase):
         return 0 <= timestamp <= int(time.time() * 1000)  # ms
 
     @staticmethod
-    def get_combinations(iterable, max_combinations: int = 100):
+    def get_combinations(
+        iterable: Iterable[str], max_combinations: int = 100
+    ) -> Iterable[Tuple[str, ...]]:
         """Get some combinations of an iterable."""
         # https://stackoverflow.com/a/10465588
         # TODO: Randomize fully. For now the combinations are sorted by length.
@@ -150,7 +153,7 @@ class TestBase(unittest.TestCase):
             itertools.combinations(list_, r)
             for r in lengths
             # shuffle each iteration
-            if random.shuffle(list_) is None  # type: ignore
+            if random.shuffle(list_) is None  # type: ignore [func-returns-value]
         )
         return itertools.islice(combinations, max_combinations)
 
@@ -164,7 +167,7 @@ class Event(TestBase):
     ]
     default_properties = ["id", "item_type", "item_id", "type", "created_time"]
 
-    def generate_event(self):
+    def generate_event(self) -> None:
         """Generate an event and wait until it's available."""
         events_before = len(self.api.get_all_events(cursor=self.current_cursor))
         # For now only notes trigger events:
@@ -186,14 +189,15 @@ class Event(TestBase):
         event = self.api.get_event(id_=last_event["id"])
 
         self.assertEqual(list(event.keys()), self.default_properties + ["type_"])
-        self.assertIn(event["item_type"], ItemType._value2member_map_)
+        self.assertIn(event["item_type"], {item.value for item in ItemType})
         self.assertTrue(self.is_id_valid(event["item_id"]))
         self.assertEqual(event["type"], ChangeType.CREATED.value)
         self.assertTrue(self.is_timestamp_valid(event["created_time"]))
         self.assertEqual(event["type_"], ItemType.ITEM_CHANGE.value)
 
         for property_ in self.default_properties:
-            self.assertEqual(event[property_], event[property_])
+            # https://github.com/python/mypy/issues/7178
+            self.assertEqual(event[property_], event[property_])  # type: ignore [misc]
 
     def test_get_events_by_cursor(self):
         """Get all events by specifying a cursor of 0."""
@@ -203,10 +207,13 @@ class Event(TestBase):
         previous_created_time = 0
         previous_id = 0
         for event in events["items"]:
-            self.assertGreater(event["created_time"], previous_created_time)
-            self.assertGreater(event["id"], previous_id)
-            previous_created_time = event["created_time"]
-            previous_id = event["id"]
+            # TODO: id is int only for events. Find a way to abstract it.
+            current_id = cast(int, event["id"])
+            current_created_time = event["created_time"]
+            self.assertGreater(current_created_time, previous_created_time)
+            self.assertGreater(current_id, previous_id)
+            previous_created_time = current_created_time
+            previous_id = current_id
             self.assertEqual(list(event.keys()), self.default_properties)
 
     def test_get_events_empty(self):
@@ -460,7 +467,7 @@ class Resource(TestBase):
     default_properties = ["id", "title"]
 
     @with_resource
-    def test_add(self, filename: str):
+    def test_add(self, filename):
         """Add a resource."""
         id_ = self.api.add_resource(filename=filename)
         self.assertTrue(self.is_id_valid(id_))
@@ -470,7 +477,7 @@ class Resource(TestBase):
         self.assertEqual(resources[0]["id"], id_)
 
     @with_resource
-    def test_add_to_note(self, filename: str):
+    def test_add_to_note(self, filename):
         """Add a resource to an existing note."""
         self.api.add_notebook()
         note_id = self.api.add_note()
@@ -488,7 +495,7 @@ class Resource(TestBase):
         # self.assertEqual(notes[0]["id"], note_id)
 
     @with_resource
-    def test_delete(self, filename: str):
+    def test_delete(self, filename):
         """Add and then delete a resource."""
         id_ = self.api.add_resource(filename=filename)
         resources = self.api.get_resources()
@@ -539,7 +546,7 @@ class Resource(TestBase):
                 self.assertEqual(list(resource.keys()), list(properties))
 
     @with_resource
-    def test_modify_title(self, filename: str):
+    def test_modify_title(self, filename):
         """Modify a resource title."""
         id_ = self.api.add_resource(filename=filename)
 
@@ -562,7 +569,7 @@ class Resource(TestBase):
             self.assertEqual(resource["size"], os.path.getsize(file_))
 
     @with_resource
-    def test_check_property_title(self, filename: str):
+    def test_check_property_title(self, filename):
         """Check the title of a resource."""
         title = self.get_random_string()
         id_ = self.api.add_resource(filename=filename, title=title)
@@ -614,7 +621,7 @@ class Search(TestBase):
     def test_master_key(self):
         """There is no master key configured."""
         self.assertEqual(
-            self.api.search(query={"query": "*", "type": "master_key"}),
+            self.api.search(query="*", type="master_key"),
             self.empty_search,
         )
 
@@ -636,7 +643,7 @@ class Search(TestBase):
         for _ in range(limit + 1):
             self.api.add_notebook()
 
-        query = {"query": "*", "type": "folder", "limit": limit}
+        query: JoplinKwargs = {"query": "*", "type": "folder", "limit": limit}
         search_result = self.api.search(**query)
         self.assertEqual(len(search_result["items"]), limit)
         self.assertTrue(search_result["has_more"])
@@ -803,7 +810,7 @@ class Helper(TestBase):
 
 class Miscellaneous(TestBase):
     @with_resource
-    def test_same_id_different_type(self, filename: str):
+    def test_same_id_different_type(self, filename):
         """Same IDs can be used if the types are different."""
         id_ = self.get_random_id()
 
