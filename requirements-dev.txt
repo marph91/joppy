@@ -4,8 +4,8 @@ parameterized
 requests
 xvfbwrapper
 # linting
-black
-flake8
-mypy
+black==21.9b0
+flake8==3.9.0
+mypy==0.902
 # TODO: Use "--install-types" when https://github.com/python/mypy/issues/10600 is solved.
 types-requests
