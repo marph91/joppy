@@ -654,6 +654,43 @@ class Search(TestBase):
         self.assertEqual(len(search_result["items"]), 1)
         self.assertFalse(search_result["has_more"])
 
+    @unittest.skipIf(not SLOW_TESTS, "Notes aren't instantly available at search.")
+    def test_search_query_special_chars(self):
+        """
+        Search should succeed even with special characters.
+        See: https://github.com/marph91/joppy/issues/5
+        """
+        queries = (
+            (
+                "https://books.google.com.br/books?id=vaZFBgAAQBAJ&pg=PA83&dq=lakatos+"
+                "copernicus&hl=pt-BR&sa=X&ved=0ahUKEwjewoWZ6q7hAhUNJ7kGHdy5CZUQ6AEIUDA"
+                r"F#v=onepage&q=lakatos%20copernicus&f=false"
+            ),
+            (
+                "https://www.facebook.com/photo.php?fbid=621934757910715&set=a.1437947"
+                "52391387&type=3&app=fbl"
+            ),
+            r"foo# ?bar%+!baz",
+            self.get_random_string(),
+        )
+
+        self.api.add_notebook()
+        for query in queries:
+            self.api.add_note(title=query)
+
+        # Wait until the notes are available at search.
+        setup_joplin.wait_for(
+            lambda: None
+            if len(self.api.search(query=queries[0])["items"]) != 1
+            else True,
+            timeout=10,
+        )
+
+        for query in queries:
+            result = self.api.search(query=query)
+            self.assertEqual(len(result["items"]), 1)
+            self.assertEqual(result["items"][0]["title"], query)
+
 
 class Tag(TestBase):
     properties = [

@@ -1,8 +1,20 @@
 """Interface for the joplin data API."""
 
+import copy
 import json
 import logging
-from typing import Any, Callable, Dict, List, MutableMapping, Optional, TypedDict, Union
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Dict,
+    List,
+    MutableMapping,
+    Optional,
+    TypedDict,
+    Union,
+)
+import urllib.parse
 
 import requests
 
@@ -258,7 +270,13 @@ class Resource(ApiBase):
 class Search(ApiBase):
     def search(self, **query: JoplinTypes) -> JoplinItemList:
         """Issue a search."""
-        response: JoplinItemList = self.get("/search", query=query).json()
+        # Copy the dict, because its content gets changed.
+        query_ = copy.deepcopy(query)
+        # The outer query is the query of the URL. The inner query is the query of the
+        # Joplin search endpoint. To avoid special characters in the inner query that
+        # would be recognized as outer query, encode it.
+        query_["query"] = urllib.parse.quote(cast(str, query_["query"]))
+        response: JoplinItemList = self.get("/search", query=query_).json()
         return response
 
 
