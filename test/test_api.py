@@ -654,6 +654,17 @@ class Search(TestBase):
         self.assertEqual(len(search_result["items"]), 1)
         self.assertFalse(search_result["has_more"])
 
+    def test_search_all(self):
+        """Search notebooks and return all results, unpaginated."""
+        # Small limit and count to create/remove as less as possible items.
+        count, limit = random.randint(1, 10), random.randint(1, 10)
+        title = self.get_random_string()
+        query: JoplinKwargs = {"query": title, "type": "folder", "limit": limit}
+        for _ in range(count):
+            self.api.add_notebook(title=title)
+        self.assertEqual(len(self.api.search(**query)["items"]), min(limit, count))
+        self.assertEqual(len(self.api.search_all(**query)), count)
+
 
 class Tag(TestBase):
     properties = [
