@@ -21,8 +21,9 @@ from joppy import tools
 from . import setup_joplin
 
 
+os.makedirs("test_output", exist_ok=True)
 logging.basicConfig(
-    filename="test.log",
+    filename="test_output/test.log",
     filemode="w",
     format="%(asctime)s [%(levelname)s]: %(message)s",
     level=logging.DEBUG,

@@ -5,6 +5,8 @@ on: [push]
 jobs:
   container:
     runs-on: ubuntu-latest
+    env:
+      SLOW_TESTS: 1
     steps:
       - uses: actions/checkout@v2
       - name: Install system dependencies
@@ -16,9 +18,20 @@ jobs:
       - name: Run tests
         run: |
           touch ~/.Xauthority  # workaround for https://github.com/python-xlib/python-xlib/issues/66
-          SLOW_TESTS=1 coverage run -m unittest -v
+          coverage run -m xmlrunner -v --output-file test_output/test_results.xml
           coverage report
           coverage xml
-      - uses: codecov/codecov-action@v2
+      - name: Publish Code Coverage Results
+        uses: codecov/codecov-action@v2
         with:
-          files: ./coverage.xml
+          files: ./test_output/coverage.xml
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v1
+        if: always()
+        with:
+          files: test_output/test_results.xml
+      - name: Archive all collected test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: test_output
+          path: test_output/

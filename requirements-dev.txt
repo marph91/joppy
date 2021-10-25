@@ -2,6 +2,7 @@
 coverage
 parameterized
 requests
+unittest-xml-reporting
 xvfbwrapper
 # linting
 black==21.9b0
