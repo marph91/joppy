@@ -654,7 +654,6 @@ class Search(TestBase):
         self.assertEqual(len(search_result["items"]), 1)
         self.assertFalse(search_result["has_more"])
 
-    @unittest.skipIf(not SLOW_TESTS, "Notes aren't instantly available at search.")
     def test_search_query_special_chars(self):
         """
         Search should succeed even with special characters.
@@ -674,20 +673,9 @@ class Search(TestBase):
             self.get_random_string(),
         )
 
-        self.api.add_notebook()
         for query in queries:
-            self.api.add_note(title=query)
-
-        # Wait until the notes are available at search.
-        setup_joplin.wait_for(
-            lambda: None
-            if len(self.api.search(query=queries[0])["items"]) != 1
-            else True,
-            timeout=10,
-        )
-
-        for query in queries:
-            result = self.api.search(query=query)
+            self.api.add_notebook(title=query)
+            result = self.api.search(query=query, type="folder")
             self.assertEqual(len(result["items"]), 1)
             self.assertEqual(result["items"][0]["title"], query)
 
