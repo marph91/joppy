@@ -139,6 +139,7 @@ class Event(ApiBase):
     Events are supported since Joplin 2.4.5.
     See: https://github.com/laurent22/joplin/releases/tag/v2.4.5
     """
+
     def get_event(self, id_: str, **query: JoplinTypes) -> JoplinItem:
         """Get the event with the given ID."""
         response: JoplinItem = self.get(f"/events/{id_}", query=query).json()
@@ -275,12 +276,12 @@ class Search(ApiBase):
     def search(self, **query: JoplinTypes) -> JoplinItemList:
         """Issue a search."""
         # Copy the dict, because its content gets changed.
-        query_ = copy.deepcopy(query)
+        outer_query = copy.deepcopy(query)
         # The outer query is the query of the URL. The inner query is the query of the
         # Joplin search endpoint. To avoid special characters in the inner query that
         # would be recognized as outer query, encode it.
-        query_["query"] = urllib.parse.quote(cast(str, query_["query"]))
-        response: JoplinItemList = self.get("/search", query=query_).json()
+        outer_query["query"] = urllib.parse.quote(cast(str, outer_query["query"]))
+        response: JoplinItemList = self.get("/search", query=outer_query).json()
         return response
 
 
