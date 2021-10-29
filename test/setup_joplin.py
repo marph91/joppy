@@ -16,7 +16,8 @@ def download_joplin(destination: str) -> None:
     if not os.path.exists(destination):
         # TODO: How to download the latest release?
         response = requests.get(
-            "https://github.com/laurent22/joplin/releases/download/v2.5.4/Joplin-2.5.4.AppImage"  # noqa: E501
+            "https://github.com/laurent22/joplin/releases/download/v2.5.4/"
+            "Joplin-2.5.4.AppImage"
         )
         response.raise_for_status()
         with open(destination, "wb") as outfile:
@@ -47,14 +48,14 @@ def configure_webclipper_autostart(profile: str) -> None:
 
 
 def wait_for(func: Callable[..., Any], interval: float = 0.5, timeout: int = 5) -> Any:
-    """Wait for an arbitrary function to return something."""
+    """Wait for an arbitrary function to return not None."""
     mustend = time.time() + timeout
     while time.time() < mustend:
         result = func()
         if result is not None:
             return result
         time.sleep(interval)
-    raise TimeoutError("Function didn't return a valid value.")
+    raise TimeoutError(f"Function didn't return a valid value {result}.")
 
 
 class JoplinApp:
