@@ -135,6 +135,10 @@ class ApiBase:
 
 
 class Event(ApiBase):
+    """
+    Events are supported since Joplin 2.4.5.
+    See: https://github.com/laurent22/joplin/releases/tag/v2.4.5
+    """
     def get_event(self, id_: str, **query: JoplinTypes) -> JoplinItem:
         """Get the event with the given ID."""
         response: JoplinItem = self.get(f"/events/{id_}", query=query).json()
@@ -357,7 +361,7 @@ class Api(Event, Note, Notebook, Ping, Resource, Search, Tag):
             self.delete_tag(tag["id"])
 
     @staticmethod
-    def _get_all(
+    def _unpaginate(
         func: Callable[..., JoplinItemList], **query: JoplinTypes
     ) -> List[JoplinItem]:
         """Calls an Joplin endpoint until it's response doesn't contain more data."""
@@ -373,20 +377,24 @@ class Api(Event, Note, Notebook, Ping, Resource, Search, Tag):
 
     def get_all_events(self, **query: JoplinTypes) -> List[JoplinItem]:
         """Get all events, unpaginated."""
-        return self._get_all(self.get_events, **query)
+        return self._unpaginate(self.get_events, **query)
 
     def get_all_notes(self, **query: JoplinTypes) -> List[JoplinItem]:
         """Get all notes, unpaginated."""
-        return self._get_all(self.get_notes, **query)
+        return self._unpaginate(self.get_notes, **query)
 
     def get_all_notebooks(self, **query: JoplinTypes) -> List[JoplinItem]:
         """Get all notebooks, unpaginated."""
-        return self._get_all(self.get_notebooks, **query)
+        return self._unpaginate(self.get_notebooks, **query)
 
     def get_all_resources(self, **query: JoplinTypes) -> List[JoplinItem]:
         """Get all resources, unpaginated."""
-        return self._get_all(self.get_resources, **query)
+        return self._unpaginate(self.get_resources, **query)
 
     def get_all_tags(self, **query: JoplinTypes) -> List[JoplinItem]:
         """Get all tags, unpaginated."""
-        return self._get_all(self.get_tags, **query)
+        return self._unpaginate(self.get_tags, **query)
+
+    def search_all(self, **query: JoplinTypes) -> List[JoplinItem]:
+        """Issue a search and get all results, unpaginated."""
+        return self._unpaginate(self.search, **query)

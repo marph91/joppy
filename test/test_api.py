@@ -103,7 +103,6 @@ class TestBase(unittest.TestCase):
         self.api.delete_all_notebooks()
         self.api.delete_all_resources()
         self.api.delete_all_tags()
-        self.current_cursor = self.api.get_events()["cursor"]
 
     @staticmethod
     def get_random_id() -> str:
@@ -170,14 +169,15 @@ class Event(TestBase):
 
     def generate_event(self) -> None:
         """Generate an event and wait until it's available."""
-        events_before = len(self.api.get_all_events(cursor=self.current_cursor))
+        current_cursor = self.api.get_events()["cursor"]
+        events_before = len(self.api.get_all_events(cursor=current_cursor))
         # For now only notes trigger events:
         # https://joplinapp.org/api/references/rest_api/#events
         self.api.add_notebook()
         self.api.add_note()
 
         def compare_event_count():
-            event_count = len(self.api.get_all_events(cursor=self.current_cursor))
+            event_count = len(self.api.get_all_events(cursor=current_cursor))
             return event_count if event_count == events_before + 1 else None
 
         # Wait until the event is available.
@@ -185,8 +185,9 @@ class Event(TestBase):
 
     def test_get_event(self):
         """Get a specific event."""
+        current_cursor = self.api.get_events()["cursor"]
         self.generate_event()
-        last_event = self.api.get_events(cursor=self.current_cursor)["items"][-1]
+        last_event = self.api.get_events(cursor=current_cursor)["items"][-1]
         event = self.api.get_event(id_=last_event["id"])
 
         self.assertEqual(list(event.keys()), self.default_properties + ["type_"])
@@ -678,6 +679,17 @@ class Search(TestBase):
             result = self.api.search(query=query, type="folder")
             self.assertEqual(len(result["items"]), 1)
             self.assertEqual(result["items"][0]["title"], query)
+
+    def test_search_all(self):
+        """Search notebooks and return all results, unpaginated."""
+        # Small limit and count to create/remove as less as possible items.
+        count, limit = random.randint(1, 10), random.randint(1, 10)
+        title = self.get_random_string()
+        query: JoplinKwargs = {"query": title, "type": "folder", "limit": limit}
+        for _ in range(count):
+            self.api.add_notebook(title=title)
+        self.assertEqual(len(self.api.search(**query)["items"]), min(limit, count))
+        self.assertEqual(len(self.api.search_all(**query)), count)
 
 
 class Tag(TestBase):
