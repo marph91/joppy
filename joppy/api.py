@@ -123,6 +123,10 @@ class ApiBase:
 
 
 class Event(ApiBase):
+    """
+    Events are supported since Joplin 2.4.5.
+    See: https://github.com/laurent22/joplin/releases/tag/v2.4.5
+    """
     def get_event(self, id_: str, **query: JoplinTypes) -> JoplinItem:
         """Get the event with the given ID."""
         response: JoplinItem = self.get(f"/events/{id_}", query=query).json()
