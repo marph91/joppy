@@ -8,7 +8,6 @@ Usage: API_TOKEN=XYZ python export_all_to_pdf.py
 import argparse
 import dataclasses
 import os
-from typing import Any, Dict, List, Union
 
 from joppy.api import Api
 from markdown import Markdown
