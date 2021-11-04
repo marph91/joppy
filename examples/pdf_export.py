@@ -110,6 +110,13 @@ def item_tree_to_html(item_tree):
     return "".join(sub_tree_to_html(item_tree))
 
 
+def sort_item_tree(item_tree):
+    return {
+        key: sort_item_tree(value) if isinstance(value, dict) else value
+        for key, value in sorted(item_tree.items(), key=lambda item: item[0].title)
+    }
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -127,9 +134,10 @@ def main():
     # Obtain the notebooks and notes via joplin API.
     api = Api(token=os.getenv("API_TOKEN"))
     item_tree = get_item_tree(api)
+    sorted_item_tree = sort_item_tree(item_tree)
 
     # Convert abd merge everything to a single HTML document.
-    html = item_tree_to_html(item_tree)
+    html = item_tree_to_html(sorted_item_tree)
     if args.html_file:
         with open(args.html_file, "w") as outfile:
             outfile.write(html)
