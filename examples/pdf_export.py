@@ -117,8 +117,21 @@ def sort_item_tree(item_tree):
     }
 
 
+def select_notebook(item_tree, query, by="title"):
+    """Find a notebook in the complete item tree."""
+    for key, value in item_tree.items():
+        if isinstance(key, Notebook) and getattr(key, by) in query:
+            yield key, value
+        yield from select_notebook(value, query)
+
+
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--notebooks",
+        nargs="+",
+        help="Title of the root notebooks. By default all notebooks are selected.",
+    )
     parser.add_argument(
         "--pdf-file",
         default="joplin_notebook.pdf",
@@ -134,6 +147,13 @@ def main():
     # Obtain the notebooks and notes via joplin API.
     api = Api(token=os.getenv("API_TOKEN"))
     item_tree = get_item_tree(api)
+
+    if args.notebooks:
+        item_tree = dict(select_notebook(item_tree, args.notebooks))
+        if not item_tree:
+            raise Exception(
+                "No notebooks found. Please specify at least one valid notebook."
+            )
     sorted_item_tree = sort_item_tree(item_tree)
 
     # Convert abd merge everything to a single HTML document.
