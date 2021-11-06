@@ -2,7 +2,9 @@
 Convert all notebooks and notes to PDF.
 
 Requirements: pip install joppy markdown weasyprint
-Usage: API_TOKEN=XYZ python export_all_to_pdf.py
+Usage:
+- API_TOKEN=XYZ python export_all_to_pdf.py
+- python export_all_to_pdf.py --help
 """
 
 import argparse
@@ -18,6 +20,8 @@ from weasyprint import HTML
 # "order" to allow sorting.
 @dataclasses.dataclass(order=True, frozen=True)
 class Note:
+    """Represents a Joplin note."""
+
     id: str
     parent_id: str
     title: str
@@ -29,6 +33,8 @@ class Note:
 
 @dataclasses.dataclass(order=True, frozen=True)
 class Notebook:
+    """Represents a Joplin notebook."""
+
     id: str
     parent_id: str
     title: str
@@ -61,6 +67,10 @@ def create_tree(flat_list):
 
 
 def get_item_tree(api):
+    """
+    Generate an item tree from the Joplin API. The API returns a flat list of
+    items with parent child relations.
+    """
     # Notebooks and notes have the same namespaces for IDs.
     # Thus the following convention for generating the tree:
     # - Notebook IDs get the prefix "nb"
@@ -89,7 +99,7 @@ def get_item_tree(api):
 
 
 def item_tree_to_html(item_tree):
-    # Convert the notes to HTML and merge them to a single document.
+    """Convert the notes to HTML and merge them to a single document."""
     md = Markdown(extensions=["nl2br", "sane_lists", "tables"])
 
     def sub_tree_to_html(item_tree, level=1):
@@ -111,6 +121,7 @@ def item_tree_to_html(item_tree):
 
 
 def sort_item_tree(item_tree):
+    """Sort all items based on their title."""
     return {
         key: sort_item_tree(value) if isinstance(value, dict) else value
         for key, value in sorted(item_tree.items(), key=lambda item: item[0].title)
@@ -156,7 +167,7 @@ def main():
             )
     sorted_item_tree = sort_item_tree(item_tree)
 
-    # Convert abd merge everything to a single HTML document.
+    # Convert and merge everything to a single HTML document.
     html = item_tree_to_html(sorted_item_tree)
     if args.html_file:
         with open(args.html_file, "w") as outfile:
