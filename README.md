@@ -25,7 +25,7 @@ pip install .
 
 Note: The API is tested with Joplin 2.4.9 and Python 3.8 on Ubuntu 20.04 for now.
 
-## Usage example
+## Usage
 
 Start joplin and [get your API token](https://joplinapp.org/api/references/rest_api/#authorisation).
 
@@ -87,7 +87,13 @@ resource_id = api.add_resource(filename="path/to/image.png", title="My first res
 api.add_resource_to_note(resource_id=resource_id, note_id=note_id)
 ```
 
-For more usage examples, check the [tests](test/test_api.py).
+For more usage examples, check the example scripts or [tests](test/test_api.py).
+
+## Example scripts
+
+Before using joppy, you should check the [Joplin plugins](https://joplinapp.org/plugins/). They are probably more convenient. However, if you need a new feature or just want to code in python, you can use joppy. Below are example scripts to showcase how joppy can be used.
+
+- [pdf_export.py](examples/pdf_export.py): Joplin only supports PDF export of a single note. This script allows to export one, multiple or all notebooks to PDF. Note that there are still some issues, like checkboxes don't get visualized correctly and big tables are truncated.
 
 ## Tests
 
@@ -99,12 +105,12 @@ python -m unittest
 
 It's possible to configure the test run via some environment variables:
 
-* `SLOW_TESTS`: Set this variable to run the slow tests. Default not set.
-* `API_TOKEN`: Set this variable if there is already a joplin instance running. **Don't use your default joplin profile!** By default, a joplin instance is started inside xvfb. This takes some time, but works for CI.
+- `SLOW_TESTS`: Set this variable to run the slow tests. Default not set.
+- `API_TOKEN`: Set this variable if there is already a joplin instance running. **Don't use your default joplin profile!** By default, a joplin instance is started inside xvfb. This takes some time, but works for CI.
 
 ## FAQ
 
 Short summary about questions I had during the implementation.
 
-* What is the purpose/usecase of "user_created_time"? Isn't "created_time" sufficient? &#8594; <https://discourse.joplinapp.org/t/importing-notes-from-tiddlywiki-api-feature-request-for-timestamps/1952/7>
-* Why is the token in the query? &#8594; <https://discourse.joplinapp.org/t/joplin-api-token-in-header-vs-query-parameters/12573/5>
+- What is the purpose/usecase of "user_created_time"? Isn't "created_time" sufficient? &#8594; <https://discourse.joplinapp.org/t/importing-notes-from-tiddlywiki-api-feature-request-for-timestamps/1952/7>
+- Why is the token in the query? &#8594; <https://discourse.joplinapp.org/t/joplin-api-token-in-header-vs-query-parameters/12573/5>
