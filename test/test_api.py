@@ -15,6 +15,7 @@ import unittest
 
 from parameterized import parameterized
 import requests
+import urllib3
 
 from joppy.api import Api, JoplinKwargs
 from joppy import tools
@@ -367,6 +368,7 @@ class Notebook(TestBase):
         "id", "title", "created_time", "updated_time",
         "user_created_time", "user_updated_time", "encryption_cipher_text",
         "encryption_applied", "parent_id", "is_shared", "share_id",
+        "master_key_id", "icon",
         # fmt: on
     ]
     default_properties = ["id", "parent_id", "title"]
@@ -811,7 +813,7 @@ class Fuzz(TestBase):
                 self.api._request(method, path)
             except (
                 requests.exceptions.HTTPError,
-                requests.packages.urllib3.exceptions.LocationParseError,
+                urllib3.exceptions.LocationParseError,
             ):
                 pass
         self.api.ping()

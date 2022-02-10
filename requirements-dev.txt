@@ -1,12 +1,12 @@
 # tests
-coverage
-parameterized
-requests
-unittest-xml-reporting
-xvfbwrapper
+coverage==6.3.1
+parameterized==0.8.1
+requests==2.25.1
+unittest-xml-reporting==3.2.0
+xvfbwrapper==0.2.9
 # linting
 black==21.9b0
 flake8==3.9.0
 mypy==0.902
 # TODO: Use "--install-types" when https://github.com/python/mypy/issues/10600 is solved.
-types-requests
+types-requests==2.27.9
