@@ -1,10 +1,9 @@
 """
-Convert all notebooks and notes to PDF.
-
+Convert notebooks and notes to PDF.
 Requirements: pip install joppy markdown weasyprint
 Usage:
-- API_TOKEN=XYZ python export_all_to_pdf.py
-- python export_all_to_pdf.py --help
+- API_TOKEN=XYZ python pdf_export.py
+- python pdf_export.py --help
 """
 
 import argparse
