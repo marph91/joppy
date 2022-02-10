@@ -16,8 +16,8 @@ def download_joplin(destination: str) -> None:
     if not os.path.exists(destination):
         # TODO: How to download the latest release?
         response = requests.get(
-            "https://github.com/laurent22/joplin/releases/download/v2.5.4/"
-            "Joplin-2.5.4.AppImage"
+            "https://github.com/laurent22/joplin/releases/download/v2.6.10/"
+            "Joplin-2.6.10.AppImage"
         )
         response.raise_for_status()
         with open(destination, "wb") as outfile:
