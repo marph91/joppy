@@ -350,16 +350,25 @@ class Note(TestBase):
 
     def test_move(self):
         """Move a note from one notebook to another."""
+        original_title = "test title"
+        original_body = "test body"
+
         notebook_1_id = self.api.add_notebook()
         notebook_2_id = self.api.add_notebook()
-        id_ = self.api.add_note(parent_id=notebook_1_id)
+        id_ = self.api.add_note(
+            parent_id=notebook_1_id, title=original_title, body=original_body
+        )
 
         note = self.api.get_note(id_=id_)
         self.assertEqual(note["parent_id"], notebook_1_id)
 
         self.api.modify_note(id_=id_, parent_id=notebook_2_id)
-        note = self.api.get_note(id_=id_)
+        note = self.api.get_note(id_=id_, fields="body,parent_id,title")
         self.assertEqual(note["parent_id"], notebook_2_id)
+
+        # Ensure the original properties aren't modified.
+        self.assertEqual(note["body"], original_body)
+        self.assertEqual(note["title"], original_title)
 
 
 class Notebook(TestBase):
