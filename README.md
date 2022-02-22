@@ -7,7 +7,7 @@ Python interface for the [Joplin data API](https://joplinapp.org/api/references/
 [![codecov](https://codecov.io/gh/marph91/joppy/branch/master/graph/badge.svg?token=97E6IX792A)](https://codecov.io/gh/marph91/joppy)
 [![lint](https://github.com/marph91/joppy/actions/workflows/lint.yml/badge.svg)](https://github.com/marph91/joppy/actions/workflows/lint.yml)
 
-## Installation
+## :computer: Installation
 
 From pypi:
 
@@ -23,9 +23,9 @@ cd joppy
 pip install .
 ```
 
-Note: The API is tested with Joplin 2.4.9 and Python 3.8 on Ubuntu 20.04 for now.
+Note: The API is tested with the latest release of Joplin on Ubuntu by github actions. It was reported that joppy is [working at windows 10](https://discourse.joplinapp.org/t/joplin-api-python/1359/39), too.
 
-## Usage
+## :wrench: Usage
 
 Start joplin and [get your API token](https://joplinapp.org/api/references/rest_api/#authorisation).
 
@@ -89,13 +89,18 @@ api.add_resource_to_note(resource_id=resource_id, note_id=note_id)
 
 For more usage examples, check the example scripts or [tests](test/test_api.py).
 
-## Example scripts
+## :newspaper: Example scripts
 
 Before using joppy, you should check the [Joplin plugins](https://joplinapp.org/plugins/). They are probably more convenient. However, if you need a new feature or just want to code in python, you can use joppy. Below are example scripts to showcase how joppy can be used.
 
 - [pdf_export.py](examples/pdf_export.py): Joplin only supports PDF export of a single note. This script allows to export one, multiple or all notebooks to PDF. Note that there are still some issues, like checkboxes don't get visualized correctly and big tables are truncated.
 
-## Tests
+Scripts and projects from other users using joppy:
+- https://github.com/gri38/django-joplin_vieweb: Web viewer for joplin.
+- https://discourse.joplinapp.org/t/solved-tips-for-removing-safely-duplicated-notes-from-two-very-similar-notebooks/20943/9: Removing duplicated notes.
+- https://discourse.joplinapp.org/t/joplin-api-python/1359/39: Not sure what it actually does :P
+
+## :sunny: Tests
 
 To run the tests, some additional system packages and python modules are needed. After installing them, just run:
 
@@ -108,7 +113,7 @@ It's possible to configure the test run via some environment variables:
 - `SLOW_TESTS`: Set this variable to run the slow tests. Default not set.
 - `API_TOKEN`: Set this variable if there is already a joplin instance running. **Don't use your default joplin profile!** By default, a joplin instance is started inside xvfb. This takes some time, but works for CI.
 
-## FAQ
+## :question: FAQ
 
 Short summary about questions I had during the implementation.
 

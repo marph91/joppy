@@ -12,12 +12,19 @@ from xvfbwrapper import Xvfb
 
 
 def download_joplin(destination: str) -> None:
-    """Download the joplin desktop app if not already done."""
+    """Download the latest joplin desktop app release if not already done."""
     if not os.path.exists(destination):
-        # TODO: How to download the latest release?
+
+        # obtain the version string
         response = requests.get(
-            "https://github.com/laurent22/joplin/releases/download/v2.6.10/"
-            "Joplin-2.6.10.AppImage"
+            "https://api.github.com/repos/laurent22/joplin/releases/latest"
+        )
+        latest_version = response.json()["name"].lstrip("v")
+
+        # download the binary
+        response = requests.get(
+            f"https://github.com/laurent22/joplin/releases/download/v{latest_version}/"
+            f"Joplin-{latest_version}.AppImage"
         )
         response.raise_for_status()
         with open(destination, "wb") as outfile:
