@@ -99,6 +99,9 @@ class TestBase(unittest.TestCase):
 
     def setUp(self):
         super().setUp()
+
+        logging.debug(f"Test: {self.id()}")
+
         self.api = Api(token=API_TOKEN)
         # Note: Notes get deleted automatically.
         self.api.delete_all_notebooks()
@@ -117,7 +120,9 @@ class TestBase(unittest.TestCase):
         characters = string.printable
         for character in exclude:
             characters = characters.replace(character, "")
-        return "".join(random.choice(characters) for _ in range(length))
+        random_string = "".join(random.choice(characters) for _ in range(length))
+        logging.debug(f"Test: random string: {random_string}")
+        return random_string
 
     @staticmethod
     def is_id_valid(id_: str) -> bool:
