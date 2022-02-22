@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name="joppy",
-    version="0.0.4",
+    version="0.0.5",
     packages=["joppy"],
     description="Python API for Joplin",
     long_description=(pathlib.Path(__file__).parent / "README.md").read_text(),
@@ -16,8 +16,8 @@ setup(
     classifiers=[
         "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.6",
     ],
-    python_requires=">=3.8",
+    python_requires=">=3.6",
     install_requires=["requests"],
 )
