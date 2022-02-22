@@ -3,6 +3,7 @@
 import copy
 import json
 import logging
+import sys
 from typing import (
     Any,
     Callable,
@@ -11,12 +12,17 @@ from typing import (
     List,
     MutableMapping,
     Optional,
-    TypedDict,
     Union,
 )
 import urllib.parse
 
 import requests
+
+
+if sys.version_info >= (3, 8):
+    from typing import TypedDict
+else:
+    from typing_extensions import TypedDict
 
 
 # Don't spam the log. See: https://stackoverflow.com/a/11029841/7410886.
@@ -80,7 +86,10 @@ class ApiBase:
         data: Optional[JoplinKwargs] = None,
         files: Optional[Dict[str, Any]] = None,
     ) -> requests.models.Response:
-        logging.debug(f"API: {method} request: {path=}, {query=}, {data=}, {files=}")
+        logging.debug(
+            f"API: {method} request: path={path}, query={query}, data={data}, "
+            f"files={files}"
+        )
         if data is not None and "id_" in data:
             # "id" is a reserved keyword in python, so don't use it.
             data["id"] = data["id_"]

@@ -1,8 +1,8 @@
 # tests
-coverage==6.3.1
+coverage==6.2
 parameterized==0.8.1
 requests==2.25.1
-unittest-xml-reporting==3.2.0
+unittest-xml-reporting==3.1.0
 xvfbwrapper==0.2.9
 # linting
 black==21.9b0
