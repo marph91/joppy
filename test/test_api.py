@@ -6,7 +6,7 @@ import logging
 import mimetypes
 import os
 import random
-from re import sub
+import re
 import string
 import tempfile
 import time
@@ -912,13 +912,13 @@ class UseCase(TestBase):
         self.api.add_tag(title="another tag with spaces")
 
         def to_camel_case(name: str) -> str:
-            name = sub(r"(_|-)+", " ", name).title().replace(" ", "")
+            name = re.sub(r"(_|-)+", " ", name).title().replace(" ", "")
             return "".join([name[0].lower(), name[1:]])
 
-        tags = self.api.get_tags()["items"]
+        tags = self.api.get_all_tags()
         for tag in tags:
             self.api.modify_tag(id_=tag["id"], title=to_camel_case(tag["title"]))
 
-        tags = self.api.get_tags()["items"]
+        tags = self.api.get_all_tags()
         for tag in tags:
             self.assertNotIn(" ", tag["title"])
