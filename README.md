@@ -29,63 +29,69 @@ Note: The API is tested with the latest release of Joplin on Ubuntu by github ac
 
 Start joplin and [get your API token](https://joplinapp.org/api/references/rest_api/#authorisation).
 
-Get all notes:
+<details>
+  <summary>Get all notes</summary>
+  
+  ```python
+  from joppy.api import Api
 
-```python
-from joppy.api import Api
+  # Create a new Api instance.
+  api = Api(token=YOUR_TOKEN)
 
-# Create a new Api instance.
-api = Api(token=YOUR_TOKEN)
+  # Get all notes. Note that this method calls get_notes() multiple times to assemble the unpaginated result.
+  notes = api.get_all_notes()
+  ```
+</details>
 
-# Get all notes. Note that this method calls get_notes() multiple times to assemble the unpaginated result.
-notes = api.get_all_notes()
-```
+<details>
+  <summary>Add a tag to a note</summary>
+  
+  ```python
+  from joppy.api import Api
 
-Add a tag to a note:
+  # Create a new Api instance.
+  api = Api(token=YOUR_TOKEN)
 
-```python
-from joppy.api import Api
+  # Add a notebook.
+  notebook_id = api.add_notebook(title="My first notebook")
 
-# Create a new Api instance.
-api = Api(token=YOUR_TOKEN)
+  # Add a note in the previously created notebook.
+  note_id = api.add_note(title="My first note", body="With some content", parent_id=notebook_id)
 
-# Add a notebook.
-notebook_id = api.add_notebook(title="My first notebook")
+  # Add a tag, that is not yet attached to a note.
+  tag_id = api.add_tag(title="introduction")
 
-# Add a note in the previously created notebook.
-note_id = api.add_note(title="My first note", body="With some content", parent_id=notebook_id)
+  # Link the tag to the note.
+  api.add_tag_to_note(tag_id=tag_id, note_id=note_id)
+  ```
+</details>
 
-# Add a tag, that is not yet attached to a note.
-tag_id = api.add_tag(title="introduction")
+<details>
+  <summary>Add a resource to a note</summary>
+  
+  ```python
+  from joppy.api import Api
+  from joppy import tools
 
-# Link the tag to the note.
-api.add_tag_to_note(tag_id=tag_id, note_id=note_id)
-```
+  # Create a new Api instance.
+  api = Api(token=YOUR_TOKEN)
 
-Add a resource to a note:
+  # Add a notebook.
+  notebook_id = api.add_notebook(title="My first notebook")
 
-```python
-from joppy.api import Api
-from joppy import tools
+  # Option 1: Add a note with an image data URL. This works only for images.
+  image_data = tools.encode_base64("path/to/image.png")
+  api.add_note(
+      title="My first note",
+      image_data_url=f"data:image/png;base64,{image_data}",
+  )
 
-# Create a new Api instance.
-api = Api(token=YOUR_TOKEN)
-
-# Add a notebook.
-notebook_id = api.add_notebook(title="My first notebook")
-
-# Option 1: Add a note with an image data URL. This works only for images.
-image_data = tools.encode_base64("path/to/image.png")
-api.add_note(
-    title="My first note",
-    image_data_url=f"data:image/png;base64,{image_data}",
-)
-
-# Option 2: Create note and resource separately. Link them later. This works for arbitrary attachments.
-note_id = api.add_note(title="My second note")
-resource_id = api.add_resource(filename="path/to/image.png", title="My first resource")
-api.add_resource_to_note(resource_id=resource_id, note_id=note_id)
-```
+  # Option 2: Create note and resource separately. Link them later. This works for arbitrary attachments.
+  note_id = api.add_note(title="My second note")
+  resource_id = api.add_resource(filename="path/to/image.png", title="My first resource")
+  api.add_resource_to_note(resource_id=resource_id, note_id=note_id)
+  ```
+</details>
 
 For more usage examples, check the example scripts or [tests](test/test_api.py).
 
