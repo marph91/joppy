@@ -93,6 +93,59 @@ Start joplin and [get your API token](https://joplinapp.org/api/references/rest_
   ```
 </details>
 
+<details>
+  <summary>Bulk remove tags</summary>
+
+  Inspired by <https://discourse.joplinapp.org/t/bulk-tag-delete-python-script/5497/1>.
+
+  ```python
+  import re
+
+  from joppy.api import Api
+
+  # Create a new Api instance.
+  api = Api(token=YOUR_TOKEN)
+
+  # Iterate through all tags.
+  for tag in api.get_all_tags():
+
+      # Delete all tags that match the regex. I. e. start with "!".
+      if re.search("^!", tag["title"]) is not None:
+          api.delete_tag(tag["id"])
+  ```
+</details>
+
+<details>
+  <summary>Remove orphaned resources</summary>
+
+  Inspired by <https://discourse.joplinapp.org/t/joplin-vacuum-a-python-script-to-remove-orphaned-resources/19742>.
+
+  ```python
+  import re
+
+  from joppy.api import Api
+
+  # Create a new Api instance.
+  api = Api(token=YOUR_TOKEN)
+
+  # Somehow this doesn't work: api.get_all_notes(resource_id=resource["id"])
+  # So we have to find the referenced resources by regex.
+
+  # Iterate through all notes and find the referenced resources.
+  referenced_resources = set()
+  for note in api.get_all_notes(fields="id,body"):
+      matches = re.findall("!\[.*\]\(:.*\/([A-Za-z0-9]{32})\)", note["body"])
+      referenced_resources.update(matches)
+
+  assert len(referenced_resources) > 0, "sanity check"
+
+  for resource in api.get_all_resources():
+      if resource["id"] not in referenced_resources:
+          print("Deleting resource:", resource)
+          api.delete_resource(resource["id"])
+  ```
+</details>
+
 For more usage examples, check the example scripts or [tests](test/test_api.py).
 
 ## :newspaper: Example scripts
