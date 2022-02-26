@@ -13,7 +13,6 @@ import time
 from typing import cast, Iterable, Tuple
 import unittest
 
-from parameterized import parameterized
 import requests
 import urllib3
 
@@ -465,12 +464,13 @@ class Ping(TestBase):
         ping = self.api.ping()
         self.assertEqual(ping.text, "JoplinClipperServer")
 
-    @parameterized.expand(("delete", "post", "put"))
-    def test_ping_wrong_method(self, method):
+    def test_ping_wrong_method(self):
         """Pinging the wrong method should return an error code."""
-        with self.assertRaises(requests.exceptions.HTTPError) as context:
-            getattr(self.api, method)("/ping")
-        self.assertEqual(context.exception.response.status_code, 405)
+        for method in ("delete", "post", "put"):
+            with self.subTest(method=method):
+                with self.assertRaises(requests.exceptions.HTTPError) as context:
+                    getattr(self.api, method)("/ping")
+                self.assertEqual(context.exception.response.status_code, 405)
 
 
 class Resource(TestBase):
