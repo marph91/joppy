@@ -134,7 +134,7 @@ Start joplin and [get your API token](https://joplinapp.org/api/references/rest_
   # Iterate through all notes and find the referenced resources.
   referenced_resources = set()
   for note in api.get_all_notes(fields="id,body"):
-      matches = re.findall("!\[.*\]\(:.*\/([A-Za-z0-9]{32})\)", note["body"])
+      matches = re.findall("\[.*\]\(:.*\/([A-Za-z0-9]{32})\)", note["body"])
       referenced_resources.update(matches)
 
   assert len(referenced_resources) > 0, "sanity check"
