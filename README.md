@@ -128,7 +128,8 @@ Start joplin and [get your API token](https://joplinapp.org/api/references/rest_
   # Create a new Api instance.
   api = Api(token=YOUR_TOKEN)
 
-  # Somehow this doesn't work: api.get_all_notes(resource_id=resource["id"])
+  # Getting the referenced resource directly doesn't work:
+  # https://github.com/laurent22/joplin/issues/4535
   # So we have to find the referenced resources by regex.
 
   # Iterate through all notes and find the referenced resources.
