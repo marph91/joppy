@@ -350,24 +350,26 @@ class Api(Event, Note, Notebook, Ping, Resource, Search, Tag):
         )
         self.modify_note(note_id, body=body_with_attachment)
 
+    def delete_all_notes(self) -> None:
+        """Delete all notes."""
+        for note in self.get_all_notes():
+            self.delete_note(note["id"])
+
     def delete_all_notebooks(self) -> None:
         """Delete all notebooks."""
-        notebooks = self.get_notebooks()["items"]
-        for notebook in notebooks:
+        for notebook in self.get_all_notebooks():
             # Deleting the root notebooks is sufficient.
             if not notebook["parent_id"]:
                 self.delete_notebook(notebook["id"])
 
     def delete_all_resources(self) -> None:
         """Delete all resources."""
-        resources = self.get_resources()["items"]
-        for resource in resources:
+        for resource in self.get_all_resources():
             self.delete_resource(resource["id"])
 
     def delete_all_tags(self) -> None:
         """Delete all tags."""
-        tags = self.get_tags()["items"]
-        for tag in tags:
+        for tag in self.get_all_tags():
             self.delete_tag(tag["id"])
 
     @staticmethod
