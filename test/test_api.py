@@ -910,6 +910,8 @@ class Regression(TestBase):
 class ReadmeExamples(TestBase):
     """Check the readme examples for functionality."""
 
+    readme_content: str = ""
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
