@@ -910,14 +910,15 @@ class Regression(TestBase):
 class ReadmeExamples(TestBase):
     """Check the readme examples for functionality."""
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
 
         with open("README.md") as infile:
             readme_content = infile.read()
 
         # Replace the token to make the code functional.
-        self.readme_content = readme_content.replace("YOUR_TOKEN", f'"{API_TOKEN}"')
+        cls.readme_content = readme_content.replace("YOUR_TOKEN", f'"{API_TOKEN}"')
 
     def get_example_code(self, example_name: str) -> str:
         """
