@@ -917,23 +917,6 @@ class ReadmeExamples(TestBase):
         # Replace the token to make the code functional.
         self.readme_content = readme_content.replace("YOUR_TOKEN", f'"{API_TOKEN}"')
 
-    def test_remove_spaces_from_tags(self):
-        """https://www.reddit.com/r/joplinapp/comments/pozric/batch_remove_spaces_from_all_tags/"""  # noqa: E501
-        self.api.add_tag(title="tag with spaces")
-        self.api.add_tag(title="another tag with spaces")
-
-        def to_camel_case(name: str) -> str:
-            name = re.sub(r"(_|-)+", " ", name).title().replace(" ", "")
-            return "".join([name[0].lower(), name[1:]])
-
-        tags = self.api.get_all_tags()
-        for tag in tags:
-            self.api.modify_tag(id_=tag["id"], title=to_camel_case(tag["title"]))
-
-        tags = self.api.get_all_tags()
-        for tag in tags:
-            self.assertNotIn(" ", tag["title"])
-
     def get_example_code(self, example_name: str) -> str:
         """
         Get the code of a readme example by its name.
@@ -1007,6 +990,19 @@ class ReadmeExamples(TestBase):
         tags = self.api.get_all_tags()
         self.assertEqual(len(tags), 1)
         self.assertEqual(tags[0]["title"], "title")  # tags are always lower case
+
+    def test_remove_spaces_from_tags(self):
+
+        self.api.add_tag(title="tag with spaces")
+        self.api.add_tag(title="another tag with spaces")
+
+        code = self.get_example_code("remove_spaces_from_tags")
+        exec(code)
+
+        all_tags = self.api.get_all_tags()
+        self.assertEqual(len(all_tags), 2)
+        for tag in all_tags:
+            self.assertNotIn(" ", tag["title"])
 
     @with_resource
     def test_remove_orphaned_resources(self, filename):

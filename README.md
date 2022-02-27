@@ -27,12 +27,12 @@ Note: The API is tested with the latest release of Joplin on Ubuntu by github ac
 
 ## :wrench: Usage
 
-Start joplin and [get your API token](https://joplinapp.org/api/references/rest_api/#authorisation).
+Start joplin and [get your API token](https://joplinapp.org/api/references/rest_api/#authorisation). Click to expand the examples.
 
 <details>
-  <summary>Get all notes</summary>
-  
-  ```python name=get_all_notes
+<summary>Get all notes</summary>
+
+```python name=get_all_notes
 from joppy.api import Api
 
 # Create a new Api instance.
@@ -40,13 +40,13 @@ api = Api(token=YOUR_TOKEN)
 
 # Get all notes. Note that this method calls get_notes() multiple times to assemble the unpaginated result.
 notes = api.get_all_notes()
-  ```
+```
 </details>
 
 <details>
-  <summary>Add a tag to a note</summary>
+<summary>Add a tag to a note</summary>
   
-  ```python name=add_tag_to_note
+```python name=add_tag_to_note
 from joppy.api import Api
 
 # Create a new Api instance.
@@ -63,13 +63,13 @@ tag_id = api.add_tag(title="introduction")
 
 # Link the tag to the note.
 api.add_tag_to_note(tag_id=tag_id, note_id=note_id)
-  ```
+```
 </details>
 
 <details>
-  <summary>Add a resource to a note</summary>
-  
-  ```python name=add_resource_to_note
+<summary>Add a resource to a note</summary>
+
+```python name=add_resource_to_note
 from joppy.api import Api
 from joppy import tools
 
@@ -90,15 +90,15 @@ api.add_note(
 note_id = api.add_note(title="My second note")
 resource_id = api.add_resource(filename="path/to/image.png", title="My first resource")
 api.add_resource_to_note(resource_id=resource_id, note_id=note_id)
-  ```
+```
 </details>
 
 <details>
-  <summary>Bulk remove tags</summary>
+<summary>Bulk remove tags</summary>
 
-  Inspired by <https://discourse.joplinapp.org/t/bulk-tag-delete-python-script/5497/1>.
+Inspired by <https://discourse.joplinapp.org/t/bulk-tag-delete-python-script/5497/1>.
 
-  ```python name=remove_tags
+```python name=remove_tags
 import re
 
 from joppy.api import Api
@@ -112,16 +112,40 @@ for tag in api.get_all_tags():
     # Delete all tags that match the regex. I. e. start with "!".
     if re.search("^!", tag["title"]) is not None:
         api.delete_tag(tag["id"])
-  ```
+```
 </details>
 
 <details>
-  <summary>Remove orphaned resources</summary>
+<summary>Remove spaces from tags</summary>
 
-  Inspired by <https://discourse.joplinapp.org/t/joplin-vacuum-a-python-script-to-remove-orphaned-resources/19742>.
-  Note: The note history is not considered. See: <https://discourse.joplinapp.org/t/joplin-vacuum-a-python-script-to-remove-orphaned-resources/19742/13>.
+Inspired by <https://www.reddit.com/r/joplinapp/comments/pozric/batch_remove_spaces_from_all_tags/>.
 
-  ```python name=remove_orphaned_resources
+```python name=remove_spaces_from_tags
+import re
+
+from joppy.api import Api
+
+# Create a new Api instance.
+api = Api(token=YOUR_TOKEN)
+
+# Define the conversion function.
+def to_camel_case(name: str) -> str:
+    name = re.sub(r"(_|-)+", " ", name).title().replace(" ", "")
+    return "".join([name[0].lower(), name[1:]])
+
+# Iterate through all tags and apply the conversion.
+for tag in api.get_all_tags():
+    api.modify_tag(id_=tag["id"], title=to_camel_case(tag["title"]))
+```
+</details>
+
+<details>
+<summary>Remove orphaned resources</summary>
+
+Inspired by <https://discourse.joplinapp.org/t/joplin-vacuum-a-python-script-to-remove-orphaned-resources/19742>.
+Note: The note history is not considered. See: <https://discourse.joplinapp.org/t/joplin-vacuum-a-python-script-to-remove-orphaned-resources/19742/13>.
+
+```python name=remove_orphaned_resources
 import re
 
 from joppy.api import Api
@@ -145,7 +169,7 @@ for resource in api.get_all_resources():
     if resource["id"] not in referenced_resources:
         print("Deleting resource:", resource)
         api.delete_resource(resource["id"])
-  ```
+```
 </details>
 
 For more usage examples, check the example scripts or [tests](test/test_api.py).
