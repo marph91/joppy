@@ -7,6 +7,7 @@ Python interface for the [Joplin data API](https://joplinapp.org/api/references/
 [![tests](https://github.com/marph91/joppy/actions/workflows/tests.yml/badge.svg)](https://github.com/marph91/joppy/actions/workflows/tests.yml)
 [![codecov](https://codecov.io/gh/marph91/joppy/branch/master/graph/badge.svg?token=97E6IX792A)](https://codecov.io/gh/marph91/joppy)
 
+[![https://img.shields.io/badge/Joplin-2.7.13-blueviolet](https://img.shields.io/badge/Joplin-2.7.13-blueviolet)](https://github.com/laurent22/joplin)
 [![Python version](https://img.shields.io/pypi/pyversions/joppy.svg)](https://pypi.python.org/pypi/joppy/)
 
 ## :computer: Installation
@@ -24,8 +25,6 @@ git clone https://github.com/marph91/joppy.git
 cd joppy
 pip install .
 ```
-
-Note: The API is tested with the latest release of Joplin on Ubuntu by github actions. It was reported that joppy is [working at windows 10](https://discourse.joplinapp.org/t/joplin-api-python/1359/39), too.
 
 ## :wrench: Usage
 
