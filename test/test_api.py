@@ -898,9 +898,11 @@ class Regression(TestBase):
         notes = self.api.get_notes(tag_id=tag_id, fields="id")
         self.assertEqual(list(notes["items"][0].keys()), ["id"])
 
+    @unittest.skip("Not yet implemented")
     def test_set_location(self):
         """https://github.com/laurent22/joplin/issues/3884"""
 
+    @unittest.skip("Not yet implemented")
     def test_add_todo(self):
         """https://github.com/laurent22/joplin/issues/1687"""
 
