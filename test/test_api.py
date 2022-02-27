@@ -10,7 +10,7 @@ import re
 import string
 import tempfile
 import time
-from typing import cast, Iterable, Tuple
+from typing import Any, cast, Iterable, Mapping, Tuple
 import unittest
 
 import requests
@@ -905,7 +905,18 @@ class Regression(TestBase):
         """https://github.com/laurent22/joplin/issues/1687"""
 
 
-class UseCase(TestBase):
+class ReadmeExamples(TestBase):
+    """Check the readme examples for functionality."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        with open("README.md") as infile:
+            readme_content = infile.read()
+
+        # Replace the token to make the code functional.
+        self.readme_content = readme_content.replace("YOUR_TOKEN", f'"{API_TOKEN}"')
+
     def test_remove_spaces_from_tags(self):
         """https://www.reddit.com/r/joplinapp/comments/pozric/batch_remove_spaces_from_all_tags/"""  # noqa: E501
         self.api.add_tag(title="tag with spaces")
@@ -922,3 +933,100 @@ class UseCase(TestBase):
         tags = self.api.get_all_tags()
         for tag in tags:
             self.assertNotIn(" ", tag["title"])
+
+    def get_example_code(self, example_name: str) -> str:
+        """
+        Get the code of a readme example by its name.
+        The example can be identified by a custom info string in markdown.
+        See: https://spec.commonmark.org/0.30/#example-143
+        """
+
+        matches = re.search(
+            f"```python name={example_name}\n(.*?)```",
+            self.readme_content,
+            flags=re.DOTALL,
+        )
+        # TODO: Use "assertIsNotNone()" when
+        # https://github.com/python/mypy/issues/5528 is resolved.
+        assert matches is not None
+        self.assertEqual(len(matches.groups()), 1)
+        return matches.groups()[0]
+
+    def test_get_all_notes(self):
+
+        note_count = 3
+        self.api.add_notebook()
+        for _ in range(note_count):
+            self.api.add_note()
+
+        # Execute the example code. The local variables are stored in "locals_dict".
+        code = self.get_example_code("get_all_notes")
+        locals_dict: Mapping[str, Any] = {}
+        exec(code, None, locals_dict)
+
+        self.assertEqual(len(locals_dict["notes"]), note_count)
+
+    def test_add_tag_to_note(self):
+
+        code = self.get_example_code("add_tag_to_note")
+        exec(code)
+
+        tags = self.api.get_all_tags()
+        self.assertEqual(len(tags), 1)
+
+        notes = self.api.get_all_notes(tag_id=tags[0]["id"])
+        self.assertEqual(len(notes), 1)
+
+    def test_add_resource_to_note(self):
+
+        code = self.get_example_code("add_resource_to_note")
+        code = code.replace("path/to/image.png", "test/grant_authorization_button.png")
+        exec(code)
+
+        notes = self.api.get_all_notes()
+        self.assertEqual(len(notes), 2)
+
+        resources = self.api.get_all_resources()
+        self.assertEqual(len(resources), 2)
+
+        # Each note should reference to exactly one resource.
+        for note in notes:
+            resources = self.api.get_all_resources(note_id=note["id"])
+            self.assertEqual(len(resources), 1)
+
+    def test_remove_tags(self):
+
+        self.api.add_tag(title="Title")
+        self.api.add_tag(title="! Another Title")
+        self.api.add_tag(title="!_third_title")
+
+        code = self.get_example_code("remove_tags")
+        exec(code)
+
+        # All tags starting with "!" should be removed.
+        tags = self.api.get_all_tags()
+        self.assertEqual(len(tags), 1)
+        self.assertEqual(tags[0]["title"], "title")  # tags are always lower case
+
+    @with_resource
+    def test_remove_orphaned_resources(self, filename):
+
+        self.api.add_notebook()
+        for i in range(2):
+            note_id = self.api.add_note()
+            resource_id = self.api.add_resource(
+                filename=filename, title=f"resource {i}"
+            )
+            self.api.add_resource_to_note(resource_id=resource_id, note_id=note_id)
+
+        # Delete the second note, which creates an orphaned resource.
+        self.api.delete_note(note_id)
+        self.assertEqual(len(self.api.get_all_resources()), 2)
+
+        code = self.get_example_code("remove_orphaned_resources")
+        exec(code)
+
+        # The resource without reference should be deleted.
+        resources = self.api.get_all_resources()
+        self.assertEqual(len(resources), 1)
+        self.assertEqual(resources[0]["title"], "resource 0")

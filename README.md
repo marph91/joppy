@@ -32,64 +32,64 @@ Start joplin and [get your API token](https://joplinapp.org/api/references/rest_
 <details>
   <summary>Get all notes</summary>
   
-  ```python
-  from joppy.api import Api
+  ```python name=get_all_notes
+from joppy.api import Api
 
-  # Create a new Api instance.
-  api = Api(token=YOUR_TOKEN)
+# Create a new Api instance.
+api = Api(token=YOUR_TOKEN)
 
-  # Get all notes. Note that this method calls get_notes() multiple times to assemble the unpaginated result.
-  notes = api.get_all_notes()
+# Get all notes. Note that this method calls get_notes() multiple times to assemble the unpaginated result.
+notes = api.get_all_notes()
   ```
 </details>
 
 <details>
   <summary>Add a tag to a note</summary>
   
-  ```python
-  from joppy.api import Api
+  ```python name=add_tag_to_note
+from joppy.api import Api
 
-  # Create a new Api instance.
-  api = Api(token=YOUR_TOKEN)
+# Create a new Api instance.
+api = Api(token=YOUR_TOKEN)
 
-  # Add a notebook.
-  notebook_id = api.add_notebook(title="My first notebook")
+# Add a notebook.
+notebook_id = api.add_notebook(title="My first notebook")
 
-  # Add a note in the previously created notebook.
-  note_id = api.add_note(title="My first note", body="With some content", parent_id=notebook_id)
+# Add a note in the previously created notebook.
+note_id = api.add_note(title="My first note", body="With some content", parent_id=notebook_id)
 
-  # Add a tag, that is not yet attached to a note.
-  tag_id = api.add_tag(title="introduction")
+# Add a tag, that is not yet attached to a note.
+tag_id = api.add_tag(title="introduction")
 
-  # Link the tag to the note.
-  api.add_tag_to_note(tag_id=tag_id, note_id=note_id)
+# Link the tag to the note.
+api.add_tag_to_note(tag_id=tag_id, note_id=note_id)
   ```
 </details>
 
 <details>
   <summary>Add a resource to a note</summary>
   
-  ```python
-  from joppy.api import Api
-  from joppy import tools
+  ```python name=add_resource_to_note
+from joppy.api import Api
+from joppy import tools
 
-  # Create a new Api instance.
-  api = Api(token=YOUR_TOKEN)
+# Create a new Api instance.
+api = Api(token=YOUR_TOKEN)
 
-  # Add a notebook.
-  notebook_id = api.add_notebook(title="My first notebook")
+# Add a notebook.
+notebook_id = api.add_notebook(title="My first notebook")
 
-  # Option 1: Add a note with an image data URL. This works only for images.
-  image_data = tools.encode_base64("path/to/image.png")
-  api.add_note(
-      title="My first note",
-      image_data_url=f"data:image/png;base64,{image_data}",
-  )
+# Option 1: Add a note with an image data URL. This works only for images.
+image_data = tools.encode_base64("path/to/image.png")
+api.add_note(
+    title="My first note",
+    image_data_url=f"data:image/png;base64,{image_data}",
+)
 
-  # Option 2: Create note and resource separately. Link them later. This works for arbitrary attachments.
-  note_id = api.add_note(title="My second note")
-  resource_id = api.add_resource(filename="path/to/image.png", title="My first resource")
-  api.add_resource_to_note(resource_id=resource_id, note_id=note_id)
+# Option 2: Create note and resource separately. Link them later. This works for arbitrary attachments.
+note_id = api.add_note(title="My second note")
+resource_id = api.add_resource(filename="path/to/image.png", title="My first resource")
+api.add_resource_to_note(resource_id=resource_id, note_id=note_id)
   ```
 </details>
 
@@ -98,20 +98,20 @@ Start joplin and [get your API token](https://joplinapp.org/api/references/rest_
 
   Inspired by <https://discourse.joplinapp.org/t/bulk-tag-delete-python-script/5497/1>.
 
-  ```python
-  import re
+  ```python name=remove_tags
+import re
 
-  from joppy.api import Api
+from joppy.api import Api
 
-  # Create a new Api instance.
-  api = Api(token=YOUR_TOKEN)
+# Create a new Api instance.
+api = Api(token=YOUR_TOKEN)
 
-  # Iterate through all tags.
-  for tag in api.get_all_tags():
+# Iterate through all tags.
+for tag in api.get_all_tags():
 
-      # Delete all tags that match the regex. I. e. start with "!".
-      if re.search("^!", tag["title"]) is not None:
-          api.delete_tag(tag["id"])
+    # Delete all tags that match the regex. I. e. start with "!".
+    if re.search("^!", tag["title"]) is not None:
+        api.delete_tag(tag["id"])
   ```
 </details>
 
@@ -119,31 +119,32 @@ Start joplin and [get your API token](https://joplinapp.org/api/references/rest_
   <summary>Remove orphaned resources</summary>
 
   Inspired by <https://discourse.joplinapp.org/t/joplin-vacuum-a-python-script-to-remove-orphaned-resources/19742>.
+  Note: The note history is not considered. See: <https://discourse.joplinapp.org/t/joplin-vacuum-a-python-script-to-remove-orphaned-resources/19742/13>.
 
-  ```python
-  import re
+  ```python name=remove_orphaned_resources
+import re
 
-  from joppy.api import Api
+from joppy.api import Api
 
-  # Create a new Api instance.
-  api = Api(token=YOUR_TOKEN)
+# Create a new Api instance.
+api = Api(token=YOUR_TOKEN)
 
-  # Getting the referenced resource directly doesn't work:
-  # https://github.com/laurent22/joplin/issues/4535
-  # So we have to find the referenced resources by regex.
+# Getting the referenced resource directly doesn't work:
+# https://github.com/laurent22/joplin/issues/4535
+# So we have to find the referenced resources by regex.
 
-  # Iterate through all notes and find the referenced resources.
-  referenced_resources = set()
-  for note in api.get_all_notes(fields="id,body"):
-      matches = re.findall("\[.*\]\(:.*\/([A-Za-z0-9]{32})\)", note["body"])
-      referenced_resources.update(matches)
+# Iterate through all notes and find the referenced resources.
+referenced_resources = set()
+for note in api.get_all_notes(fields="id,body"):
+    matches = re.findall(r"\[.*\]\(:.*\/([A-Za-z0-9]{32})\)", note["body"])
+    referenced_resources.update(matches)
 
-  assert len(referenced_resources) > 0, "sanity check"
+assert len(referenced_resources) > 0, "sanity check"
 
-  for resource in api.get_all_resources():
-      if resource["id"] not in referenced_resources:
-          print("Deleting resource:", resource)
-          api.delete_resource(resource["id"])
+for resource in api.get_all_resources():
+    if resource["id"] not in referenced_resources:
+        print("Deleting resource:", resource)
+        api.delete_resource(resource["id"])
   ```
 </details>
 
