@@ -8,6 +8,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.6", "3.8", "3.10"]
+      fail-fast: false
     env:
       SLOW_TESTS: 1
     steps:
@@ -35,7 +36,6 @@ jobs:
           files: ./test_output/coverage.xml
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v1
-        if: always()
         with:
           files: test_output/test_results.xml
       - name: Archive all collected test results
