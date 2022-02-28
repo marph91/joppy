@@ -687,7 +687,9 @@ class Search(TestBase):
                 "52391387&type=3&app=fbl"
             ),
             r"foo# ?bar%+!baz",
-            self.get_random_string(),
+            # Leading slashes in notebooks are stripped by default:
+            # https://github.com/laurent22/joplin/issues/6213
+            self.get_random_string().lstrip("/\\"),
         )
 
         for query in queries:
@@ -700,7 +702,9 @@ class Search(TestBase):
         """Search notebooks and return all results, unpaginated."""
         # Small limit and count to create/remove as less as possible items.
         count, limit = random.randint(1, 10), random.randint(1, 10)
-        title = self.get_random_string()
+        # Leading slashes in notebooks are stripped by default:
+        # https://github.com/laurent22/joplin/issues/6213
+        title = self.get_random_string().lstrip("/\\")
         query: JoplinKwargs = {"query": title, "type": "folder", "limit": limit}
         for _ in range(count):
             self.api.add_notebook(title=title)
