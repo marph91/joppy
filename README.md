@@ -179,12 +179,14 @@ For more usage examples, check the example scripts or [tests](test/test_api.py).
 
 Before using joppy, you should check the [Joplin plugins](https://joplinapp.org/plugins/). They are probably more convenient. However, if you need a new feature or just want to code in python, you can use joppy. Below are example scripts to showcase how joppy can be used.
 
-- [pdf_export.py](examples/pdf_export.py): Joplin only supports PDF export of a single note. This script allows to export one, multiple or all notebooks to PDF. Note that there are still some issues, like checkboxes don't get visualized correctly and big tables are truncated.
-
-Scripts and projects from other users using joppy:
-- https://github.com/gri38/django-joplin_vieweb: Web viewer for joplin.
-- https://discourse.joplinapp.org/t/solved-tips-for-removing-safely-duplicated-notes-from-two-very-similar-notebooks/20943/9: Removing duplicated notes.
-- https://discourse.joplinapp.org/t/joplin-api-python/1359/39: Not sure what it actually does :P
+|Script|Description|
+|---|---|
+|[note_export.py](examples/note_export.py)|Export notes to any format supported by [pandoc](https://pandoc.org/).|
+|[note_stats.py](examples/note_stats.py)|Get some simple statistics about your notes, based on [nltk](https://www.nltk.org/).|
+|[pdf_export.py](examples/pdf_export.py)|Joplin only supports PDF export of a single note. This script allows to export one, multiple or all notebooks to PDF. Note that there are still some issues, like checkboxes don't get visualized correctly and big tables are truncated.|
+|https://github.com/gri38/django-joplin_vieweb|Web viewer for joplin.|
+|https://discourse.joplinapp.org/t/solved-tips-for-removing-safely-duplicated-notes-from-two-very-similar-notebooks/20943/9|Removing duplicated notes.|
+|https://discourse.joplinapp.org/t/joplin-api-python/1359/39|Not sure what it actually does :P|
 
 ## :sunny: Tests
 
