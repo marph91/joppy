@@ -28,6 +28,19 @@ pip install .
 
 ## :wrench: Usage
 
+### General function description
+
+- `add_<type>()`: Create a new element.
+- `delete_<type>()`: Delete an element by ID.
+- `get_<type>()`: Get an element by ID.
+- `get_all_<type>()`: Get all elements of a kind.
+- `modify_<type>()`: Modify an elements property by ID.
+- `search_all()`: Search elements using [joplins search engine](https://joplinapp.org/api/references/rest_api/#searching).
+
+For details, consult the [implementation](joppy/api.py), [joplin documentation](https://joplinapp.org/api/references/rest_api/) or [create an issue](https://github.com/marph91/joppy/issues).
+
+### Quick examples
+
 Start joplin and [get your API token](https://joplinapp.org/api/references/rest_api/#authorisation). Click to expand the examples.
 
 <details>
