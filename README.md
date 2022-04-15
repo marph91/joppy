@@ -7,7 +7,7 @@ Python interface for the [Joplin data API](https://joplinapp.org/api/references/
 [![tests](https://github.com/marph91/joppy/actions/workflows/tests.yml/badge.svg)](https://github.com/marph91/joppy/actions/workflows/tests.yml)
 [![codecov](https://codecov.io/gh/marph91/joppy/branch/master/graph/badge.svg?token=97E6IX792A)](https://codecov.io/gh/marph91/joppy)
 
-[![https://img.shields.io/badge/Joplin-2.7.13-blueviolet](https://img.shields.io/badge/Joplin-2.7.13-blueviolet)](https://github.com/laurent22/joplin)
+[![https://img.shields.io/badge/Joplin-2.8.2-blueviolet](https://img.shields.io/badge/Joplin-2.8.2-blueviolet)](https://github.com/laurent22/joplin)
 [![Python version](https://img.shields.io/pypi/pyversions/joppy.svg)](https://pypi.python.org/pypi/joppy/)
 
 ## :computer: Installation
@@ -55,6 +55,7 @@ api = Api(token=YOUR_TOKEN)
 # Get all notes. Note that this method calls get_notes() multiple times to assemble the unpaginated result.
 notes = api.get_all_notes()
 ```
+
 </details>
 
 <details>
@@ -64,20 +65,26 @@ notes = api.get_all_notes()
 from joppy.api import Api
 
 # Create a new Api instance.
+
 api = Api(token=YOUR_TOKEN)
 
 # Add a notebook.
+
 notebook_id = api.add_notebook(title="My first notebook")
 
 # Add a note in the previously created notebook.
+
 note_id = api.add_note(title="My first note", body="With some content", parent_id=notebook_id)
 
 # Add a tag, that is not yet attached to a note.
+
 tag_id = api.add_tag(title="introduction")
 
 # Link the tag to the note.
+
 api.add_tag_to_note(tag_id=tag_id, note_id=note_id)
-```
+
+````
 </details>
 
 <details>
@@ -104,7 +111,8 @@ api.add_note(
 note_id = api.add_note(title="My second note")
 resource_id = api.add_resource(filename="path/to/image.png", title="My first resource")
 api.add_resource_to_note(resource_id=resource_id, note_id=note_id)
-```
+````
+
 </details>
 
 <details>
@@ -127,6 +135,7 @@ for tag in api.get_all_tags():
     if re.search("^!", tag["title"]) is not None:
         api.delete_tag(tag["id"])
 ```
+
 </details>
 
 <details>
@@ -151,6 +160,7 @@ def to_camel_case(name: str) -> str:
 for tag in api.get_all_tags():
     api.modify_tag(id_=tag["id"], title=to_camel_case(tag["title"]))
 ```
+
 </details>
 
 <details>
@@ -184,6 +194,7 @@ for resource in api.get_all_resources():
         print("Deleting resource:", resource)
         api.delete_resource(resource["id"])
 ```
+
 </details>
 
 For more usage examples, check the example scripts or [tests](test/test_api.py).
@@ -192,15 +203,15 @@ For more usage examples, check the example scripts or [tests](test/test_api.py).
 
 Before using joppy, you should check the [Joplin plugins](https://joplinapp.org/plugins/). They are probably more convenient. However, if you need a new feature or just want to code in python, you can use joppy. Below are example scripts to showcase how joppy can be used.
 
-|Script|Description|
-|---|---|
-|[note_export.py](examples/note_export.py)|Export notes to any format supported by [pandoc](https://pandoc.org/).|
-|[note_stats.py](examples/note_stats.py)|Get some simple statistics about your notes, based on [nltk](https://www.nltk.org/).|
-|[pdf_export.py](examples/pdf_export.py)|Joplin only supports PDF export of a single note. This script allows to export one, multiple or all notebooks to PDF. Note that there are still some issues, like checkboxes don't get visualized correctly and big tables are truncated.|
-|https://github.com/marph91/joplin-ui-tests|System tests for the joplin desktop app. Based on selenium.|
-|https://github.com/gri38/django-joplin_vieweb|Web viewer for joplin.|
-|https://discourse.joplinapp.org/t/solved-tips-for-removing-safely-duplicated-notes-from-two-very-similar-notebooks/20943/9|Removing duplicated notes.|
-|https://discourse.joplinapp.org/t/joplin-api-python/1359/39|Not sure what it actually does :P|
+| Script                                                                                                                     | Description                                                                                                                                                                                                                               |
+| -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [note_export.py](examples/note_export.py)                                                                                  | Export notes to any format supported by [pandoc](https://pandoc.org/).                                                                                                                                                                    |
+| [note_stats.py](examples/note_stats.py)                                                                                    | Get some simple statistics about your notes, based on [nltk](https://www.nltk.org/).                                                                                                                                                      |
+| [pdf_export.py](examples/pdf_export.py)                                                                                    | Joplin only supports PDF export of a single note. This script allows to export one, multiple or all notebooks to PDF. Note that there are still some issues, like checkboxes don't get visualized correctly and big tables are truncated. |
+| https://github.com/marph91/joplin-ui-tests                                                                                 | System tests for the joplin desktop app. Based on selenium.                                                                                                                                                                               |
+| https://github.com/gri38/django-joplin_vieweb                                                                              | Web viewer for joplin.                                                                                                                                                                                                                    |
+| https://discourse.joplinapp.org/t/solved-tips-for-removing-safely-duplicated-notes-from-two-very-similar-notebooks/20943/9 | Removing duplicated notes.                                                                                                                                                                                                                |
+| https://discourse.joplinapp.org/t/joplin-api-python/1359/39                                                                | Not sure what it actually does :P                                                                                                                                                                                                         |
 
 ## :sunny: Tests
 

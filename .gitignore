@@ -1,6 +1,7 @@
 __pycache__
 .coverage
 .mypy_cache
+examples
 test_output
 test_profile
 *.egg-info
