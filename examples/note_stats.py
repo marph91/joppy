@@ -46,7 +46,7 @@ def analyze_text(text: str):
         # normalize to lower case
         word.lower()
         for word in tokens
-        if word not in ("...", "''", "``") and
+        if word not in ("...", "''", "``", "--", "++") and
         # punctuation
         word not in string.punctuation and
         # single character words
