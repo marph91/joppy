@@ -7,7 +7,7 @@ Python interface for the [Joplin data API](https://joplinapp.org/api/references/
 [![tests](https://github.com/marph91/joppy/actions/workflows/tests.yml/badge.svg)](https://github.com/marph91/joppy/actions/workflows/tests.yml)
 [![codecov](https://codecov.io/gh/marph91/joppy/branch/master/graph/badge.svg?token=97E6IX792A)](https://codecov.io/gh/marph91/joppy)
 
-[![https://img.shields.io/badge/Joplin-2.8.2-blueviolet](https://img.shields.io/badge/Joplin-2.8.2-blueviolet)](https://github.com/laurent22/joplin)
+[![https://img.shields.io/badge/Joplin-2.8.8-blueviolet](https://img.shields.io/badge/Joplin-2.8.8-blueviolet)](https://github.com/laurent22/joplin)
 [![Python version](https://img.shields.io/pypi/pyversions/joppy.svg)](https://pypi.python.org/pypi/joppy/)
 
 ## :computer: Installation
@@ -85,6 +85,7 @@ tag_id = api.add_tag(title="introduction")
 api.add_tag_to_note(tag_id=tag_id, note_id=note_id)
 
 ````
+
 </details>
 
 <details>
@@ -209,10 +210,10 @@ Before using joppy, you should check the [Joplin plugins](https://joplinapp.org/
 | [note_stats.py](examples/note_stats.py)                                                                                    | Get some simple statistics about your notes, based on [nltk](https://www.nltk.org/).                                                                                                                                                      |
 | [pdf_export.py](examples/pdf_export.py)                                                                                    | Joplin only supports PDF export of a single note. This script allows to export one, multiple or all notebooks to PDF. Note that there are still some issues, like checkboxes don't get visualized correctly and big tables are truncated. |
 | [visualize_note_locations.py](examples/visualize_note_locations.py)                                                        | Visualize the locations of your notes.                                                                                                                                                                                                    |
-| https://github.com/marph91/joplin-ui-tests                                                                                 | System tests for the joplin desktop app. Based on selenium.                                                                                                                                                                               |
-| https://github.com/gri38/django-joplin_vieweb                                                                              | Web viewer for joplin.                                                                                                                                                                                                                    |
-| https://discourse.joplinapp.org/t/solved-tips-for-removing-safely-duplicated-notes-from-two-very-similar-notebooks/20943/9 | Removing duplicated notes.                                                                                                                                                                                                                |
-| https://discourse.joplinapp.org/t/joplin-api-python/1359/39                                                                | Not sure what it actually does :P                                                                                                                                                                                                         |
+| <https://github.com/marph91/joplin-ui-tests>                                                                                | System tests for the joplin desktop app. Based on selenium.                                                                                                                                                                               |
+| <https://github.com/gri38/django-joplin_vieweb>                                                                             | Web viewer for joplin.                                                                                                                                                                                                                    |
+| <https://discourse.joplinapp.org/t/solved-tips-for-removing-safely-duplicated-notes-from-two-very-similar-notebooks/20943/9>| Removing duplicated notes.                                                                                                                                                                                                                |
+| <https://discourse.joplinapp.org/t/joplin-api-python/1359/39>                                                               | Not sure what it actually does :P                                                                                                                                                                                                         |
 
 ## :sunny: Tests
 
