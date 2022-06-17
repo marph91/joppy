@@ -257,13 +257,14 @@ class Resource(ApiBase):
         """Delete a resource."""
         self.delete(f"/resources/{id_}")
 
-    def get_resource(
-        self, id_: str, get_file: bool = False, **query: JoplinTypes
-    ) -> JoplinItem:
-        """Get the resource with the given ID."""
-        file_ = "/file" if get_file else ""
-        response: JoplinItem = self.get(f"/resources/{id_}{file_}", query=query).json()
+    def get_resource(self, id_: str, **query: JoplinTypes) -> JoplinItem:
+        """Get metadata about the resource with the given ID."""
+        response: JoplinItem = self.get(f"/resources/{id_}", query=query).json()
         return response
+
+    def get_resource_file(self, id_: str) -> bytes:
+        """Get the resource with the given ID in binary format."""
+        return self.get(f"/resources/{id_}/file").content
 
     def get_resources(
         self, note_id: Optional[str] = None, **query: JoplinTypes

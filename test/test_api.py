@@ -525,11 +525,20 @@ class Resource(TestBase):
 
     @with_resource
     def test_get_resource(self, filename):
-        """Get a specific resource."""
+        """Get metadata about a specific resource."""
         id_ = self.api.add_resource(filename=filename)
         resource = self.api.get_resource(id_=id_)
         self.assertEqual(list(resource.keys()), self.default_properties + ["type_"])
         self.assertEqual(resource["type_"], ItemType.RESOURCE.value)
+
+    @with_resource
+    def test_get_resource_file(self, filename):
+        """Get a specific resource in binary format."""
+        for file_ in ("test/grant_authorization_button.png", filename):
+            id_ = self.api.add_resource(filename=file_)
+            resource = self.api.get_resource_file(id_=id_)
+            with open(file_, "rb") as resource_file:
+                self.assertEqual(resource, resource_file.read())
 
     @with_resource
     def test_get_resources(self, filename):
@@ -887,7 +896,7 @@ class Regression(TestBase):
         Response HTTP 104: https://stackoverflow.com/a/52826181
         """
         # Use only one random character, since it's very slow already.
-        body = self.get_random_string(1) * 10 ** 9
+        body = self.get_random_string(1) * 10**9
         self.api.add_notebook()
         note_id = self.api.add_note(body=body)
         self.assertEqual(self.api.get_note(id_=note_id)["title"], body)
