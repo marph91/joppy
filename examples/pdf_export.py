@@ -4,6 +4,9 @@ Requirements: pip install joppy markdown weasyprint
 Usage:
 - API_TOKEN=XYZ python pdf_export.py
 - python pdf_export.py --help
+Known issues:
+- Checkboxes don't get visualized correctly.
+- Big tables are truncated.
 """
 
 import argparse
