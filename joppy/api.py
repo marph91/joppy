@@ -19,6 +19,11 @@ import urllib.parse
 import requests
 
 
+# Use a global session object for better performance.
+# Define it globally to avoid "ResourceWarning".
+SESSION = requests.Session()
+
+
 if sys.version_info >= (3, 8):
     from typing import TypedDict
 else:
@@ -99,7 +104,7 @@ class ApiBase:
         query_str = "&".join([f"{key}={val}" for key, val in query.items()])
 
         try:
-            response: requests.models.Response = getattr(requests, method)(
+            response: requests.models.Response = getattr(SESSION, method)(
                 f"{self.url}{path}?{query_str}",
                 json=data,
                 files=files,
