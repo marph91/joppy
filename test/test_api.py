@@ -204,7 +204,7 @@ class Event(TestBase):
 
         for property_ in self.default_properties:
             # https://github.com/python/mypy/issues/7178
-            self.assertEqual(event[property_], event[property_])  # type: ignore [misc]
+            self.assertEqual(event[property_], event[property_])  # type: ignore
 
     def test_get_events_by_cursor(self):
         """Get all events by specifying a cursor of 0."""
