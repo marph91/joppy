@@ -158,7 +158,7 @@ class TestBase(unittest.TestCase):
             itertools.combinations(list_, r)
             for r in lengths
             # shuffle each iteration
-            if random.shuffle(list_) is None  # type: ignore [func-returns-value]
+            if random.shuffle(list_) is None
         )
         return itertools.islice(combinations, max_combinations)
 
