@@ -39,7 +39,7 @@ pip install .
 
 For details, consult the [implementation](joppy/api.py), [joplin documentation](https://joplinapp.org/api/references/rest_api/) or [create an issue](https://github.com/marph91/joppy/issues).
 
-### Quick examples
+## :bulb: Example snippets
 
 Start joplin and [get your API token](https://joplinapp.org/api/references/rest_api/#authorisation). Click to expand the examples.
 
