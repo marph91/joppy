@@ -14,7 +14,11 @@ import requests
 
 def parse_reddit_page(url):
     headers = {
-        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:105.0) Gecko/20100101 Firefox/105.0"
+        "User-Agent": (
+            "Mozilla/5.0 (X11; Linux x86_64; rv:105.0) "
+            "Gecko/20100101 "
+            "Firefox/105.0"
+        )
     }
     response = requests.get(url, headers=headers)
     response.raise_for_status()
@@ -73,7 +77,10 @@ def create_joplin_note(note_title, note_body, destination_notebook):
 
 def main():
     destination_notebook = "tmp"
-    url = "https://old.reddit.com/r/joplinapp/comments/xm5xdr/how_do_you_save_reddit_posts_with_comments_in"
+    url = (
+        "https://old.reddit.com/r/"
+        "joplinapp/comments/xm5xdr/how_do_you_save_reddit_posts_with_comments_in"
+    )
 
     note_title, note_body = parse_reddit_page(url)
     create_joplin_note(note_title, note_body, destination_notebook)
