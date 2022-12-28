@@ -4,11 +4,13 @@ from dataclasses import dataclass, field, fields
 from datetime import datetime
 import enum
 from typing import (
+    Generic,
     List,
     MutableMapping,
     Optional,
     Union,
     Set,
+    TypeVar,
 )
 
 
@@ -46,7 +48,7 @@ class ItemType(enum.Enum):
 
 
 @dataclass
-class BaseType:
+class BaseData:
     type_: Optional[str] = None
 
     def __post_init__(self) -> None:
@@ -87,17 +89,7 @@ class BaseType:
 
 
 @dataclass
-class BaseTypeList:
-    has_more: bool
-    cursor: Optional[int] = None
-
-    def __post_init__(self) -> None:
-        # Cast the basic joplin API datatypes to more convenient datatypes.
-        self.has_more = bool(self.has_more)
-
-
-@dataclass
-class Note(BaseType):
+class NoteData(BaseData):
     """https://joplinapp.org/api/references/rest_api/#notes"""
 
     id: Optional[str] = None
@@ -135,12 +127,7 @@ class Note(BaseType):
 
 
 @dataclass
-class NoteList(BaseTypeList):
-    items: List[Note] = field(default_factory=list)
-
-
-@dataclass
-class Notebook(BaseType):
+class NotebookData(BaseData):
     """https://joplinapp.org/api/references/rest_api/#folders"""
 
     id: Optional[str] = None
@@ -159,12 +146,7 @@ class Notebook(BaseType):
 
 
 @dataclass
-class NotebookList(BaseTypeList):
-    items: List[Notebook] = field(default_factory=list)
-
-
-@dataclass
-class Resource(BaseType):
+class ResourceData(BaseData):
     """https://joplinapp.org/api/references/rest_api/#resources"""
 
     id: Optional[str] = None
@@ -186,12 +168,7 @@ class Resource(BaseType):
 
 
 @dataclass
-class ResourceList(BaseTypeList):
-    items: List[Resource] = field(default_factory=list)
-
-
-@dataclass
-class Tag(BaseType):
+class TagData(BaseData):
     """https://joplinapp.org/api/references/rest_api/#tags"""
 
     id: Optional[str] = None
@@ -207,12 +184,7 @@ class Tag(BaseType):
 
 
 @dataclass
-class TagList(BaseTypeList):
-    items: List[Tag] = field(default_factory=list)
-
-
-@dataclass
-class Event(BaseType):
+class EventData(BaseData):
     """https://joplinapp.org/api/references/rest_api/#events"""
 
     id: Optional[int] = None
@@ -230,6 +202,15 @@ class Event(BaseType):
             self.id = int(self.id)
 
 
+T = TypeVar("T", EventData, NoteData, NotebookData, ResourceData, TagData)
+
+
 @dataclass
-class EventList(BaseTypeList):
-    items: List[Event] = field(default_factory=list)
+class DataList(Generic[T]):
+    has_more: bool
+    cursor: Optional[int] = None
+    items: List[T] = field(default_factory=list)
+
+    def __post_init__(self) -> None:
+        # Cast the basic joplin API datatypes to more convenient datatypes.
+        self.has_more = bool(self.has_more)

@@ -112,19 +112,19 @@ class Event(ApiBase):
     See: https://github.com/laurent22/joplin/releases/tag/v2.4.5
     """
 
-    def get_event(self, id_: int, **query: dt.JoplinTypes) -> dt.Event:
+    def get_event(self, id_: int, **query: dt.JoplinTypes) -> dt.EventData:
         """Get the event with the given ID."""
-        response = dt.Event(**self.get(f"/events/{id_}", query=query).json())
+        response = dt.EventData(**self.get(f"/events/{id_}", query=query).json())
         return response
 
-    def get_events(self, **query: dt.JoplinTypes) -> dt.EventList:
+    def get_events(self, **query: dt.JoplinTypes) -> dt.DataList[dt.EventData]:
         """
         Get events, paginated. To get all events (unpaginated), use
         "get_all_events()".
         """
         response = self.get("/events", query=query).json()
-        response["items"] = [dt.Event(**item) for item in response["items"]]
-        return dt.EventList(**response)
+        response["items"] = [dt.EventData(**item) for item in response["items"]]
+        return dt.DataList[dt.EventData](**response)
 
 
 class Note(ApiBase):
@@ -136,9 +136,9 @@ class Note(ApiBase):
         """Delete a note."""
         self.delete(f"/notes/{id_}")
 
-    def get_note(self, id_: str, **query: dt.JoplinTypes) -> dt.Note:
+    def get_note(self, id_: str, **query: dt.JoplinTypes) -> dt.NoteData:
         """Get the note with the given ID."""
-        response = dt.Note(**self.get(f"/notes/{id_}", query=query).json())
+        response = dt.NoteData(**self.get(f"/notes/{id_}", query=query).json())
         return response
 
     def get_notes(
@@ -147,7 +147,7 @@ class Note(ApiBase):
         resource_id: Optional[str] = None,
         tag_id: Optional[str] = None,
         **query: dt.JoplinTypes,
-    ) -> dt.NoteList:
+    ) -> dt.DataList[dt.NoteData]:
         """
         Get notes, paginated. If a notebook, resource or tag ID is given,
         return the corresponding notes. To get all notes (unpaginated), use
@@ -159,8 +159,8 @@ class Note(ApiBase):
         resource = "" if resource_id is None else f"/resources/{resource_id}"
         tag = "" if tag_id is None else f"/tags/{tag_id}"
         response = self.get(f"{notebook}{resource}{tag}/notes", query=query).json()
-        response["items"] = [dt.Note(**item) for item in response["items"]]
-        return dt.NoteList(**response)
+        response["items"] = [dt.NoteData(**item) for item in response["items"]]
+        return dt.DataList[dt.NoteData](**response)
 
     def modify_note(self, id_: str, **data: dt.JoplinTypes) -> None:
         """Modify a note."""
@@ -176,19 +176,19 @@ class Notebook(ApiBase):
         """Delete a notebook."""
         self.delete(f"/folders/{id_}")
 
-    def get_notebook(self, id_: str, **query: dt.JoplinTypes) -> dt.Notebook:
+    def get_notebook(self, id_: str, **query: dt.JoplinTypes) -> dt.NotebookData:
         """Get the notebook with the given ID."""
-        response = dt.Notebook(**self.get(f"/folders/{id_}", query=query).json())
+        response = dt.NotebookData(**self.get(f"/folders/{id_}", query=query).json())
         return response
 
-    def get_notebooks(self, **query: dt.JoplinTypes) -> dt.NotebookList:
+    def get_notebooks(self, **query: dt.JoplinTypes) -> dt.DataList[dt.NotebookData]:
         """
         Get notebooks, paginated. To get all notebooks (unpaginated), use
         "get_all_notebooks()".
         """
         response = self.get("/folders", query=query).json()
-        response["items"] = [dt.Notebook(**item) for item in response["items"]]
-        return dt.NotebookList(**response)
+        response["items"] = [dt.NotebookData(**item) for item in response["items"]]
+        return dt.DataList[dt.NotebookData](**response)
 
     def modify_notebook(self, id_: str, **data: dt.JoplinTypes) -> None:
         """Modify a notebook."""
@@ -218,9 +218,9 @@ class Resource(ApiBase):
         """Delete a resource."""
         self.delete(f"/resources/{id_}")
 
-    def get_resource(self, id_: str, **query: dt.JoplinTypes) -> dt.Resource:
+    def get_resource(self, id_: str, **query: dt.JoplinTypes) -> dt.ResourceData:
         """Get metadata about the resource with the given ID."""
-        response = dt.Resource(**self.get(f"/resources/{id_}", query=query).json())
+        response = dt.ResourceData(**self.get(f"/resources/{id_}", query=query).json())
         return response
 
     def get_resource_file(self, id_: str) -> bytes:
@@ -229,15 +229,15 @@ class Resource(ApiBase):
 
     def get_resources(
         self, note_id: Optional[str] = None, **query: dt.JoplinTypes
-    ) -> dt.ResourceList:
+    ) -> dt.DataList[dt.ResourceData]:
         """
         Get resources, paginated. If a note ID is given, return the corresponding
         resources. To get all resources (unpaginated), use "get_all_resources()".
         """
         note = "" if note_id is None else f"/notes/{note_id}"
         response = self.get(f"{note}/resources", query=query).json()
-        response["items"] = [dt.Resource(**item) for item in response["items"]]
-        return dt.ResourceList(**response)
+        response["items"] = [dt.ResourceData(**item) for item in response["items"]]
+        return dt.DataList[dt.ResourceData](**response)
 
     def modify_resource(self, id_: str, **data: dt.JoplinTypes) -> None:
         """Modify a resource."""
@@ -247,7 +247,13 @@ class Resource(ApiBase):
 class Search(ApiBase):
     def search(
         self, **query: dt.JoplinTypes
-    ) -> Union[dt.NoteList, dt.NotebookList, dt.ResourceList, dt.TagList]:
+    ) -> Union[
+        dt.DataList[dt.NoteData],
+        dt.DataList[dt.NotebookData],
+        dt.DataList[dt.ResourceData],
+        dt.DataList[dt.TagData],
+    ]:
+        # ) -> dt.DataList[Union[dt.NoteData, dt.NotebookData, dt.ResourceData, dt.TagData]]:
         """Issue a search."""
         # Copy the dict, because its content gets changed.
         outer_query = copy.deepcopy(query)
@@ -259,17 +265,17 @@ class Search(ApiBase):
         # TODO: add missing types
         items = response["items"]
         if "type" not in query or query["type"] == dt.ItemType.NOTE.name.lower():
-            response["items"] = [dt.Note(**item) for item in items]
-            return dt.NoteList(**response)
+            response["items"] = [dt.NoteData(**item) for item in items]
+            return dt.DataList[dt.NoteData](**response)
         elif query["type"] == dt.ItemType.FOLDER.name.lower():
-            response["items"] = [dt.Notebook(**item) for item in items]
-            return dt.NotebookList(**response)
+            response["items"] = [dt.NotebookData(**item) for item in items]
+            return dt.DataList[dt.NotebookData](**response)
         elif query["type"] == dt.ItemType.RESOURCE.name.lower():
-            response["items"] = [dt.Resource(**item) for item in items]
-            return dt.ResourceList(**response)
+            response["items"] = [dt.ResourceData(**item) for item in items]
+            return dt.DataList[dt.ResourceData](**response)
         elif query["type"] == dt.ItemType.TAG.name.lower():
-            response["items"] = [dt.Tag(**item) for item in items]
-            return dt.TagList(**response)
+            response["items"] = [dt.TagData(**item) for item in items]
+            return dt.DataList[dt.TagData](**response)
         raise NotImplementedError(f"Type {query['type']} not implemented, yet.")
 
 
@@ -289,22 +295,22 @@ class Tag(ApiBase):
         note = "" if note_id is None else f"/notes/{note_id}"
         self.delete(f"/tags/{id_}{note}")
 
-    def get_tag(self, id_: str, **query: dt.JoplinTypes) -> dt.Tag:
+    def get_tag(self, id_: str, **query: dt.JoplinTypes) -> dt.TagData:
         """Get the tag with the given ID."""
-        response = dt.Tag(**self.get(f"/tags/{id_}", query=query).json())
+        response = dt.TagData(**self.get(f"/tags/{id_}", query=query).json())
         return response
 
     def get_tags(
         self, note_id: Optional[str] = None, **query: dt.JoplinTypes
-    ) -> dt.TagList:
+    ) -> dt.DataList[dt.TagData]:
         """
         Get tags, paginated. If a note is given, return the corresponding tags.
         To get all tags (unpaginated), use "get_all_tags()".
         """
         note = "" if note_id is None else f"/notes/{note_id}"
         response = self.get(f"{note}/tags", query=query).json()
-        response["items"] = [dt.Tag(**item) for item in response["items"]]
-        return dt.TagList(**response)
+        response["items"] = [dt.TagData(**item) for item in response["items"]]
+        return dt.DataList[dt.TagData](**response)
 
     def modify_tag(self, id_: str, **data: dt.JoplinTypes) -> None:
         """Modify a tag."""
@@ -357,7 +363,9 @@ class Api(Event, Note, Notebook, Ping, Resource, Search, Tag):
             self.delete_tag(tag.id)
 
     @staticmethod
-    def _unpaginate(func: Callable[..., Any], **query: dt.JoplinTypes) -> Any:
+    def _unpaginate(
+        func: Callable[..., dt.DataList[dt.T]], **query: dt.JoplinTypes
+    ) -> List[dt.T]:
         """Calls an Joplin endpoint until it's response doesn't contain more data."""
         response = func(**query)
         items = response.items
@@ -369,28 +377,28 @@ class Api(Event, Note, Notebook, Ping, Resource, Search, Tag):
             items.extend(response.items)
         return items
 
-    def get_all_events(self, **query: dt.JoplinTypes) -> List[dt.Event]:
+    def get_all_events(self, **query: dt.JoplinTypes) -> List[dt.EventData]:
         """Get all events, unpaginated."""
         return self._unpaginate(self.get_events, **query)
 
-    def get_all_notes(self, **query: dt.JoplinTypes) -> List[dt.Note]:
+    def get_all_notes(self, **query: dt.JoplinTypes) -> List[dt.NoteData]:
         """Get all notes, unpaginated."""
         return self._unpaginate(self.get_notes, **query)
 
-    def get_all_notebooks(self, **query: dt.JoplinTypes) -> List[dt.Notebook]:
+    def get_all_notebooks(self, **query: dt.JoplinTypes) -> List[dt.NotebookData]:
         """Get all notebooks, unpaginated."""
         return self._unpaginate(self.get_notebooks, **query)
 
-    def get_all_resources(self, **query: dt.JoplinTypes) -> List[dt.Resource]:
+    def get_all_resources(self, **query: dt.JoplinTypes) -> List[dt.ResourceData]:
         """Get all resources, unpaginated."""
         return self._unpaginate(self.get_resources, **query)
 
-    def get_all_tags(self, **query: dt.JoplinTypes) -> List[dt.Tag]:
+    def get_all_tags(self, **query: dt.JoplinTypes) -> List[dt.TagData]:
         """Get all tags, unpaginated."""
         return self._unpaginate(self.get_tags, **query)
 
     def search_all(
         self, **query: dt.JoplinTypes
-    ) -> List[Union[dt.Note, dt.Notebook, dt.Resource, dt.Tag, dt.Event]]:
+    ) -> List[Union[dt.NoteData, dt.NotebookData, dt.ResourceData, dt.TagData]]:
         """Issue a search and get all results, unpaginated."""
-        return self._unpaginate(self.search, **query)
+        return self._unpaginate(self.search, **query)  # type: ignore
