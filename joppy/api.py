@@ -97,7 +97,7 @@ class ApiBase:
         )
         if data is not None and "id_" in data:
             # "id" is a reserved keyword in python, so don't use it.
-            data["id"] = data["id_"]
+            data["id"] = data.pop("id_")
         if query is None:
             query = {}
         query["token"] = self.token  # TODO: extending the dict may have side effects
