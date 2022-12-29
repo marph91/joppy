@@ -95,7 +95,7 @@ class JoplinApp:
         # TODO: hardcoded url
         def api_available() -> Optional[bool]:
             try:
-                response = requests.get("http://localhost:41184/ping")
+                response = requests.get("http://localhost:41184/ping", timeout=5)
                 if response.status_code == 200:
                     return True
             except Exception:

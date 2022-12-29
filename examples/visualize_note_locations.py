@@ -16,7 +16,7 @@ notes = api.get_all_notes(fields="id,title,latitude,longitude")
 print("Notes:", len(notes))
 
 # filter notes with location (0, 0)
-notes = [note for note in notes if note["latitude"] != 0 and note["longitude"] != 0]
+notes = [note for note in notes if note.latitude != 0 and note.longitude != 0]
 
 df = pd.DataFrame(notes)
 fig = px.scatter_geo(df, lat="latitude", lon="longitude", hover_name="title")

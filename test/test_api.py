@@ -1,6 +1,6 @@
 """Tests for the joplin python API."""
 
-import enum
+from datetime import datetime
 import itertools
 import logging
 import mimetypes
@@ -9,15 +9,15 @@ import random
 import re
 import string
 import tempfile
-import time
-from typing import Any, cast, Iterable, Mapping, Tuple
+from typing import Any, Iterable, Mapping, Tuple
 import unittest
 
 import requests
 import urllib3
 
-from joppy.api import Api, JoplinKwargs
 from joppy import tools
+from joppy.api import Api
+import joppy.data_types as dt
 from . import setup_joplin
 
 
@@ -50,34 +50,7 @@ def with_resource(func):
     return inner_decorator
 
 
-class ChangeType(enum.Enum):
-    # https://joplinapp.org/api/references/rest_api/#properties-4
-    CREATED = 1
-    UPDATED = 2
-    DELETED = 3
-
-
-class ItemType(enum.Enum):
-    # https://joplinapp.org/api/references/rest_api/#item-type-ids
-    NOTE = 1
-    FOLDER = 2
-    SETTING = 3
-    RESOURCE = 4
-    TAG = 5
-    NOTE_TAG = 6
-    SEARCH = 7
-    ALARM = 8
-    MASTER_KEY = 9
-    ITEM_CHANGE = 10
-    NOTE_RESOURCE = 11
-    RESOURCE_LOCAL_STATE = 12
-    REVISION = 13
-    MIGRATION = 14
-    SMART_FILTER = 15
-    COMMAND = 16
-
-
-def setUpModule():
+def setUpModule():  # pylint: disable=invalid-name
     # TODO: When splitting in multiple files, this needs to be run at start of the
     # testsuite.
     global API_TOKEN, APP
@@ -88,18 +61,16 @@ def setUpModule():
         API_TOKEN = APP.api_token
 
 
-def tearDownModule():
+def tearDownModule():  # pylint: disable=invalid-name
     if APP is not None:
         APP.stop()
 
 
 class TestBase(unittest.TestCase):
-    empty_search = {"items": [], "has_more": False}
-
     def setUp(self):
         super().setUp()
 
-        logging.debug(f"Test: {self.id()}")
+        logging.debug("Test: %s", self.id())
 
         self.api = Api(token=API_TOKEN)
         # Note: Notes get deleted automatically.
@@ -120,29 +91,8 @@ class TestBase(unittest.TestCase):
         for character in exclude:
             characters = characters.replace(character, "")
         random_string = "".join(random.choice(characters) for _ in range(length))
-        logging.debug(f"Test: random string: {random_string}")
+        logging.debug("Test: random string: %s", random_string)
         return random_string
-
-    @staticmethod
-    def is_id_valid(id_: str) -> bool:
-        """
-        Check whether a string is a valid id. See:
-        https://joplinapp.org/api/references/rest_api/#creating-a-note-with-a-specific-id.
-        """
-        if len(id_) != 32:
-            return False
-        # https://stackoverflow.com/a/11592279/7410886
-        try:
-            int(id_, 16)
-        except ValueError:
-            return False
-        return True
-
-    @staticmethod
-    def is_timestamp_valid(timestamp: int) -> bool:
-        """Check whether a timestamp is valid."""
-        # https://joplinapp.org/api/references/rest_api/#about-the-property-types
-        return 0 <= timestamp <= int(time.time() * 1000)  # ms
 
     @staticmethod
     def get_combinations(
@@ -164,25 +114,19 @@ class TestBase(unittest.TestCase):
 
 
 class Event(TestBase):
-    properties = [
-        # fmt: off
-        "id", "item_type", "item_id", "type", "created_time",
-        # "source", "before_change_item",
-        # fmt: on
-    ]
-    default_properties = ["id", "item_type", "item_id", "type", "created_time"]
-
     def generate_event(self) -> None:
         """Generate an event and wait until it's available."""
-        current_cursor = self.api.get_events()["cursor"]
-        events_before = len(self.api.get_all_events(cursor=current_cursor))
+        events = self.api.get_events()
+        assert events.cursor is not None
+        events_before = len(self.api.get_all_events(cursor=events.cursor))
         # For now only notes trigger events:
         # https://joplinapp.org/api/references/rest_api/#events
         self.api.add_notebook()
         self.api.add_note()
 
         def compare_event_count():
-            event_count = len(self.api.get_all_events(cursor=current_cursor))
+            assert events.cursor is not None
+            event_count = len(self.api.get_all_events(cursor=events.cursor))
             return event_count if event_count == events_before + 1 else None
 
         # Wait until the event is available.
@@ -190,84 +134,68 @@ class Event(TestBase):
 
     def test_get_event(self):
         """Get a specific event."""
-        current_cursor = self.api.get_events()["cursor"]
+        events = self.api.get_events()
+        assert events.cursor is not None
         self.generate_event()
-        last_event = self.api.get_events(cursor=current_cursor)["items"][-1]
-        event = self.api.get_event(id_=last_event["id"])
+        last_event = self.api.get_events(cursor=events.cursor).items[-1]
+        assert last_event.id is not None
+        event = self.api.get_event(id_=last_event.id)
 
-        self.assertEqual(list(event.keys()), self.default_properties + ["type_"])
-        self.assertIn(event["item_type"], {item.value for item in ItemType})
-        self.assertTrue(self.is_id_valid(event["item_id"]))
-        self.assertEqual(event["type"], ChangeType.CREATED.value)
-        self.assertTrue(self.is_timestamp_valid(event["created_time"]))
-        self.assertEqual(event["type_"], ItemType.ITEM_CHANGE.value)
+        self.assertEqual(event.assigned_fields(), event.default_fields())
+        self.assertEqual(event.type, dt.EventChangeType.CREATED)
+        self.assertEqual(event.type_, dt.ItemType.ITEM_CHANGE)
 
-        for property_ in self.default_properties:
-            # https://github.com/python/mypy/issues/7178
-            self.assertEqual(event[property_], event[property_])  # type: ignore
+        # TODO: What is the purpose?
+        # for property_ in event.default_fields():
+        #    # https://github.com/python/mypy/issues/7178
+        #    self.assertEqual(event[property_], event[property_])  # type: ignore
 
     def test_get_events_by_cursor(self):
         """Get all events by specifying a cursor of 0."""
+        previous_created_time = datetime(2000, 1, 1)
+        previous_id = 0
+
         self.generate_event()
         events = self.api.get_events(cursor=0)
 
-        previous_created_time = 0
-        previous_id = 0
-        for event in events["items"]:
-            # TODO: id is int only for events. Find a way to abstract it.
-            current_id = cast(int, event["id"])
-            current_created_time = event["created_time"]
+        for event in events.items:
+            current_created_time = event.created_time
+            assert current_created_time is not None
+            assert event.id is not None
             self.assertGreater(current_created_time, previous_created_time)
-            self.assertGreater(current_id, previous_id)
+            self.assertGreater(event.id, previous_id)
             previous_created_time = current_created_time
-            previous_id = current_id
-            self.assertEqual(list(event.keys()), self.default_properties)
+            previous_id = event.id
+            self.assertEqual(event.assigned_fields(), event.default_fields())
 
     def test_get_events_empty(self):
         """
         If no cursor is given, the latest cursor is returned to retrieve future events.
         """
         events = self.api.get_events()
-        self.assertEqual(events["items"], [])
-        self.assertFalse(events["has_more"])
-        self.assertIn("cursor", events)
+        self.assertEqual(events.items, [])
+        self.assertFalse(events.has_more)
 
     def test_get_events_valid_properties(self):
         """Try to get specific properties of an event."""
         # TODO: Doesn't work with cursor=0
-        property_combinations = self.get_combinations(self.properties)
+        property_combinations = self.get_combinations(dt.EventData.fields())
         for properties in property_combinations:
             events = self.api.get_events(fields=",".join(properties))
-            for event in events["items"]:
-                self.assertEqual(list(event.keys()), list(properties))
+            for event in events.items:
+                self.assertEqual(event.assigned_fields(), set(properties))
 
 
 class Note(TestBase):
-    properties = [
-        # fmt: off
-        "id", "parent_id", "title", "body", "created_time", "updated_time",
-        "is_conflict", "latitude", "longitude", "altitude", "author", "source_url",
-        "is_todo", "todo_due", "todo_completed", "source", "source_application",
-        "application_data", "order", "user_created_time", "user_updated_time",
-        "encryption_cipher_text", "encryption_applied", "markup_language",
-        "is_shared", "share_id", "conflict_original_id",
-        # "body_html", "base_url", "image_data_url", "crop_rect",
-        # fmt: on
-    ]
-    default_properties = ["id", "parent_id", "title"]
-
     def test_add(self):
         """Add a note to an existing notebook."""
         parent_id = self.api.add_notebook()
         id_ = self.api.add_note()
 
-        self.assertTrue(self.is_id_valid(parent_id))
-        self.assertTrue(self.is_id_valid(id_))
-
-        notes = self.api.get_notes()["items"]
+        notes = self.api.get_notes().items
         self.assertEqual(len(notes), 1)
-        self.assertEqual(notes[0]["id"], id_)
-        self.assertEqual(notes[0]["parent_id"], parent_id)
+        self.assertEqual(notes[0].id, id_)
+        self.assertEqual(notes[0].parent_id, parent_id)
 
     def test_add_attach_image(self):
         """Add a note with an image attached."""
@@ -278,14 +206,14 @@ class Note(TestBase):
         )
 
         # Check that there is a resource.
-        resources = self.api.get_resources()["items"]
+        resources = self.api.get_resources().items
         self.assertEqual(len(resources), 1)
-        resource_id = resources[0]["id"]
+        resource_id = resources[0].id
 
         # Verify the resource is attached to the note.
-        resources = self.api.get_resources(note_id=note_id)["items"]
+        resources = self.api.get_resources(note_id=note_id).items
         self.assertEqual(len(resources), 1)
-        self.assertEqual(resources[0]["id"], resource_id)
+        self.assertEqual(resources[0].id, resource_id)
 
     def test_add_no_notebook(self):
         """A note has to be added to an existing notebook."""
@@ -302,28 +230,28 @@ class Note(TestBase):
         self.api.add_notebook()
         id_ = self.api.add_note()
         notes = self.api.get_notes()
-        self.assertEqual(len(notes["items"]), 1)
+        self.assertEqual(len(notes.items), 1)
 
         self.api.delete_note(id_=id_)
-        self.assertEqual(self.api.get_notes(), self.empty_search)
+        self.assertEqual(self.api.get_notes().items, [])
 
     def test_get_note(self):
         """Get a specific note."""
         self.api.add_notebook()
         id_ = self.api.add_note()
         note = self.api.get_note(id_=id_)
-        self.assertEqual(list(note.keys()), self.default_properties + ["type_"])
-        self.assertEqual(note["type_"], ItemType.NOTE.value)
+        self.assertEqual(note.assigned_fields(), note.default_fields())
+        self.assertEqual(note.type_, dt.ItemType.NOTE)
 
     def test_get_notes(self):
         """Get all notes."""
         self.api.add_notebook()
         self.api.add_note()
         notes = self.api.get_notes()
-        self.assertEqual(len(notes["items"]), 1)
-        self.assertFalse(notes["has_more"])
-        for note in notes["items"]:
-            self.assertEqual(list(note.keys()), self.default_properties)
+        self.assertEqual(len(notes.items), 1)
+        self.assertFalse(notes.has_more)
+        for note in notes.items:
+            self.assertEqual(note.assigned_fields(), note.default_fields())
 
     def test_get_all_notes(self):
         """Get all notes, unpaginated."""
@@ -332,9 +260,7 @@ class Note(TestBase):
         count, limit = random.randint(1, 10), random.randint(1, 10)
         for _ in range(count):
             self.api.add_note()
-        self.assertEqual(
-            len(self.api.get_notes(limit=limit)["items"]), min(limit, count)
-        )
+        self.assertEqual(len(self.api.get_notes(limit=limit).items), min(limit, count))
         self.assertEqual(len(self.api.get_all_notes(limit=limit)), count)
 
     def test_get_notes_too_many_ids(self):
@@ -346,11 +272,18 @@ class Note(TestBase):
         """Try to get specific properties of a note."""
         self.api.add_notebook()
         self.api.add_note()
-        property_combinations = self.get_combinations(self.properties)
+        # TODO: Some of the fields yield HTTP 500.
+        selected_fields = dt.NoteData.fields() - {
+            "body_html",
+            "base_url",
+            "image_data_url",
+            "crop_rect",
+        }
+        property_combinations = self.get_combinations(selected_fields)
         for properties in property_combinations:
             notes = self.api.get_notes(fields=",".join(properties))
-            for note in notes["items"]:
-                self.assertEqual(list(note.keys()), list(properties))
+            for note in notes.items:
+                self.assertEqual(note.assigned_fields(), set(properties))
 
     def test_move(self):
         """Move a note from one notebook to another."""
@@ -364,54 +297,42 @@ class Note(TestBase):
         )
 
         note = self.api.get_note(id_=id_)
-        self.assertEqual(note["parent_id"], notebook_1_id)
+        self.assertEqual(note.parent_id, notebook_1_id)
 
         self.api.modify_note(id_=id_, parent_id=notebook_2_id)
         note = self.api.get_note(id_=id_, fields="body,parent_id,title")
-        self.assertEqual(note["parent_id"], notebook_2_id)
+        self.assertEqual(note.parent_id, notebook_2_id)
 
         # Ensure the original properties aren't modified.
-        self.assertEqual(note["body"], original_body)
-        self.assertEqual(note["title"], original_title)
+        self.assertEqual(note.body, original_body)
+        self.assertEqual(note.title, original_title)
 
 
 class Notebook(TestBase):
-    properties = [
-        # fmt: off
-        "id", "title", "created_time", "updated_time",
-        "user_created_time", "user_updated_time", "encryption_cipher_text",
-        "encryption_applied", "parent_id", "is_shared", "share_id",
-        "master_key_id", "icon",
-        # fmt: on
-    ]
-    default_properties = ["id", "parent_id", "title"]
-
     def test_add(self):
         """Add a notebook."""
         id_ = self.api.add_notebook()
 
-        self.assertTrue(self.is_id_valid(id_))
-
-        notebooks = self.api.get_notebooks()["items"]
+        notebooks = self.api.get_notebooks().items
         self.assertEqual(len(notebooks), 1)
-        self.assertEqual(notebooks[0]["id"], id_)
+        self.assertEqual(notebooks[0].id, id_)
 
     def test_get_notebook(self):
         """Get a specific notebook."""
         id_ = self.api.add_notebook()
         notebook = self.api.get_notebook(id_=id_)
         # TODO: properties instead of default_properties
-        self.assertEqual(list(notebook.keys()), self.properties + ["type_"])
-        self.assertEqual(notebook["type_"], ItemType.FOLDER.value)
+        self.assertEqual(notebook.assigned_fields(), notebook.fields())
+        self.assertEqual(notebook.type_, dt.ItemType.FOLDER)
 
     def test_get_notebooks(self):
         """Get all notebooks."""
         self.api.add_notebook()
         notebooks = self.api.get_notebooks()
-        self.assertEqual(len(notebooks["items"]), 1)
-        self.assertFalse(notebooks["has_more"])
-        for notebook in notebooks["items"]:
-            self.assertEqual(list(notebook.keys()), self.default_properties)
+        self.assertEqual(len(notebooks.items), 1)
+        self.assertFalse(notebooks.has_more)
+        for notebook in notebooks.items:
+            self.assertEqual(notebook.assigned_fields(), notebook.default_fields())
 
     def test_get_all_notebooks(self):
         """Get all notebooks, unpaginated."""
@@ -420,7 +341,7 @@ class Notebook(TestBase):
         for _ in range(count):
             self.api.add_notebook()
         self.assertEqual(
-            len(self.api.get_notebooks(limit=limit)["items"]), min(limit, count)
+            len(self.api.get_notebooks(limit=limit).items), min(limit, count)
         )
         self.assertEqual(len(self.api.get_all_notebooks(limit=limit)), count)
 
@@ -440,22 +361,22 @@ class Notebook(TestBase):
     def test_get_notebooks_valid_properties(self):
         """Try to get specific properties of a notebook."""
         self.api.add_notebook()
-        property_combinations = self.get_combinations(self.properties)
+        property_combinations = self.get_combinations(dt.NotebookData.fields())
         for properties in property_combinations:
             notebooks = self.api.get_notebooks(fields=",".join(properties))
-            for notebook in notebooks["items"]:
-                self.assertEqual(list(notebook.keys()), list(properties))
+            for notebook in notebooks.items:
+                self.assertEqual(notebook.assigned_fields(), set(properties))
 
     def test_move(self):
         """Move a root notebok to another notebook. It's now a subnotebook."""
         first_id = self.api.add_notebook()
         second_id = self.api.add_notebook()
-        self.assertEqual(self.api.get_notebook(id_=first_id)["parent_id"], "")
-        self.assertEqual(self.api.get_notebook(id_=second_id)["parent_id"], "")
+        self.assertEqual(self.api.get_notebook(id_=first_id).parent_id, "")
+        self.assertEqual(self.api.get_notebook(id_=second_id).parent_id, "")
 
         self.api.modify_notebook(id_=first_id, parent_id=second_id)
-        self.assertEqual(self.api.get_notebook(id_=first_id)["parent_id"], second_id)
-        self.assertEqual(self.api.get_notebook(id_=second_id)["parent_id"], "")
+        self.assertEqual(self.api.get_notebook(id_=first_id).parent_id, second_id)
+        self.assertEqual(self.api.get_notebook(id_=second_id).parent_id, "")
 
 
 class Ping(TestBase):
@@ -474,25 +395,14 @@ class Ping(TestBase):
 
 
 class Resource(TestBase):
-    properties = [
-        # fmt: off
-        "id", "title", "mime", "filename", "created_time", "updated_time",
-        "user_created_time", "user_updated_time", "file_extension",
-        "encryption_cipher_text", "encryption_applied", "encryption_blob_encrypted",
-        "size", "is_shared", "share_id",
-        # fmt: on
-    ]
-    default_properties = ["id", "title"]
-
     @with_resource
     def test_add(self, filename):
         """Add a resource."""
         id_ = self.api.add_resource(filename=filename)
-        self.assertTrue(self.is_id_valid(id_))
 
-        resources = self.api.get_resources()["items"]
+        resources = self.api.get_resources().items
         self.assertEqual(len(resources), 1)
-        self.assertEqual(resources[0]["id"], id_)
+        self.assertEqual(resources[0].id, id_)
 
     @with_resource
     def test_add_to_note(self, filename):
@@ -503,9 +413,9 @@ class Resource(TestBase):
         self.api.add_resource_to_note(resource_id=resource_id, note_id=note_id)
 
         # Verify the resource is attached to the note.
-        resources = self.api.get_resources(note_id=note_id)["items"]
+        resources = self.api.get_resources(note_id=note_id).items
         self.assertEqual(len(resources), 1)
-        self.assertEqual(resources[0]["id"], resource_id)
+        self.assertEqual(resources[0].id, resource_id)
 
         # TODO: Seems to be not working.
         # notes = self.api.get_notes(resource_id=resource_id)["items"]
@@ -517,10 +427,10 @@ class Resource(TestBase):
         """Add and then delete a resource."""
         id_ = self.api.add_resource(filename=filename)
         resources = self.api.get_resources()
-        self.assertEqual(len(resources["items"]), 1)
+        self.assertEqual(len(resources.items), 1)
 
         self.api.delete_resource(id_=id_)
-        self.assertEqual(self.api.get_resources(), self.empty_search)
+        self.assertEqual(self.api.get_resources().items, [])
         self.assertEqual(os.listdir(f"{PROFILE}/resources"), [])
 
     @with_resource
@@ -528,8 +438,8 @@ class Resource(TestBase):
         """Get metadata about a specific resource."""
         id_ = self.api.add_resource(filename=filename)
         resource = self.api.get_resource(id_=id_)
-        self.assertEqual(list(resource.keys()), self.default_properties + ["type_"])
-        self.assertEqual(resource["type_"], ItemType.RESOURCE.value)
+        self.assertEqual(resource.assigned_fields(), resource.default_fields())
+        self.assertEqual(resource.type_, dt.ItemType.RESOURCE)
 
     @with_resource
     def test_get_resource_file(self, filename):
@@ -545,10 +455,10 @@ class Resource(TestBase):
         """Get all resources."""
         self.api.add_resource(filename=filename)
         resources = self.api.get_resources()
-        self.assertEqual(len(resources["items"]), 1)
-        self.assertFalse(resources["has_more"])
-        for resource in resources["items"]:
-            self.assertEqual(list(resource.keys()), self.default_properties)
+        self.assertEqual(len(resources.items), 1)
+        self.assertFalse(resources.has_more)
+        for resource in resources.items:
+            self.assertEqual(resource.assigned_fields(), resource.default_fields())
 
     @with_resource
     def test_get_all_resources(self, filename):
@@ -558,7 +468,7 @@ class Resource(TestBase):
         for _ in range(count):
             self.api.add_resource(filename=filename)
         self.assertEqual(
-            len(self.api.get_resources(limit=limit)["items"]), min(limit, count)
+            len(self.api.get_resources(limit=limit).items), min(limit, count)
         )
         self.assertEqual(len(self.api.get_all_resources(limit=limit)), count)
 
@@ -566,11 +476,11 @@ class Resource(TestBase):
     def test_get_resources_valid_properties(self, filename):
         """Try to get specific properties of a resource."""
         self.api.add_resource(filename=filename)
-        property_combinations = self.get_combinations(self.properties)
+        property_combinations = self.get_combinations(dt.ResourceData.fields())
         for properties in property_combinations:
             resources = self.api.get_resources(fields=",".join(properties))
-            for resource in resources["items"]:
-                self.assertEqual(list(resource.keys()), list(properties))
+            for resource in resources.items:
+                self.assertEqual(resource.assigned_fields(), set(properties))
 
     @with_resource
     def test_modify_title(self, filename):
@@ -579,7 +489,7 @@ class Resource(TestBase):
 
         new_title = self.get_random_string()
         self.api.modify_resource(id_=id_, title=new_title)
-        self.assertEqual(self.api.get_resource(id_=id_)["title"], new_title)
+        self.assertEqual(self.api.get_resource(id_=id_).title, new_title)
 
     @with_resource
     def test_check_derived_properties(self, filename):
@@ -589,11 +499,11 @@ class Resource(TestBase):
             resource = self.api.get_resource(id_=id_, fields="mime,file_extension,size")
             mime_type, _ = mimetypes.guess_type(file_)
             self.assertEqual(
-                resource["mime"],
+                resource.mime,
                 mime_type if mime_type is not None else "application/octet-stream",
             )
-            self.assertEqual(resource["file_extension"], os.path.splitext(file_)[1][1:])
-            self.assertEqual(resource["size"], os.path.getsize(file_))
+            self.assertEqual(resource.file_extension, os.path.splitext(file_)[1][1:])
+            self.assertEqual(resource.size, os.path.getsize(file_))
 
     @with_resource
     def test_check_property_title(self, filename):
@@ -601,14 +511,14 @@ class Resource(TestBase):
         title = self.get_random_string()
         id_ = self.api.add_resource(filename=filename, title=title)
         resource = self.api.get_resource(id_=id_)
-        self.assertEqual(resource["title"], title)
+        self.assertEqual(resource.title, title)
 
 
 # TODO: Add more tests for the search parameter.
 class Search(TestBase):
     def test_empty(self):
         """Search should succeed, even if there is no result item."""
-        self.assertEqual(self.api.search(query="*"), self.empty_search)
+        self.assertEqual(self.api.search(query="*").items, [])
 
     def test_notes(self):
         """
@@ -617,8 +527,8 @@ class Search(TestBase):
         """
         self.api.add_notebook()
         self.api.add_note()
-        self.assertEqual(self.api.search(query="*"), self.empty_search)
-        self.assertEqual(self.api.search(query="*", type="note"), self.empty_search)
+        self.assertEqual(self.api.search(query="*").items, [])
+        self.assertEqual(self.api.search(query="*", type="note").items, [])
 
     def test_notebooks(self):
         """Search by notebooks and search endpoint should yield same results."""
@@ -648,8 +558,8 @@ class Search(TestBase):
     def test_master_key(self):
         """There is no master key configured."""
         self.assertEqual(
-            self.api.search(query="*", type="master_key"),
-            self.empty_search,
+            self.api.search(query="*", type="master_key").items,
+            [],
         )
 
     def test_non_searchable(self):
@@ -670,15 +580,15 @@ class Search(TestBase):
         for _ in range(limit + 1):
             self.api.add_notebook()
 
-        query: JoplinKwargs = {"query": "*", "type": "folder", "limit": limit}
+        query: dt.JoplinKwargs = {"query": "*", "type": "folder", "limit": limit}
         search_result = self.api.search(**query)
-        self.assertEqual(len(search_result["items"]), limit)
-        self.assertTrue(search_result["has_more"])
+        self.assertEqual(len(search_result.items), limit)
+        self.assertTrue(search_result.has_more)
 
         query["page"] = 2
         search_result = self.api.search(**query)
-        self.assertEqual(len(search_result["items"]), 1)
-        self.assertFalse(search_result["has_more"])
+        self.assertEqual(len(search_result.items), 1)
+        self.assertFalse(search_result.has_more)
 
     def test_search_query_special_chars(self):
         """
@@ -704,8 +614,8 @@ class Search(TestBase):
         for query in queries:
             self.api.add_notebook(title=query)
             result = self.api.search(query=query, type="folder")
-            self.assertEqual(len(result["items"]), 1)
-            self.assertEqual(result["items"][0]["title"], query)
+            self.assertEqual(len(result.items), 1)
+            self.assertEqual(result.items[0].title, query)
 
     def test_search_all(self):
         """Search notebooks and return all results, unpaginated."""
@@ -714,30 +624,21 @@ class Search(TestBase):
         # Leading slashes in notebooks are stripped by default:
         # https://github.com/laurent22/joplin/issues/6213
         title = self.get_random_string().lstrip("/\\")
-        query: JoplinKwargs = {"query": title, "type": "folder", "limit": limit}
+        query: dt.JoplinKwargs = {"query": title, "type": "folder", "limit": limit}
         for _ in range(count):
             self.api.add_notebook(title=title)
-        self.assertEqual(len(self.api.search(**query)["items"]), min(limit, count))
+        self.assertEqual(len(self.api.search(**query).items), min(limit, count))
         self.assertEqual(len(self.api.search_all(**query)), count)
 
 
 class Tag(TestBase):
-    properties = [
-        # fmt: off
-        "id", "parent_id", "title", "created_time", "updated_time",
-        "user_created_time", "user_updated_time", "encryption_cipher_text",
-        "encryption_applied", "is_shared",
-        # fmt: on
-    ]
-    default_properties = ["id", "parent_id", "title"]
-
     def test_add_no_note(self):
         """Tags can be added even without notes."""
         id_ = self.api.add_tag()
 
-        tags = self.api.get_tags()["items"]
+        tags = self.api.get_tags().items
         self.assertEqual(len(tags), 1)
-        self.assertEqual(tags[0]["id"], id_)
+        self.assertEqual(tags[0].id, id_)
 
     def test_add_to_note(self):
         """Add a tag to an existing note."""
@@ -746,9 +647,11 @@ class Tag(TestBase):
         tag_id = self.api.add_tag()
         self.api.add_tag_to_note(tag_id=tag_id, note_id=note_id)
 
-        notes = self.api.get_notes(tag_id=tag_id)["items"]
+        notes = self.api.get_notes(tag_id=tag_id).items
         self.assertEqual(len(notes), 1)
-        self.assertEqual(notes[0]["id"], note_id)
+        self.assertEqual(notes[0].id, note_id)
+        tags = self.api.get_all_tags()
+        self.assertEqual(len(tags), 1)
 
     def test_add_with_parent(self):
         """Add a tag as child for an existing note."""
@@ -756,13 +659,10 @@ class Tag(TestBase):
         parent_id = self.api.add_note()
         id_ = self.api.add_tag(parent_id=parent_id)
 
-        self.assertTrue(self.is_id_valid(parent_id))
-        self.assertTrue(self.is_id_valid(id_))
-
-        tags = self.api.get_tags()["items"]
+        tags = self.api.get_tags().items
         self.assertEqual(len(tags), 1)
-        self.assertEqual(tags[0]["id"], id_)
-        self.assertEqual(tags[0]["parent_id"], parent_id)
+        self.assertEqual(tags[0].id, id_)
+        self.assertEqual(tags[0].parent_id, parent_id)
 
     def test_add_duplicated_name(self):
         """Tag names have to be unique."""
@@ -797,17 +697,17 @@ class Tag(TestBase):
         """Get a specific tag."""
         id_ = self.api.add_tag()
         tag = self.api.get_tag(id_=id_)
-        self.assertEqual(list(tag.keys()), self.default_properties + ["type_"])
-        self.assertEqual(tag["type_"], ItemType.TAG.value)
+        self.assertEqual(tag.assigned_fields(), tag.default_fields())
+        self.assertEqual(tag.type_, dt.ItemType.TAG)
 
     def test_get_tags(self):
         """Get all tags."""
         self.api.add_tag()
         tags = self.api.get_tags()
-        self.assertEqual(len(tags["items"]), 1)
-        self.assertFalse(tags["has_more"])
-        for tag in tags["items"]:
-            self.assertEqual(list(tag.keys()), self.default_properties)
+        self.assertEqual(len(tags.items), 1)
+        self.assertFalse(tags.has_more)
+        for tag in tags.items:
+            self.assertEqual(tag.assigned_fields(), tag.default_fields())
 
     def test_get_all_tags(self):
         """Get all tags, unpaginated."""
@@ -815,19 +715,17 @@ class Tag(TestBase):
         count, limit = random.randint(1, 10), random.randint(1, 10)
         for _ in range(count):
             self.api.add_tag()
-        self.assertEqual(
-            len(self.api.get_tags(limit=limit)["items"]), min(limit, count)
-        )
+        self.assertEqual(len(self.api.get_tags(limit=limit).items), min(limit, count))
         self.assertEqual(len(self.api.get_all_tags(limit=limit)), count)
 
     def test_get_tags_valid_properties(self):
         """Try to get specific properties of a tag."""
         self.api.add_tag()
-        property_combinations = self.get_combinations(self.properties)
+        property_combinations = self.get_combinations(dt.TagData.fields())
         for properties in property_combinations:
             tags = self.api.get_tags(fields=",".join(properties))
-            for tag in tags["items"]:
-                self.assertEqual(list(tag.keys()), list(properties))
+            for tag in tags.items:
+                self.assertEqual(tag.assigned_fields(), set(properties))
 
 
 class Fuzz(TestBase):
@@ -852,27 +750,17 @@ class Helper(TestBase):
     def test_random_id(self):
         """Random IDs should always be valid."""
         for _ in range(100):
-            self.assertTrue(self.is_id_valid(self.get_random_id()))
+            self.assertTrue(dt.is_id_valid(self.get_random_id()))
 
     def test_is_id_valid(self):
         """Trivial test for the is_id_valid() function."""
-        self.assertTrue(self.is_id_valid("0" * 32))
+        self.assertTrue(dt.is_id_valid("0" * 32))
 
         # ID has to be 32 chars.
-        self.assertFalse(self.is_id_valid("0" * 31))
+        self.assertFalse(dt.is_id_valid("0" * 31))
 
         # ID has to be contain only hex chars.
-        self.assertFalse(self.is_id_valid("h" + "0" * 31))
-
-    def test_is_timestamp_valid(self):
-        """Trivial test for the is_timestamp_valid() function."""
-        self.assertTrue(self.is_timestamp_valid(int(time.time() * 1000)))
-
-        # Timestamp has to be positive.
-        self.assertFalse(self.is_timestamp_valid(-1))
-
-        # Timestamp can't be in the future.
-        self.assertFalse(self.is_timestamp_valid(int((time.time() + 5) * 1000)))
+        self.assertFalse(dt.is_id_valid("h" + "0" * 31))
 
 
 class Miscellaneous(TestBase):
@@ -899,7 +787,7 @@ class Regression(TestBase):
         body = self.get_random_string(1) * 10**9
         self.api.add_notebook()
         note_id = self.api.add_note(body=body)
-        self.assertEqual(self.api.get_note(id_=note_id)["title"], body)
+        self.assertEqual(self.api.get_note(id_=note_id).title, body)
 
     def test_note_tag_fields(self):
         """https://github.com/laurent22/joplin/issues/4407"""
@@ -909,7 +797,7 @@ class Regression(TestBase):
         self.api.add_tag_to_note(tag_id=tag_id, note_id=note_id)
 
         notes = self.api.get_notes(tag_id=tag_id, fields="id")
-        self.assertEqual(list(notes["items"][0].keys()), ["id"])
+        self.assertEqual(notes.items[0].assigned_fields(), {"id"})
 
     @unittest.skip("Not yet implemented")
     def test_set_location(self):
@@ -929,7 +817,7 @@ class ReadmeExamples(TestBase):
     def setUpClass(cls):
         super().setUpClass()
 
-        with open("README.md") as infile:
+        with open("README.md", encoding="utf-8") as infile:
             readme_content = infile.read()
 
         # Replace the token to make the code functional.
@@ -975,7 +863,8 @@ class ReadmeExamples(TestBase):
         tags = self.api.get_all_tags()
         self.assertEqual(len(tags), 1)
 
-        notes = self.api.get_all_notes(tag_id=tags[0]["id"])
+        assert tags[0].id is not None
+        notes = self.api.get_all_notes(tag_id=tags[0].id)
         self.assertEqual(len(notes), 1)
 
     def test_add_resource_to_note(self):
@@ -992,7 +881,8 @@ class ReadmeExamples(TestBase):
 
         # Each note should reference to exactly one resource.
         for note in notes:
-            resources = self.api.get_all_resources(note_id=note["id"])
+            assert note.id is not None
+            resources = self.api.get_all_resources(note_id=note.id)
             self.assertEqual(len(resources), 1)
 
     def test_remove_tags(self):
@@ -1007,7 +897,7 @@ class ReadmeExamples(TestBase):
         # All tags starting with "!" should be removed.
         tags = self.api.get_all_tags()
         self.assertEqual(len(tags), 1)
-        self.assertEqual(tags[0]["title"], "title")  # tags are always lower case
+        self.assertEqual(tags[0].title, "title")  # tags are always lower case
 
     def test_remove_spaces_from_tags(self):
 
@@ -1020,7 +910,8 @@ class ReadmeExamples(TestBase):
         all_tags = self.api.get_all_tags()
         self.assertEqual(len(all_tags), 2)
         for tag in all_tags:
-            self.assertNotIn(" ", tag["title"])
+            assert tag.title is not None
+            self.assertNotIn(" ", tag.title)
 
     @with_resource
     def test_remove_orphaned_resources(self, filename):
@@ -1043,4 +934,4 @@ class ReadmeExamples(TestBase):
         # The resource without reference should be deleted.
         resources = self.api.get_all_resources()
         self.assertEqual(len(resources), 1)
-        self.assertEqual(resources[0]["title"], "resource 0")
+        self.assertEqual(resources[0].title, "resource 0")

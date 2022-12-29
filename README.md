@@ -133,8 +133,8 @@ api = Api(token=YOUR_TOKEN)
 for tag in api.get_all_tags():
 
     # Delete all tags that match the regex. I. e. start with "!".
-    if re.search("^!", tag["title"]) is not None:
-        api.delete_tag(tag["id"])
+    if re.search("^!", tag.title) is not None:
+        api.delete_tag(tag.id)
 ```
 
 </details>
@@ -159,7 +159,7 @@ def to_camel_case(name: str) -> str:
 
 # Iterate through all tags and apply the conversion.
 for tag in api.get_all_tags():
-    api.modify_tag(id_=tag["id"], title=to_camel_case(tag["title"]))
+    api.modify_tag(id_=tag.id, title=to_camel_case(tag.title))
 ```
 
 </details>
@@ -185,15 +185,15 @@ api = Api(token=YOUR_TOKEN)
 # Iterate through all notes and find the referenced resources.
 referenced_resources = set()
 for note in api.get_all_notes(fields="id,body"):
-    matches = re.findall(r"\[.*\]\(:.*\/([A-Za-z0-9]{32})\)", note["body"])
+    matches = re.findall(r"\[.*\]\(:.*\/([A-Za-z0-9]{32})\)", note.body)
     referenced_resources.update(matches)
 
 assert len(referenced_resources) > 0, "sanity check"
 
 for resource in api.get_all_resources():
-    if resource["id"] not in referenced_resources:
+    if resource.id not in referenced_resources:
         print("Deleting resource:", resource)
-        api.delete_resource(resource["id"])
+        api.delete_resource(resource.id)
 ```
 
 </details>

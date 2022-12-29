@@ -73,6 +73,7 @@ def main():
 
     # download nltk data at the first start
     if False:
+        # "punkt" and "tokenizers" are needed.
         nltk.download()
 
     # get all notes from joplin
@@ -81,7 +82,7 @@ def main():
     print("Notes:", len(notes))
 
     # concatenate and convert them to text
-    text = markdown_to_text("\n".join(note["body"] for note in notes))
+    text = markdown_to_text("\n".join(note.body for note in notes))
 
     # analyze them
     analyze_text(text)
