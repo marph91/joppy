@@ -4,7 +4,9 @@ on: [push]
 
 jobs:
   container:
-    runs-on: ubuntu-latest
+    # Workaround for missing python 3.6:
+    # https://github.com/actions/setup-python/issues/544#issuecomment-1320295576
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         python-version: ["3.6", "3.8", "3.10"]
