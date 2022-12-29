@@ -15,10 +15,10 @@ import unittest
 import requests
 import urllib3
 
-from . import setup_joplin
 from joppy import tools
 from joppy.api import Api
 import joppy.data_types as dt
+from . import setup_joplin
 
 
 os.makedirs("test_output", exist_ok=True)
@@ -50,7 +50,7 @@ def with_resource(func):
     return inner_decorator
 
 
-def setUpModule():
+def setUpModule():  # pylint: disable=invalid-name
     # TODO: When splitting in multiple files, this needs to be run at start of the
     # testsuite.
     global API_TOKEN, APP
@@ -61,7 +61,7 @@ def setUpModule():
         API_TOKEN = APP.api_token
 
 
-def tearDownModule():
+def tearDownModule():  # pylint: disable=invalid-name
     if APP is not None:
         APP.stop()
 
@@ -70,7 +70,7 @@ class TestBase(unittest.TestCase):
     def setUp(self):
         super().setUp()
 
-        logging.debug(f"Test: {self.id()}")
+        logging.debug("Test: %s", self.id())
 
         self.api = Api(token=API_TOKEN)
         # Note: Notes get deleted automatically.
@@ -91,7 +91,7 @@ class TestBase(unittest.TestCase):
         for character in exclude:
             characters = characters.replace(character, "")
         random_string = "".join(random.choice(characters) for _ in range(length))
-        logging.debug(f"Test: random string: {random_string}")
+        logging.debug("Test: random string: %s", random_string)
         return random_string
 
     @staticmethod
@@ -817,7 +817,7 @@ class ReadmeExamples(TestBase):
     def setUpClass(cls):
         super().setUpClass()
 
-        with open("README.md") as infile:
+        with open("README.md", encoding="utf-8") as infile:
             readme_content = infile.read()
 
         # Replace the token to make the code functional.
