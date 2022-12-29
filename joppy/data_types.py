@@ -47,9 +47,30 @@ class ItemType(enum.Enum):
     COMMAND = 16
 
 
+class MarkupLanguage(enum.Enum):
+    # https://discourse.joplinapp.org/t/api-body-vs-body-html/11697/4
+    MARKDOWN = 1
+    HTML = 2
+
+
+def is_id_valid(id_: str) -> bool:
+    """
+    Check whether a string is a valid id. See:
+    https://joplinapp.org/api/references/rest_api/#creating-a-note-with-a-specific-id.
+    """
+    if len(id_) != 32:
+        return False
+    # https://stackoverflow.com/a/11592279/7410886
+    try:
+        int(id_, 16)
+    except ValueError:
+        return False
+    return True
+
+
 @dataclass
 class BaseData:
-    type_: Optional[str] = None
+    type_: Optional[ItemType] = None
 
     def __post_init__(self) -> None:
         # Cast the basic joplin API datatypes to more convenient datatypes.
@@ -57,8 +78,18 @@ class BaseData:
             value = getattr(self, field_.name)
             if value is None:
                 continue
-            # if field_.name in ("id", "parent_id", "share_id", "conflict_original_id", "master_key_id", "item_id"):
-            if field_.name.endswith("_time") or field_.name == "todo_due":
+            if field_.name in (
+                "id",
+                "parent_id",
+                "share_id",
+                "conflict_original_id",
+                "master_key_id",
+                "item_id",
+            ):
+                # Exclude integer and empty string IDs.
+                if value and isinstance(value, str) and not is_id_valid(value):
+                    raise ValueError("Invalid ID:", value)
+            elif field_.name.endswith("_time") or field_.name == "todo_due":
                 setattr(self, field_.name, datetime.fromtimestamp(value / 1000.0))
             elif field_.name in (
                 "is_conflict",
@@ -69,9 +100,13 @@ class BaseData:
                 "encryption_blob_encrypted",
             ):
                 setattr(self, field_.name, bool(value))
-            # elif field_.name in ("latitude", "longitude", "altitude"):
+            elif field_.name == "latitude":
+                if not (-90 <= value <= 90):
+                    raise ValueError("Invalid latitude:", value)
+            elif field_.name == "longitude":
+                if not (-180 <= value <= 180):
+                    raise ValueError("Invalid longitude:", value)
             # elif field_.name == "order":
-            # elif field_.name == "markup_language":
             # elif field_.name == "crop_rect":
             # elif field_.name == "icon":
             # elif field_.name == "filename":  # "file_extension"
@@ -115,7 +150,7 @@ class NoteData(BaseData):
     user_updated_time: Optional[datetime] = None
     encryption_cipher_text: Optional[str] = None
     encryption_applied: Optional[bool] = None
-    markup_language: Optional[int] = None
+    markup_language: Optional[MarkupLanguage] = None
     is_shared: Optional[bool] = None
     share_id: Optional[str] = None
     conflict_original_id: Optional[str] = None
@@ -188,9 +223,9 @@ class EventData(BaseData):
     """https://joplinapp.org/api/references/rest_api/#events"""
 
     id: Optional[int] = None
-    item_type: Optional[int] = None
+    item_type: Optional[ItemType] = None
     item_id: Optional[int] = None
-    type: Optional[int] = None
+    type: Optional[EventChangeType] = None
     created_time: Optional[datetime] = None
     # source: Optional[int] = None
     # before_change_item: Optional[str] = None

@@ -59,7 +59,9 @@ def create_joplin_note(note_title, note_body, destination_notebook):
     joplin_api = Api(token=os.getenv("API_TOKEN"))
 
     # Search the parent notebook in Joplin.
-    notebook_candidates = joplin_api.search(query=destination_notebook, type="folder").items
+    notebook_candidates = joplin_api.search(
+        query=destination_notebook, type="folder"
+    ).items
     if len(notebook_candidates) < 1:
         exit(1)
     else:

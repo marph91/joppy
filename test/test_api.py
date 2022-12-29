@@ -1,6 +1,6 @@
 """Tests for the joplin python API."""
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import itertools
 import logging
 import mimetypes
@@ -9,7 +9,6 @@ import random
 import re
 import string
 import tempfile
-import time
 from typing import Any, Iterable, Mapping, Tuple
 import unittest
 
@@ -96,27 +95,6 @@ class TestBase(unittest.TestCase):
         return random_string
 
     @staticmethod
-    def is_id_valid(id_: str) -> bool:
-        """
-        Check whether a string is a valid id. See:
-        https://joplinapp.org/api/references/rest_api/#creating-a-note-with-a-specific-id.
-        """
-        if len(id_) != 32:
-            return False
-        # https://stackoverflow.com/a/11592279/7410886
-        try:
-            int(id_, 16)
-        except ValueError:
-            return False
-        return True
-
-    @staticmethod
-    def is_timestamp_valid(timestamp: int) -> bool:
-        """Check whether a timestamp is valid."""
-        # https://joplinapp.org/api/references/rest_api/#about-the-property-types
-        return 0 <= timestamp <= int(time.time() * 1000)  # ms
-
-    @staticmethod
     def get_combinations(
         iterable: Iterable[str], max_combinations: int = 100
     ) -> Iterable[Tuple[str, ...]]:
@@ -175,7 +153,6 @@ class Event(TestBase):
             event.get_assigned_fields(), set(self.default_properties + ["type_"])
         )
         self.assertEqual(event.type, dt.EventChangeType.CREATED)
-        # TODO: self.assertTrue(self.is_timestamp_valid(event.created_time))
         self.assertEqual(event.type_, dt.ItemType.ITEM_CHANGE)
 
         # TODO: What is the purpose?
@@ -185,7 +162,7 @@ class Event(TestBase):
 
     def test_get_events_by_cursor(self):
         """Get all events by specifying a cursor of 0."""
-        previous_created_time = datetime.now() - timedelta(days=1)
+        previous_created_time = datetime(2000, 1, 1)
         previous_id = 0
 
         self.generate_event()
@@ -237,9 +214,6 @@ class Note(TestBase):
         """Add a note to an existing notebook."""
         parent_id = self.api.add_notebook()
         id_ = self.api.add_note()
-
-        self.assertTrue(self.is_id_valid(parent_id))
-        self.assertTrue(self.is_id_valid(id_))
 
         notes = self.api.get_notes().items
         self.assertEqual(len(notes), 1)
@@ -367,8 +341,6 @@ class Notebook(TestBase):
         """Add a notebook."""
         id_ = self.api.add_notebook()
 
-        self.assertTrue(self.is_id_valid(id_))
-
         notebooks = self.api.get_notebooks().items
         self.assertEqual(len(notebooks), 1)
         self.assertEqual(notebooks[0].id, id_)
@@ -469,7 +441,6 @@ class Resource(TestBase):
     def test_add(self, filename):
         """Add a resource."""
         id_ = self.api.add_resource(filename=filename)
-        self.assertTrue(self.is_id_valid(id_))
 
         resources = self.api.get_resources().items
         self.assertEqual(len(resources), 1)
@@ -744,9 +715,6 @@ class Tag(TestBase):
         parent_id = self.api.add_note()
         id_ = self.api.add_tag(parent_id=parent_id)
 
-        self.assertTrue(self.is_id_valid(parent_id))
-        self.assertTrue(self.is_id_valid(id_))
-
         tags = self.api.get_tags().items
         self.assertEqual(len(tags), 1)
         self.assertEqual(tags[0].id, id_)
@@ -840,27 +808,17 @@ class Helper(TestBase):
     def test_random_id(self):
         """Random IDs should always be valid."""
         for _ in range(100):
-            self.assertTrue(self.is_id_valid(self.get_random_id()))
+            self.assertTrue(dt.is_id_valid(self.get_random_id()))
 
     def test_is_id_valid(self):
         """Trivial test for the is_id_valid() function."""
-        self.assertTrue(self.is_id_valid("0" * 32))
+        self.assertTrue(dt.is_id_valid("0" * 32))
 
         # ID has to be 32 chars.
-        self.assertFalse(self.is_id_valid("0" * 31))
+        self.assertFalse(dt.is_id_valid("0" * 31))
 
         # ID has to be contain only hex chars.
-        self.assertFalse(self.is_id_valid("h" + "0" * 31))
-
-    def test_is_timestamp_valid(self):
-        """Trivial test for the is_timestamp_valid() function."""
-        self.assertTrue(self.is_timestamp_valid(int(time.time() * 1000)))
-
-        # Timestamp has to be positive.
-        self.assertFalse(self.is_timestamp_valid(-1))
-
-        # Timestamp can't be in the future.
-        self.assertFalse(self.is_timestamp_valid(int((time.time() + 5) * 1000)))
+        self.assertFalse(dt.is_id_valid("h" + "0" * 31))
 
 
 class Miscellaneous(TestBase):

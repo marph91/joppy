@@ -253,7 +253,6 @@ class Search(ApiBase):
         dt.DataList[dt.ResourceData],
         dt.DataList[dt.TagData],
     ]:
-        # ) -> dt.DataList[Union[dt.NoteData, dt.NotebookData, dt.ResourceData, dt.TagData]]:
         """Issue a search."""
         # Copy the dict, because its content gets changed.
         outer_query = copy.deepcopy(query)
