@@ -1,7 +1,7 @@
 """
 Custom export for Joplin notes
 
-Details: https://discourse.joplinapp.org/t/feature-request-place-attachments-in-the-same-sub-folder-when-exporting/23072
+Details: https://discourse.joplinapp.org/t/feature-request-place-attachments-in-the-same-sub-folder-when-exporting/23072  # noqa
 Requirements: pip install joppy
 Usage: python examples/custom_export.py --api-token xyz
 """
