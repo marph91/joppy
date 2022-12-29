@@ -84,8 +84,7 @@ def get_item_tree(api):
     }
     notes_flat_api = api.get_all_notes(fields="id,parent_id,title,body")
     notes_flat = {
-        "n" + n.id: Note(n.id, n.parent_id, n.title, n.body)
-        for n in notes_flat_api
+        "n" + n.id: Note(n.id, n.parent_id, n.title, n.body) for n in notes_flat_api
     }
 
     id_item_mapping = {**notebooks_flat, **notes_flat}
