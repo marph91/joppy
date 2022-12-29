@@ -52,16 +52,16 @@ def main():
     # Find notes with matching titles.
     candidates = []
     for title in args.note_titles:
-        candidates.extend([note for note in notes if note["title"] == title])
+        candidates.extend([note for note in notes if note.title == title])
     print(f"Found {len(candidates)} matching notes.")
 
     # Convert all notes to the specified format.
     os.makedirs(args.output_folder, exist_ok=True)
     for candidate in candidates:
-        note = api.get_note(id_=candidate["id"], fields="body")
+        note = api.get_note(id_=candidate.id, fields="body")
 
         title_normalized = (
-            candidate["title"].lower().replace(" ", "_") + "_" + candidate["id"]
+            candidate.title.lower().replace(" ", "_") + "_" + candidate.id
         )
         output_path = f"{args.output_folder}/{title_normalized}.{args.output_format}"
 
@@ -78,7 +78,7 @@ def main():
         }
 
         pypandoc.convert_text(
-            f"# {candidate['title']}\n{note['body']}",
+            f"# {candidate.title}\n{note.body}",
             format="md",
             outputfile=output_path,
             **format_kwargs.get(args.output_format, {"to": args.output_format}),

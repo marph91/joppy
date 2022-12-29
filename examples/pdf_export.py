@@ -79,12 +79,12 @@ def get_item_tree(api):
     # - Note IDs get the prefix "n"
     notebooks_flat_api = api.get_all_notebooks(fields="id,parent_id,title")
     notebooks_flat = {
-        "nb" + nb["id"]: Notebook(nb["id"], nb["parent_id"], nb["title"])
+        "nb" + nb.id: Notebook(nb.id, nb.parent_id, nb.title)
         for nb in notebooks_flat_api
     }
     notes_flat_api = api.get_all_notes(fields="id,parent_id,title,body")
     notes_flat = {
-        "n" + n["id"]: Note(n["id"], n["parent_id"], n["title"], n["body"])
+        "n" + n.id: Note(n.id, n.parent_id, n.title, n.body)
         for n in notes_flat_api
     }
 
