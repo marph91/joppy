@@ -114,14 +114,6 @@ class TestBase(unittest.TestCase):
 
 
 class Event(TestBase):
-    properties = [
-        # fmt: off
-        "id", "item_type", "item_id", "type", "created_time",
-        # "source", "before_change_item",
-        # fmt: on
-    ]
-    default_properties = ["id", "item_type", "item_id", "type", "created_time"]
-
     def generate_event(self) -> None:
         """Generate an event and wait until it's available."""
         events = self.api.get_events()
@@ -149,14 +141,12 @@ class Event(TestBase):
         assert last_event.id is not None
         event = self.api.get_event(id_=last_event.id)
 
-        self.assertEqual(
-            event.get_assigned_fields(), set(self.default_properties + ["type_"])
-        )
+        self.assertEqual(event.assigned_fields(), event.default_fields())
         self.assertEqual(event.type, dt.EventChangeType.CREATED)
         self.assertEqual(event.type_, dt.ItemType.ITEM_CHANGE)
 
         # TODO: What is the purpose?
-        # for property_ in self.default_properties:
+        # for property_ in event.default_fields():
         #    # https://github.com/python/mypy/issues/7178
         #    self.assertEqual(event[property_], event[property_])  # type: ignore
 
@@ -176,7 +166,7 @@ class Event(TestBase):
             self.assertGreater(event.id, previous_id)
             previous_created_time = current_created_time
             previous_id = event.id
-            self.assertEqual(event.get_assigned_fields(), set(self.default_properties))
+            self.assertEqual(event.assigned_fields(), event.default_fields())
 
     def test_get_events_empty(self):
         """
@@ -189,27 +179,14 @@ class Event(TestBase):
     def test_get_events_valid_properties(self):
         """Try to get specific properties of an event."""
         # TODO: Doesn't work with cursor=0
-        property_combinations = self.get_combinations(self.properties)
+        property_combinations = self.get_combinations(dt.EventData.fields())
         for properties in property_combinations:
             events = self.api.get_events(fields=",".join(properties))
             for event in events.items:
-                self.assertEqual(event.get_assigned_fields(), set(properties))
+                self.assertEqual(event.assigned_fields(), set(properties))
 
 
 class Note(TestBase):
-    properties = [
-        # fmt: off
-        "id", "parent_id", "title", "body", "created_time", "updated_time",
-        "is_conflict", "latitude", "longitude", "altitude", "author", "source_url",
-        "is_todo", "todo_due", "todo_completed", "source", "source_application",
-        "application_data", "order", "user_created_time", "user_updated_time",
-        "encryption_cipher_text", "encryption_applied", "markup_language",
-        "is_shared", "share_id", "conflict_original_id",
-        # "body_html", "base_url", "image_data_url", "crop_rect",
-        # fmt: on
-    ]
-    default_properties = ["id", "parent_id", "title"]
-
     def test_add(self):
         """Add a note to an existing notebook."""
         parent_id = self.api.add_notebook()
@@ -263,9 +240,7 @@ class Note(TestBase):
         self.api.add_notebook()
         id_ = self.api.add_note()
         note = self.api.get_note(id_=id_)
-        self.assertEqual(
-            note.get_assigned_fields(), set(self.default_properties + ["type_"])
-        )
+        self.assertEqual(note.assigned_fields(), note.default_fields())
         self.assertEqual(note.type_, dt.ItemType.NOTE)
 
     def test_get_notes(self):
@@ -276,7 +251,7 @@ class Note(TestBase):
         self.assertEqual(len(notes.items), 1)
         self.assertFalse(notes.has_more)
         for note in notes.items:
-            self.assertEqual(note.get_assigned_fields(), set(self.default_properties))
+            self.assertEqual(note.assigned_fields(), note.default_fields())
 
     def test_get_all_notes(self):
         """Get all notes, unpaginated."""
@@ -297,11 +272,18 @@ class Note(TestBase):
         """Try to get specific properties of a note."""
         self.api.add_notebook()
         self.api.add_note()
-        property_combinations = self.get_combinations(self.properties)
+        # TODO: Some of the fields yield HTTP 500.
+        selected_fields = dt.NoteData.fields() - {
+            "body_html",
+            "base_url",
+            "image_data_url",
+            "crop_rect",
+        }
+        property_combinations = self.get_combinations(selected_fields)
         for properties in property_combinations:
             notes = self.api.get_notes(fields=",".join(properties))
             for note in notes.items:
-                self.assertEqual(note.get_assigned_fields(), set(properties))
+                self.assertEqual(note.assigned_fields(), set(properties))
 
     def test_move(self):
         """Move a note from one notebook to another."""
@@ -327,16 +309,6 @@ class Note(TestBase):
 
 
 class Notebook(TestBase):
-    properties = [
-        # fmt: off
-        "id", "title", "created_time", "updated_time",
-        "user_created_time", "user_updated_time", "encryption_cipher_text",
-        "encryption_applied", "parent_id", "is_shared", "share_id",
-        "master_key_id", "icon",
-        # fmt: on
-    ]
-    default_properties = ["id", "parent_id", "title"]
-
     def test_add(self):
         """Add a notebook."""
         id_ = self.api.add_notebook()
@@ -350,9 +322,7 @@ class Notebook(TestBase):
         id_ = self.api.add_notebook()
         notebook = self.api.get_notebook(id_=id_)
         # TODO: properties instead of default_properties
-        self.assertEqual(
-            notebook.get_assigned_fields(), set(self.properties + ["type_"])
-        )
+        self.assertEqual(notebook.assigned_fields(), notebook.fields())
         self.assertEqual(notebook.type_, dt.ItemType.FOLDER)
 
     def test_get_notebooks(self):
@@ -362,9 +332,7 @@ class Notebook(TestBase):
         self.assertEqual(len(notebooks.items), 1)
         self.assertFalse(notebooks.has_more)
         for notebook in notebooks.items:
-            self.assertEqual(
-                notebook.get_assigned_fields(), set(self.default_properties)
-            )
+            self.assertEqual(notebook.assigned_fields(), notebook.default_fields())
 
     def test_get_all_notebooks(self):
         """Get all notebooks, unpaginated."""
@@ -393,11 +361,11 @@ class Notebook(TestBase):
     def test_get_notebooks_valid_properties(self):
         """Try to get specific properties of a notebook."""
         self.api.add_notebook()
-        property_combinations = self.get_combinations(self.properties)
+        property_combinations = self.get_combinations(dt.NotebookData.fields())
         for properties in property_combinations:
             notebooks = self.api.get_notebooks(fields=",".join(properties))
             for notebook in notebooks.items:
-                self.assertEqual(notebook.get_assigned_fields(), set(properties))
+                self.assertEqual(notebook.assigned_fields(), set(properties))
 
     def test_move(self):
         """Move a root notebok to another notebook. It's now a subnotebook."""
@@ -427,16 +395,6 @@ class Ping(TestBase):
 
 
 class Resource(TestBase):
-    properties = [
-        # fmt: off
-        "id", "title", "mime", "filename", "created_time", "updated_time",
-        "user_created_time", "user_updated_time", "file_extension",
-        "encryption_cipher_text", "encryption_applied", "encryption_blob_encrypted",
-        "size", "is_shared", "share_id",
-        # fmt: on
-    ]
-    default_properties = ["id", "title"]
-
     @with_resource
     def test_add(self, filename):
         """Add a resource."""
@@ -480,9 +438,7 @@ class Resource(TestBase):
         """Get metadata about a specific resource."""
         id_ = self.api.add_resource(filename=filename)
         resource = self.api.get_resource(id_=id_)
-        self.assertEqual(
-            resource.get_assigned_fields(), set(self.default_properties + ["type_"])
-        )
+        self.assertEqual(resource.assigned_fields(), resource.default_fields())
         self.assertEqual(resource.type_, dt.ItemType.RESOURCE)
 
     @with_resource
@@ -502,9 +458,7 @@ class Resource(TestBase):
         self.assertEqual(len(resources.items), 1)
         self.assertFalse(resources.has_more)
         for resource in resources.items:
-            self.assertEqual(
-                resource.get_assigned_fields(), set(self.default_properties)
-            )
+            self.assertEqual(resource.assigned_fields(), resource.default_fields())
 
     @with_resource
     def test_get_all_resources(self, filename):
@@ -522,11 +476,11 @@ class Resource(TestBase):
     def test_get_resources_valid_properties(self, filename):
         """Try to get specific properties of a resource."""
         self.api.add_resource(filename=filename)
-        property_combinations = self.get_combinations(self.properties)
+        property_combinations = self.get_combinations(dt.ResourceData.fields())
         for properties in property_combinations:
             resources = self.api.get_resources(fields=",".join(properties))
             for resource in resources.items:
-                self.assertEqual(resource.get_assigned_fields(), set(properties))
+                self.assertEqual(resource.assigned_fields(), set(properties))
 
     @with_resource
     def test_modify_title(self, filename):
@@ -679,15 +633,6 @@ class Search(TestBase):
 
 
 class Tag(TestBase):
-    properties = [
-        # fmt: off
-        "id", "parent_id", "title", "created_time", "updated_time",
-        "user_created_time", "user_updated_time", "encryption_cipher_text",
-        "encryption_applied", "is_shared",
-        # fmt: on
-    ]
-    default_properties = ["id", "parent_id", "title"]
-
     def test_add_no_note(self):
         """Tags can be added even without notes."""
         id_ = self.api.add_tag()
@@ -753,9 +698,7 @@ class Tag(TestBase):
         """Get a specific tag."""
         id_ = self.api.add_tag()
         tag = self.api.get_tag(id_=id_)
-        self.assertEqual(
-            tag.get_assigned_fields(), set(self.default_properties + ["type_"])
-        )
+        self.assertEqual(tag.assigned_fields(), tag.default_fields())
         self.assertEqual(tag.type_, dt.ItemType.TAG)
 
     def test_get_tags(self):
@@ -765,7 +708,7 @@ class Tag(TestBase):
         self.assertEqual(len(tags.items), 1)
         self.assertFalse(tags.has_more)
         for tag in tags.items:
-            self.assertEqual(tag.get_assigned_fields(), set(self.default_properties))
+            self.assertEqual(tag.assigned_fields(), tag.default_fields())
 
     def test_get_all_tags(self):
         """Get all tags, unpaginated."""
@@ -779,11 +722,11 @@ class Tag(TestBase):
     def test_get_tags_valid_properties(self):
         """Try to get specific properties of a tag."""
         self.api.add_tag()
-        property_combinations = self.get_combinations(self.properties)
+        property_combinations = self.get_combinations(dt.TagData.fields())
         for properties in property_combinations:
             tags = self.api.get_tags(fields=",".join(properties))
             for tag in tags.items:
-                self.assertEqual(tag.get_assigned_fields(), set(properties))
+                self.assertEqual(tag.assigned_fields(), set(properties))
 
 
 class Fuzz(TestBase):
@@ -855,7 +798,7 @@ class Regression(TestBase):
         self.api.add_tag_to_note(tag_id=tag_id, note_id=note_id)
 
         notes = self.api.get_notes(tag_id=tag_id, fields="id")
-        self.assertEqual(notes.items[0].get_assigned_fields(), {"id"})
+        self.assertEqual(notes.items[0].assigned_fields(), {"id"})
 
     @unittest.skip("Not yet implemented")
     def test_set_location(self):

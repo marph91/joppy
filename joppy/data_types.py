@@ -115,12 +115,22 @@ class BaseData:
             elif field_.name == "type":
                 setattr(self, field_.name, EventChangeType(value))
 
-    def get_assigned_fields(self) -> Set[str]:
+    def assigned_fields(self) -> Set[str]:
+        # Exclude "type_" for convenience.
         return set(
             field_.name
             for field_ in fields(self)
-            if getattr(self, field_.name) is not None
+            if getattr(self, field_.name) is not None and field_.name != "type_"
         )
+
+    @classmethod
+    def fields(cls) -> Set[str]:
+        # Exclude "type_" for convenience.
+        return set(field_.name for field_ in fields(cls) if field_.name != "type_")
+
+    @staticmethod
+    def default_fields() -> Set[str]:
+        return {"id", "parent_id", "title"}
 
 
 @dataclass
@@ -201,6 +211,10 @@ class ResourceData(BaseData):
     share_id: Optional[str] = None
     master_key_id: Optional[str] = None
 
+    @staticmethod
+    def default_fields() -> Set[str]:
+        return {"id", "title"}
+
 
 @dataclass
 class TagData(BaseData):
@@ -235,6 +249,10 @@ class EventData(BaseData):
         # Cast the basic joplin API datatypes to more convenient datatypes.
         if self.id is not None:
             self.id = int(self.id)
+
+    @staticmethod
+    def default_fields() -> Set[str]:
+        return {"id", "item_type", "item_id", "type", "created_time"}
 
 
 T = TypeVar("T", EventData, NoteData, NotebookData, ResourceData, TagData)
