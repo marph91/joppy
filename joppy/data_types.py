@@ -255,7 +255,7 @@ class EventData(BaseData):
         return {"id", "item_type", "item_id", "type", "created_time"}
 
 
-T = TypeVar("T", EventData, NoteData, NotebookData, ResourceData, TagData)
+T = TypeVar("T", EventData, NoteData, NotebookData, ResourceData, TagData, str)
 
 
 @dataclass

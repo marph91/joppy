@@ -555,7 +555,6 @@ class Search(TestBase):
             self.api.get_tags(),
         )
 
-    @unittest.skip("TODO")
     def test_master_key(self):
         """There is no master key configured."""
         self.assertEqual(

@@ -252,6 +252,7 @@ class Search(ApiBase):
         dt.DataList[dt.NotebookData],
         dt.DataList[dt.ResourceData],
         dt.DataList[dt.TagData],
+        dt.DataList[str],
     ]:
         """Issue a search."""
         # Copy the dict, because its content gets changed.
@@ -275,6 +276,8 @@ class Search(ApiBase):
         elif query["type"] == dt.ItemType.TAG.name.lower():
             response["items"] = [dt.TagData(**item) for item in items]
             return dt.DataList[dt.TagData](**response)
+        elif query["type"] == dt.ItemType.MASTER_KEY.name.lower():
+            return dt.DataList[str](**response)
         raise NotImplementedError(f"Type {query['type']} not implemented, yet.")
 
 
