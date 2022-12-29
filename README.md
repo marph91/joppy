@@ -206,6 +206,7 @@ Before using joppy, you should check the [Joplin plugins](https://joplinapp.org/
 
 | Script                                                              | Description                                                                                                           |
 | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| [custom_export.py](examples/custom_export.py)                       | Export resources next to notes, instead of a separate folder.                                                         |
 | [note_export.py](examples/note_export.py)                           | Export notes to any format supported by [pandoc](https://pandoc.org/).                                                |
 | [note_stats.py](examples/note_stats.py)                             | Get some simple statistics about your notes, based on [nltk](https://www.nltk.org/).                                  |
 | [pdf_export.py](examples/pdf_export.py)                             | Joplin only supports PDF export of a single note. This script allows to export one, multiple or all notebooks to PDF. |
