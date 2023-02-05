@@ -12,7 +12,7 @@ Known issues:
 - Big tables are truncated.
 
 Reference:
-- https://discourse.joplinapp.org/t/request-pdf-export-for-notebook-or-serveral-marked-notes/5648
+- https://discourse.joplinapp.org/t/request-pdf-export-for-notebook-or-serveral-marked-notes/5648  # noqa
 - https://discourse.joplinapp.org/t/list-of-folders-notes-something-like-treeview/29051
 """
 
