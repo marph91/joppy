@@ -204,16 +204,16 @@ For more usage examples, check the example scripts or [tests](test/test_api.py).
 
 Before using joppy, you should check the [Joplin plugins](https://joplinapp.org/plugins/). They are probably more convenient. However, if you need a new feature or just want to code in python, you can use joppy. Below are example scripts to showcase how joppy can be used.
 
-| Script                                                              | Description                                                                                                           |
-| ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| [custom_export.py](examples/custom_export.py)                       | Export resources next to notes, instead of a separate folder.                                                         |
-| [note_export.py](examples/note_export.py)                           | Export notes to any format supported by [pandoc](https://pandoc.org/).                                                |
-| [note_stats.py](examples/note_stats.py)                             | Get some simple statistics about your notes, based on [nltk](https://www.nltk.org/).                                  |
-| [pdf_export.py](examples/pdf_export.py)                             | Joplin only supports PDF export of a single note. This script allows to export one, multiple or all notebooks to PDF. |
-| [visualize_note_locations.py](examples/visualize_note_locations.py) | Visualize the locations of your notes.                                                                                |
-| <https://github.com/marph91/joplin-ui-tests>                        | System tests for the joplin desktop app. Based on selenium.                                                           |
-| <https://github.com/gri38/django-joplin_vieweb>                     | Web viewer for joplin.                                                                                                |
-| <https://github.com/BeneKurz/Toodledo2Joplin>                       | Import notes from <https://www.toodledo.com> to Joplin.                                                               |
+| Script                                                              | Description                                                                                                                  |
+| ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| [custom_export.py](examples/custom_export.py)                       | Export resources next to notes, instead of a separate folder.                                                                |
+| [note_export.py](examples/note_export.py)                           | Export notes to any format supported by [pandoc](https://pandoc.org/).                                                       |
+| [note_stats.py](examples/note_stats.py)                             | Get some simple statistics about your notes, based on [nltk](https://www.nltk.org/).                                         |
+| [note_tree_export.py](examples/note_tree_export.py)                 | Joplin only supports PDF export of a single note. This script allows to export one, multiple or all notebooks to PDF or TXT. |
+| [visualize_note_locations.py](examples/visualize_note_locations.py) | Visualize the locations of your notes.                                                                                       |
+| <https://github.com/marph91/joplin-ui-tests>                        | System tests for the joplin desktop app. Based on selenium.                                                                  |
+| <https://github.com/gri38/django-joplin_vieweb>                     | Web viewer for joplin.                                                                                                       |
+| <https://github.com/BeneKurz/Toodledo2Joplin>                       | Import notes from <https://www.toodledo.com> to Joplin.                                                                      |
 
 ## :sunny: Tests
 

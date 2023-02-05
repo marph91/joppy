@@ -1,21 +1,27 @@
 """
-Convert notebooks and notes to PDF.
-Requirements: pip install joppy markdown weasyprint
+Convert notebooks and notes to HTML, PDF or TXT.
+
+Requirements (for pdf export): pip install joppy markdown weasyprint
+
 Usage:
-- API_TOKEN=XYZ python pdf_export.py
-- python pdf_export.py --help
+- API_TOKEN=XYZ python note_tree_export.py --output note_tree.txt
+- python note_tree_export.py --help
+
 Known issues:
 - Checkboxes don't get visualized correctly.
 - Big tables are truncated.
+
+Reference:
+- https://discourse.joplinapp.org/t/request-pdf-export-for-notebook-or-serveral-marked-notes/5648
+- https://discourse.joplinapp.org/t/list-of-folders-notes-something-like-treeview/29051
 """
 
 import argparse
 import dataclasses
 import os
+from pathlib import Path
 
 from joppy.api import Api
-from markdown import Markdown
-from weasyprint import HTML
 
 
 # "frozen", because the class needs to be hashable for creating the tree.
@@ -101,6 +107,8 @@ def get_item_tree(api):
 
 def item_tree_to_html(item_tree):
     """Convert the notes to HTML and merge them to a single document."""
+    from markdown import Markdown
+
     md = Markdown(extensions=["nl2br", "sane_lists", "tables"])
 
     def sub_tree_to_html(item_tree, level=1):
@@ -119,6 +127,21 @@ def item_tree_to_html(item_tree):
         return html_parts
 
     return "".join(sub_tree_to_html(item_tree))
+
+
+def item_tree_to_txt(item_tree):
+    def sub_tree_to_txt(item_tree, level=0):
+        next_level = level + 1
+        txt_parts = []
+        for key, value in item_tree.items():
+            if isinstance(key, Notebook):
+                txt_parts.append(f"{'  ' * level}* {key.title}")
+            else:
+                txt_parts.append(f"{'  ' * level}- {key.title}")
+            txt_parts.extend(sub_tree_to_txt(value, next_level))
+        return txt_parts
+
+    return "\n".join(sub_tree_to_txt(item_tree))
 
 
 def sort_item_tree(item_tree):
@@ -145,16 +168,14 @@ def main():
         help="Title of the root notebooks. By default all notebooks are selected.",
     )
     parser.add_argument(
-        "--pdf-file",
-        default="joplin_notebook.pdf",
-        help="Path to the PDF output file.",
-    )
-    parser.add_argument(
-        "--html-file",
-        default="joplin_notebook.html",
-        help="Path to the HTML output file.",
+        "--output",
+        help="Path to the output file."
     )
     args = parser.parse_args()
+
+    output_format = Path(args.output).suffix
+    if output_format not in (".html", ".pdf", ".txt"):
+        raise ValueError(f"Unsupported format '{output_format}'")
 
     # Obtain the notebooks and notes via joplin API.
     api = Api(token=os.getenv("API_TOKEN"))
@@ -168,15 +189,21 @@ def main():
             )
     sorted_item_tree = sort_item_tree(item_tree)
 
-    # Convert and merge everything to a single HTML document.
-    html = item_tree_to_html(sorted_item_tree)
-    if args.html_file:
-        with open(args.html_file, "w") as outfile:
-            outfile.write(html)
+    if output_format in (".html", ".pdf"):
 
-    # Finally convert the HTML to PDF.
-    if args.pdf_file:
-        HTML(string=html).write_pdf(args.pdf_file)
+        html = item_tree_to_html(sorted_item_tree)
+
+        if output_format == ".html":
+            with open(args.output, "w") as outfile:
+                outfile.write(html)
+        else:
+            from weasyprint import HTML
+            HTML(string=html).write_pdf(args.output)
+
+    if output_format == ".txt":
+        txt_tree = item_tree_to_txt(sorted_item_tree)
+        with open(args.output, "w") as outfile:
+            outfile.write(txt_tree)
 
 
 if __name__ == "__main__":
