@@ -167,10 +167,7 @@ def main():
         nargs="+",
         help="Title of the root notebooks. By default all notebooks are selected.",
     )
-    parser.add_argument(
-        "--output",
-        help="Path to the output file."
-    )
+    parser.add_argument("--output", help="Path to the output file.")
     args = parser.parse_args()
 
     output_format = Path(args.output).suffix
@@ -198,6 +195,7 @@ def main():
                 outfile.write(html)
         else:
             from weasyprint import HTML
+
             HTML(string=html).write_pdf(args.output)
 
     if output_format == ".txt":
