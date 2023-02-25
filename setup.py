@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name="joppy",
-    version="0.1.0",
+    version="0.1.1",
     packages=["joppy"],
     # https://stackoverflow.com/a/70386281/7410886
     package_data={
