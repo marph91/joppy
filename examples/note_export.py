@@ -73,7 +73,8 @@ def main():
                 resource_binary = api.get_resource_file(resource.id)
                 with open(f"{tmpdirname}/{resource.id}", "wb") as outfile:
                     outfile.write(resource_binary)
-                # Replace joplin's local link with the path to the just downloaded resource.
+                # Replace joplin's local link with the path to the just
+                # downloaded resource.
                 note_body = note_body.replace(
                     f":/{resource.id}", f"{tmpdirname}/{resource.id}"
                 )
