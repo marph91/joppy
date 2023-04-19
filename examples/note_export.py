@@ -94,11 +94,19 @@ def main():
             # special arguments for some output formats
             format_kwargs = {
                 # https://github.com/NicklasTegner/pypandoc/issues/186#issuecomment-673282133
-                "pdf": {"to": "html", "extra_args": ["--pdf-engine", "weasyprint"]}
+                "pdf": {
+                    "to": "html",
+                    "extra_args": [
+                        "--pdf-engine",
+                        "weasyprint",
+                        "--metadata",
+                        f"title={candidate.title}",
+                    ],
+                }
             }
 
             pypandoc.convert_text(
-                f"# {candidate.title}\n{note_body}",
+                note_body,
                 format="md",
                 outputfile=output_path,
                 **format_kwargs.get(args.output_format, {"to": args.output_format}),
