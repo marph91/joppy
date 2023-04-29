@@ -114,7 +114,8 @@ def main():
                     f"Valid formats: {valid_output_formats}."
                 )
             # special arguments for some output formats
-            create_custom_css_file(Path(tmpdirname) / "custom.css")
+            custom_css_file = str(Path(tmpdirname) / "custom.css")
+            create_custom_css_file(custom_css_file)
             format_kwargs = {
                 # https://github.com/NicklasTegner/pypandoc/issues/186#issuecomment-673282133
                 "pdf": {
@@ -125,7 +126,7 @@ def main():
                         "--metadata",
                         f"title={candidate.title}",
                         "--css",
-                        Path(tmpdirname) / "custom.css",
+                        f"file:///{custom_css_file}",
                     ],
                 }
             }
