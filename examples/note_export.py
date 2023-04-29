@@ -16,6 +16,7 @@ apt install texlive-latex-base texlive-fonts-recommended texlive-fonts-extra
 
 import argparse
 import os
+from pathlib import Path
 import tempfile
 
 from joppy.api import Api
@@ -58,7 +59,6 @@ def main():
 
     # Create a temporary directory for the resources.
     with tempfile.TemporaryDirectory() as tmpdirname:
-
         # Convert all notes to the specified format.
         os.makedirs(args.output_folder, exist_ok=True)
         for candidate in candidates:
@@ -71,12 +71,14 @@ def main():
                 if not resource.mime.startswith("image"):
                     continue
                 resource_binary = api.get_resource_file(resource.id)
-                with open(f"{tmpdirname}/{resource.id}", "wb") as outfile:
+                resource_path = str(Path(tmpdirname) / resource.id)
+                with open(resource_path, "wb") as outfile:
                     outfile.write(resource_binary)
                 # Replace joplin's local link with the path to the just
-                # downloaded resource.
+                # downloaded resource. Use the "file:///" protocol:
+                # https://stackoverflow.com/a/18246357/7410886
                 note_body = note_body.replace(
-                    f":/{resource.id}", f"{tmpdirname}/{resource.id}"
+                    f":/{resource.id}", f"file:///{resource_path}"
                 )
 
             title_normalized = (
