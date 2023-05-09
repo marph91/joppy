@@ -14,7 +14,6 @@ from xvfbwrapper import Xvfb
 def download_joplin(destination: str) -> None:
     """Download the latest joplin desktop app release if not already done."""
     if not os.path.exists(destination):
-
         # obtain the version string
         # response = requests.get(
         #    "https://api.github.com/repos/laurent22/joplin/releases"

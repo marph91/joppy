@@ -842,7 +842,6 @@ class ReadmeExamples(TestBase):
         return matches.groups()[0]
 
     def test_get_all_notes(self):
-
         note_count = 3
         self.api.add_notebook()
         for _ in range(note_count):
@@ -856,7 +855,6 @@ class ReadmeExamples(TestBase):
         self.assertEqual(len(locals_dict["notes"]), note_count)
 
     def test_add_tag_to_note(self):
-
         code = self.get_example_code("add_tag_to_note")
         exec(code)
 
@@ -868,7 +866,6 @@ class ReadmeExamples(TestBase):
         self.assertEqual(len(notes), 1)
 
     def test_add_resource_to_note(self):
-
         code = self.get_example_code("add_resource_to_note")
         code = code.replace("path/to/image.png", "test/grant_authorization_button.png")
         exec(code)
@@ -886,7 +883,6 @@ class ReadmeExamples(TestBase):
             self.assertEqual(len(resources), 1)
 
     def test_remove_tags(self):
-
         self.api.add_tag(title="Title")
         self.api.add_tag(title="! Another Title")
         self.api.add_tag(title="!_third_title")
@@ -900,7 +896,6 @@ class ReadmeExamples(TestBase):
         self.assertEqual(tags[0].title, "title")  # tags are always lower case
 
     def test_remove_spaces_from_tags(self):
-
         self.api.add_tag(title="tag with spaces")
         self.api.add_tag(title="another tag with spaces")
 
@@ -915,7 +910,6 @@ class ReadmeExamples(TestBase):
 
     @with_resource
     def test_remove_orphaned_resources(self, filename):
-
         self.api.add_notebook()
         for i in range(2):
             note_id = self.api.add_note()
