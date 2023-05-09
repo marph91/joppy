@@ -89,12 +89,17 @@ class BaseData:
                 # Exclude integer and empty string IDs.
                 if value and isinstance(value, str) and not is_id_valid(value):
                     raise ValueError("Invalid ID:", value)
-            elif field_.name.endswith("_time") or field_.name == "todo_due":
-                setattr(self, field_.name, datetime.fromtimestamp(value / 1000.0))
+            elif field_.name.endswith("_time") or field_.name in (
+                "todo_due",
+                "todo_completed",
+            ):
+                casted_value = (
+                    None if value == 0 else datetime.fromtimestamp(value / 1000.0)
+                )
+                setattr(self, field_.name, casted_value)
             elif field_.name in (
                 "is_conflict",
                 "is_todo",
-                "todo_completed",
                 "encryption_applied",
                 "is_shared",
                 "encryption_blob_encrypted",
@@ -151,7 +156,7 @@ class NoteData(BaseData):
     source_url: Optional[str] = None
     is_todo: Optional[bool] = None
     todo_due: Optional[datetime] = None
-    todo_completed: Optional[bool] = None
+    todo_completed: Optional[datetime] = None
     source: Optional[str] = None
     source_application: Optional[str] = None
     application_data: Optional[str] = None

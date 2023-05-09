@@ -272,12 +272,15 @@ class Note(TestBase):
         """Try to get specific properties of a note."""
         self.api.add_notebook()
         self.api.add_note()
-        # TODO: Some of the fields yield HTTP 500.
         selected_fields = dt.NoteData.fields() - {
+            # TODO: Some of the fields yield HTTP 500.
             "body_html",
             "base_url",
             "image_data_url",
             "crop_rect",
+            # todo timestamps can be None
+            "todo_due",
+            "todo_completed",
         }
         property_combinations = self.get_combinations(selected_fields)
         for properties in property_combinations:
