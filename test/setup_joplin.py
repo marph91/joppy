@@ -20,7 +20,7 @@ def download_joplin(destination: str) -> None:
         #    "https://api.github.com/repos/laurent22/joplin/releases"
         # )
         # latest_version = response.json()[0]["name"].lstrip("v")
-        latest_version = "2.9.17"
+        latest_version = "2.10.17"
         print(f"Testing with Joplin version {latest_version}.")
 
         # download the binary
