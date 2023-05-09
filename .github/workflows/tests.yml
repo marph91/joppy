@@ -9,7 +9,9 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: ["3.6", "3.8", "3.10"]
+        # Available versions:
+        # https://github.com/actions/runner-images/blob/main/images/linux/Ubuntu2004-Readme.md#python
+        python-version: ["3.6", "3.8", "3.11"]
       fail-fast: false
     env:
       SLOW_TESTS: 1
