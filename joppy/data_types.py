@@ -111,6 +111,8 @@ class BaseData:
             elif field_.name == "longitude":
                 if not (-180 <= value <= 180):
                     raise ValueError("Invalid longitude:", value)
+            elif field_.name == "markup_language":
+                setattr(self, field_.name, MarkupLanguage(value))
             # elif field_.name == "order":
             # elif field_.name == "crop_rect":
             # elif field_.name == "icon":
