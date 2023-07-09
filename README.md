@@ -228,9 +228,55 @@ It's possible to configure the test run via some environment variables:
 - `SLOW_TESTS`: Set this variable to run the slow tests. Default not set.
 - `API_TOKEN`: Set this variable if there is already a joplin instance running. **Don't use your default joplin profile!** By default, a joplin instance is started inside xvfb. This takes some time, but works for CI.
 
-## :question: FAQ
+## :book: Changelog
 
-Short summary about questions I had during the implementation.
+### Master
 
-- What is the purpose/usecase of "user_created_time"? Isn't "created_time" sufficient? &#8594; <https://discourse.joplinapp.org/t/importing-notes-from-tiddlywiki-api-feature-request-for-timestamps/1952/7>
-- Why is the token in the query? &#8594; <https://discourse.joplinapp.org/t/joplin-api-token-in-header-vs-query-parameters/12573/5>
+- Cast `markup_language` to an appropriate enum type.
+- Add changelog.
+
+### 0.2.1
+
+- Fix PDF output example (<https://github.com/marph91/joppy/issues/19>).
+- :warning: Drop tests for python 3.6, since it's EOL. It may still work.
+- Fix the type of `todo_completed` and `todo_due`. They are a unix timestamp, not a bool.
+
+### 0.1.1
+
+- Add typing support to the pypi module.
+
+### 0.1.0
+
+- Use a requests session for speedup (<https://github.com/marph91/joppy/issues/15>).
+- :warning: Convert the API responses to data objects (<https://github.com/marph91/joppy/pull/17>). Main difference is to use `note.id` instead of `note["id"]` for example.
+
+### 0.0.7
+
+- Fix getting the binary resource file (<https://github.com/marph91/joppy/issues/13>).
+
+### 0.0.6
+
+- Add convenience method for deleting all notes.
+- Add example scripts.
+
+### 0.0.5
+
+- Fix package publishing workflow.
+
+### 0.0.4
+
+- Add support for python 3.6 and 3.7.
+
+### 0.0.3
+
+- Fix search with special characters (<https://github.com/marph91/joppy/issues/5>).
+- Remove arbitrary arguments from the internal base requests, since they aren't needed and may cause bugs.
+
+### 0.0.2
+
+- CI and test improvements.
+- Move complete setup to `setup.cfg`.
+
+### 0.0.1
+
+- Initial release.
