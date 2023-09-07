@@ -19,6 +19,7 @@ Reference:
 import argparse
 import dataclasses
 import os
+import tempfile
 from pathlib import Path
 
 from joppy.api import Api
@@ -187,16 +188,33 @@ def main():
     sorted_item_tree = sort_item_tree(item_tree)
 
     if output_format in (".html", ".pdf"):
-
         html = item_tree_to_html(sorted_item_tree)
 
-        if output_format == ".html":
-            with open(args.output, "w") as outfile:
-                outfile.write(html)
-        else:
-            from weasyprint import HTML
+        # Create a temporary directory for the resources.
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            # Download and add all image resources
+            resources = api.get_all_resources(fields="id,mime")
+            for resource in resources:
+                if not resource.mime.startswith("image"):
+                    continue
+                resource_binary = api.get_resource_file(resource.id)
+                resource_path = str(Path(tmpdirname) / resource.id)
+                with open(resource_path, "wb") as outfile:
+                    outfile.write(resource_binary)
+                # Replace joplin's local link with the path to the just
+                # downloaded resource. Use the "file:///" protocol:
+                # https://stackoverflow.com/a/18246357/7410886
+                html = html.replace(f":/{resource.id}", f"file:///{resource_path}")
 
-            HTML(string=html).write_pdf(args.output)
+            if output_format == ".html":
+                with open(args.output, "w") as outfile:
+                    outfile.write(html)
+            else:
+                from weasyprint import CSS, HTML
+
+                HTML(string=html).write_pdf(
+                    args.output, stylesheets=[CSS("custom.css")]
+                )
 
     if output_format == ".txt":
         txt_tree = item_tree_to_txt(sorted_item_tree)

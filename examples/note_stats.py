@@ -18,7 +18,6 @@ from nltk.tokenize import word_tokenize
 
 
 def markdown_to_text(markdown_string: str) -> str:
-
     # convert markdown to html
     md = Markdown(extensions=["nl2br", "sane_lists", "tables"])
     html = md.convert(markdown_string)
@@ -40,7 +39,6 @@ def markdown_to_text(markdown_string: str) -> str:
 
 
 def analyze_text(text: str):
-
     tokens = word_tokenize(text)
     tokens = [
         # normalize to lower case
@@ -70,7 +68,6 @@ def analyze_text(text: str):
 
 
 def main():
-
     # download nltk data at the first start
     if False:
         # "punkt" and "tokenizers" are needed.

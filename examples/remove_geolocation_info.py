@@ -19,7 +19,6 @@ api = Api(token=os.getenv("API_TOKEN"))
 # Iterate through all notes.
 location_keys = ["longitude", "latitude", "altitude"]
 for note in api.get_all_notes(fields=",".join(["id"] + location_keys)):
-
     # Set location info to 0 if different.
     if any(getattr(note, location_key) != 0 for location_key in location_keys):
         api.modify_note(

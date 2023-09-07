@@ -44,25 +44,6 @@ def parse_args():
     return parser.parse_args()
 
 
-def create_custom_css_file(path):
-    with open(path, "w") as outfile:
-        outfile.write(
-            """
-img {
-  /* prevent image going out of page */
-  max-width: 100%;
-  /* center image */
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-}
-figure > figcaption{
-    text-align: center;
-}
-"""
-        )
-
-
 def main():
     args = parse_args()
 
@@ -114,8 +95,6 @@ def main():
                     f"Valid formats: {valid_output_formats}."
                 )
             # special arguments for some output formats
-            custom_css_file = str(Path(tmpdirname) / "custom.css")
-            create_custom_css_file(custom_css_file)
             format_kwargs = {
                 # https://github.com/NicklasTegner/pypandoc/issues/186#issuecomment-673282133
                 "pdf": {
@@ -126,7 +105,7 @@ def main():
                         "--metadata",
                         f"title={candidate.title}",
                         "--css",
-                        f"file:///{custom_css_file}",
+                        "custom.css",
                     ],
                 }
             }

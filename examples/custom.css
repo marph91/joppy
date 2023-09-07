@@ -1,0 +1,11 @@
+img {
+  /* prevent image going out of page */
+  max-width: 80%;
+  /* center image */
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+figure > figcaption {
+  text-align: center;
+}
