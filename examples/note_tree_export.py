@@ -122,7 +122,9 @@ def item_tree_to_html(item_tree):
                 # Prevent wrong title hierarchy.
                 body = key.body.replace("# ", "#" * level + " ")
                 html_parts.append(
-                    md.convert(f"<h{level}>{key.title}</h{level}>\n{body}\n")
+                    md.convert(
+                        f'<h{level} id="{key.id}">{key.title}</h{level}>\n{body}\n'
+                    )
                 )
             html_parts.extend(sub_tree_to_html(value, next_level))
         return html_parts
@@ -205,6 +207,11 @@ def main():
                 # downloaded resource. Use the "file:///" protocol:
                 # https://stackoverflow.com/a/18246357/7410886
                 html = html.replace(f":/{resource.id}", f"file:///{resource_path}")
+
+            # Replace remaining note links.
+            # - Joplin ID: ":/"
+            # - HTML ID: "#"
+            html = html.replace('href=":/', 'href="#')
 
             if output_format == ".html":
                 with open(args.output, "w") as outfile:
