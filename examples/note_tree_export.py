@@ -195,18 +195,20 @@ def main():
         # Create a temporary directory for the resources.
         with tempfile.TemporaryDirectory() as tmpdirname:
             # Download and add all image resources
-            resources = api.get_all_resources(fields="id,mime")
+            resources = api.get_all_resources(fields="id,mime,title")
             for resource in resources:
-                if not resource.mime.startswith("image"):
-                    continue
-                resource_binary = api.get_resource_file(resource.id)
-                resource_path = str(Path(tmpdirname) / resource.id)
-                with open(resource_path, "wb") as outfile:
-                    outfile.write(resource_binary)
-                # Replace joplin's local link with the path to the just
-                # downloaded resource. Use the "file:///" protocol:
-                # https://stackoverflow.com/a/18246357/7410886
-                html = html.replace(f":/{resource.id}", f"file:///{resource_path}")
+                if resource.mime == "application/pdf":
+                    # Ignore PDFs for now.
+                    html = html.replace(f'href=":/{resource.id}"', "")
+                elif resource.mime.startswith("image"):
+                    resource_binary = api.get_resource_file(resource.id)
+                    resource_path = str(Path(tmpdirname) / resource.id)
+                    with open(resource_path, "wb") as outfile:
+                        outfile.write(resource_binary)
+                    # Replace joplin's local link with the path to the just
+                    # downloaded resource. Use the "file:///" protocol:
+                    # https://stackoverflow.com/a/18246357/7410886
+                    html = html.replace(f":/{resource.id}", f"file:///{resource_path}")
 
             # Replace remaining note links.
             # - Joplin ID: ":/"
