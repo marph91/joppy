@@ -8,8 +8,8 @@ Usage:
 - python note_tree_export.py --help
 
 Known issues:
-- Checkboxes don't get visualized correctly.
 - Big tables are truncated.
+- Maximum header level is 6: https://stackoverflow.com/a/75466347/7410886
 
 Reference:
 - https://discourse.joplinapp.org/t/request-pdf-export-for-notebook-or-serveral-marked-notes/5648  # noqa
@@ -110,7 +110,19 @@ def item_tree_to_html(item_tree):
     """Convert the notes to HTML and merge them to a single document."""
     from markdown import Markdown
 
-    md = Markdown(extensions=["pymdownx.tasklist", "fenced_code", "nl2br", "tables"])
+    md = Markdown(
+        extensions=[
+            # https://github.com/Python-Markdown/markdown/wiki/Third-Party-Extensions
+            # checklists
+            "pymdownx.tasklist",
+            # strikethrough
+            "pymdownx.tilde",
+            # code blocks
+            "fenced_code",
+            "nl2br",
+            "tables",
+        ]
+    )
 
     def sub_tree_to_html(item_tree, level=1):
         next_level = level + 1
