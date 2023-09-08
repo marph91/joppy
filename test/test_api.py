@@ -32,7 +32,7 @@ logging.basicConfig(
 
 SLOW_TESTS = bool(os.getenv("SLOW_TESTS", ""))
 PROFILE = "test_profile"
-API_TOKEN = os.getenv("API_TOKEN", "")
+API_TOKEN = ""  # Don't use the API token from env to avoid data loss.
 APP = None
 
 
