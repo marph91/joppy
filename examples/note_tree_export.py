@@ -1,7 +1,7 @@
 """
 Convert notebooks and notes to HTML, PDF or TXT.
 
-Requirements (for pdf export): pip install joppy markdown weasyprint
+Requirements (for pdf export): pip install joppy markdown pymdown-extensions weasyprint
 
 Usage:
 - API_TOKEN=XYZ python note_tree_export.py --output note_tree.txt
@@ -110,7 +110,7 @@ def item_tree_to_html(item_tree):
     """Convert the notes to HTML and merge them to a single document."""
     from markdown import Markdown
 
-    md = Markdown(extensions=["nl2br", "sane_lists", "tables"])
+    md = Markdown(extensions=["pymdownx.tasklist", "fenced_code", "nl2br", "tables"])
 
     def sub_tree_to_html(item_tree, level=1):
         next_level = level + 1

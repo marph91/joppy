@@ -9,3 +9,15 @@ img {
 figure > figcaption {
   text-align: center;
 }
+
+/* checkboxes: https://github.com/Kozea/WeasyPrint/issues/328 */
+input[type="checkbox"]:not(:checked)::before {
+  content: "\2610";
+  color: black;
+  font-size: 18px;
+}
+input[checked]::before {
+  content: "\2611";
+  color: black;
+  font-size: 18px;
+}
