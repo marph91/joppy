@@ -324,8 +324,7 @@ class Notebook(TestBase):
         """Get a specific notebook."""
         id_ = self.api.add_notebook()
         notebook = self.api.get_notebook(id_=id_)
-        # TODO: properties instead of default_properties
-        self.assertEqual(notebook.assigned_fields(), notebook.fields())
+        self.assertEqual(notebook.assigned_fields(), notebook.default_fields())
         self.assertEqual(notebook.type_, dt.ItemType.FOLDER)
 
     def test_get_notebooks(self):
