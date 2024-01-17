@@ -232,6 +232,7 @@ It's possible to configure the test run via some environment variables:
 
 ### Master
 
+- Fix adding non-image ressources (<https://github.com/marph91/joppy/issues/24>).
 - Cast `markup_language` to an appropriate enum type.
 - Add changelog.
 
