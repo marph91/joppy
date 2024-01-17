@@ -230,7 +230,7 @@ It's possible to configure the test run via some environment variables:
 
 ## :book: Changelog
 
-### Master
+### 0.2.2
 
 - Fix adding non-image ressources (<https://github.com/marph91/joppy/issues/24>).
 - Cast `markup_language` to an appropriate enum type.
