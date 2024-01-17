@@ -334,8 +334,14 @@ class Api(Event, Note, Notebook, Ping, Resource, Search, Tag):
     def add_resource_to_note(self, resource_id: str, note_id: str) -> None:
         """Add a resource to a given note."""
         note = self.get_note(id_=note_id, fields="body")
-        resource = self.get_resource(id_=resource_id, fields="title")
-        body_with_attachment = f"{note.body}\n![{resource.title}](:/{resource_id})"
+        resource = self.get_resource(id_=resource_id, fields="title,mime")
+        # TODO: Use "assertIsNotNone()" when
+        # https://github.com/python/mypy/issues/5528 is resolved.
+        assert resource.mime is not None
+        image_prefix = "!" if resource.mime.startswith("image/") else ""
+        body_with_attachment = (
+            f"{note.body}\n{image_prefix}[{resource.title}](:/{resource_id})"
+        )
         self.modify_note(note_id, body=body_with_attachment)
 
     def delete_all_notes(self) -> None:

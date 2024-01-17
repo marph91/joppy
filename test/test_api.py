@@ -410,19 +410,28 @@ class Resource(TestBase):
     def test_add_to_note(self, filename):
         """Add a resource to an existing note."""
         self.api.add_notebook()
-        note_id = self.api.add_note()
-        resource_id = self.api.add_resource(filename=filename)
-        self.api.add_resource_to_note(resource_id=resource_id, note_id=note_id)
+        for file_ in ["test/grant_authorization_button.png", filename]:
+            with self.subTest(file_=file_):
+                note_id = self.api.add_note()
+                resource_id = self.api.add_resource(filename=file_)
+                self.api.add_resource_to_note(resource_id=resource_id, note_id=note_id)
 
-        # Verify the resource is attached to the note.
-        resources = self.api.get_resources(note_id=note_id).items
-        self.assertEqual(len(resources), 1)
-        self.assertEqual(resources[0].id, resource_id)
+                # Verify the resource is attached to the note.
+                resources = self.api.get_resources(
+                    note_id=note_id, fields="id,mime"
+                ).items
+                self.assertEqual(len(resources), 1)
+                self.assertEqual(resources[0].id, resource_id)
 
-        # TODO: Seems to be not working.
-        # notes = self.api.get_notes(resource_id=resource_id)["items"]
-        # self.assertEqual(len(notes), 1)
-        # self.assertEqual(notes[0]["id"], note_id)
+                # Verify the markdown is correct (prefix "!" for images).
+                note = self.api.get_note(id_=note_id, fields="body")
+                # TODO: Use "assertIsNotNone()" when
+                # https://github.com/python/mypy/issues/5528 is resolved.
+                assert resources[0].mime is not None
+                image_prefix = "!" if resources[0].mime.startswith("image/") else ""
+                self.assertEqual(
+                    f"\n{image_prefix}[{file_}](:/{resource_id})", note.body
+                )
 
     @with_resource
     def test_delete(self, filename):
