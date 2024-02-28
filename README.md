@@ -140,9 +140,29 @@ for tag in api.get_all_tags():
 </details>
 
 <details>
+<summary>Remove unused tags</summary>
+
+Reference: <https://discourse.joplinapp.org/t/prune-empty-tags-from-web-clipper/36194>
+
+```python name=remove_unused_tags
+from joppy.api import Api
+
+# Create a new Api instance.
+api = Api(token=YOUR_TOKEN)
+
+for tag in api.get_all_tags():
+    notes_for_tag = api.get_all_notes(tag_id=tag.id)
+    if len(notes_for_tag) == 0:
+        print("Deleting tag:", tag.title)
+        api.delete_tag(tag.id)
+```
+
+</details>
+
+<details>
 <summary>Remove spaces from tags</summary>
 
-Inspired by <https://www.reddit.com/r/joplinapp/comments/pozric/batch_remove_spaces_from_all_tags/>.
+Reference: <https://www.reddit.com/r/joplinapp/comments/pozric/batch_remove_spaces_from_all_tags/>
 
 ```python name=remove_spaces_from_tags
 import re
@@ -192,7 +212,7 @@ assert len(referenced_resources) > 0, "sanity check"
 
 for resource in api.get_all_resources():
     if resource.id not in referenced_resources:
-        print("Deleting resource:", resource)
+        print("Deleting resource:", resource.title)
         api.delete_resource(resource.id)
 ```
 
