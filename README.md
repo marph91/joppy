@@ -7,7 +7,7 @@ Python interface for the [Joplin data API](https://joplinapp.org/api/references/
 [![tests](https://github.com/marph91/joppy/actions/workflows/tests.yml/badge.svg)](https://github.com/marph91/joppy/actions/workflows/tests.yml)
 [![codecov](https://codecov.io/gh/marph91/joppy/branch/master/graph/badge.svg?token=97E6IX792A)](https://codecov.io/gh/marph91/joppy)
 
-[![https://img.shields.io/badge/Joplin-2.13.9-blueviolet](https://img.shields.io/badge/Joplin-2.13.9-blueviolet)](https://github.com/laurent22/joplin)
+[![https://img.shields.io/badge/Joplin-2.14.17-blueviolet](https://img.shields.io/badge/Joplin-2.14.17-blueviolet)](https://github.com/laurent22/joplin)
 [![Python version](https://img.shields.io/pypi/pyversions/joppy.svg)](https://pypi.python.org/pypi/joppy/)
 
 ## :computer: Installation
