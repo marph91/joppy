@@ -224,9 +224,9 @@ class ResourceData(BaseData):
     user_data: Optional[str] = None
     blob_updated_time: Optional[datetime] = None
     ocr_text: Optional[str] = None
-    ocr_details: Optional[str] = None	
+    ocr_details: Optional[str] = None
     ocr_status: Optional[int] = None
-    ocr_error: Optional[str] = None	
+    ocr_error: Optional[str] = None
 
     @staticmethod
     def default_fields() -> Set[str]:
