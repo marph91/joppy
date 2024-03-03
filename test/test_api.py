@@ -73,11 +73,12 @@ class TestBase(unittest.TestCase):
         logging.debug("Test: %s", self.id())
 
         self.api = Api(token=API_TOKEN)
-        # Note: Notes get deleted automatically.
+        # Notes get deleted automatically.
         self.api.delete_all_notebooks()
         self.api.delete_all_resources()
-        self.api.delete_all_revisions()
         self.api.delete_all_tags()
+        # Delete revisions last to cover all previous deletions.
+        self.api.delete_all_revisions()
 
     @staticmethod
     def get_random_id() -> str:
