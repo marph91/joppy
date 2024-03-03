@@ -281,6 +281,8 @@ class Note(TestBase):
             # todo timestamps can be None
             "todo_due",
             "todo_completed",
+            # we don't delete notes here
+            "deleted_time",
         }
         property_combinations = self.get_combinations(selected_fields)
         for properties in property_combinations:
@@ -363,7 +365,11 @@ class Notebook(TestBase):
     def test_get_notebooks_valid_properties(self):
         """Try to get specific properties of a notebook."""
         self.api.add_notebook()
-        property_combinations = self.get_combinations(dt.NotebookData.fields())
+        selected_fields = dt.NotebookData.fields() - {
+            # we don't delete notebooks here
+            "deleted_time",
+        }
+        property_combinations = self.get_combinations(selected_fields)
         for properties in property_combinations:
             notebooks = self.api.get_notebooks(fields=",".join(properties))
             for notebook in notebooks.items:

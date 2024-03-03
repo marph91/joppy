@@ -172,6 +172,8 @@ class NoteData(BaseData):
     share_id: Optional[str] = None
     conflict_original_id: Optional[str] = None
     master_key_id: Optional[str] = None
+    user_data: Optional[str] = None
+    deleted_time: Optional[datetime] = None
     body_html: Optional[str] = None
     base_url: Optional[str] = None
     image_data_url: Optional[str] = None
@@ -195,6 +197,8 @@ class NotebookData(BaseData):
     share_id: Optional[str] = None
     master_key_id: Optional[str] = None
     icon: Optional[str] = None
+    user_data: Optional[str] = None
+    deleted_time: Optional[datetime] = None
 
 
 @dataclass
@@ -217,6 +221,12 @@ class ResourceData(BaseData):
     is_shared: Optional[bool] = None
     share_id: Optional[str] = None
     master_key_id: Optional[str] = None
+    user_data: Optional[str] = None
+    blob_updated_time: Optional[datetime] = None
+    ocr_text: Optional[str] = None
+    ocr_details: Optional[str] = None	
+    ocr_status: Optional[int] = None
+    ocr_error: Optional[str] = None	
 
     @staticmethod
     def default_fields() -> Set[str]:
@@ -237,6 +247,7 @@ class TagData(BaseData):
     encryption_applied: Optional[bool] = None
     is_shared: Optional[bool] = None
     parent_id: Optional[str] = None
+    user_data: Optional[str] = None
 
 
 @dataclass
