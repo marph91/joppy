@@ -224,6 +224,28 @@ class ResourceData(BaseData):
 
 
 @dataclass
+class RevisionData(BaseData):
+    """https://joplinapp.org/help/api/references/rest_api/#revisions"""
+
+    id: Optional[str] = None
+    parent_id: Optional[str] = None
+    item_type: Optional[ItemType] = None
+    item_id: Optional[str] = None
+    item_updated_time: Optional[datetime] = None
+    title_diff: Optional[str] = None
+    body_diff: Optional[str] = None
+    metadata_diff: Optional[str] = None
+    encryption_cipher_text: Optional[str] = None
+    encryption_applied: Optional[bool] = None
+    updated_time: Optional[datetime] = None
+    created_time: Optional[datetime] = None
+
+    @staticmethod
+    def default_fields() -> Set[str]:
+        return {"id"}
+
+
+@dataclass
 class TagData(BaseData):
     """https://joplinapp.org/api/references/rest_api/#tags"""
 
