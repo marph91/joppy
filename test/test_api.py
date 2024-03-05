@@ -73,10 +73,12 @@ class TestBase(unittest.TestCase):
         logging.debug("Test: %s", self.id())
 
         self.api = Api(token=API_TOKEN)
-        # Note: Notes get deleted automatically.
+        # Notes get deleted automatically.
         self.api.delete_all_notebooks()
         self.api.delete_all_resources()
         self.api.delete_all_tags()
+        # Delete revisions last to cover all previous deletions.
+        self.api.delete_all_revisions()
 
     @staticmethod
     def get_random_id() -> str:
@@ -529,6 +531,62 @@ class Resource(TestBase):
         id_ = self.api.add_resource(filename=filename, title=title)
         resource = self.api.get_resource(id_=id_)
         self.assertEqual(resource.title, title)
+
+
+class Revision(TestBase):
+    def test_add(self):
+        """Add a revision."""
+        self.api.add_notebook()  # notebook for the note
+        note_id = self.api.add_note()  # note that gets a new revision
+        id_ = self.api.add_revision(note_id, dt.ItemType.NOTE)
+
+        revisions = self.api.get_revisions().items
+        self.assertEqual(len(revisions), 1)
+        self.assertEqual(revisions[0].id, id_)
+
+    def test_get_revision(self):
+        """Get a specific revision."""
+        self.api.add_notebook()  # notebook for the note
+        note_id = self.api.add_note()  # note that gets a new revision
+        id_ = self.api.add_revision(note_id, dt.ItemType.NOTE)
+        revision = self.api.get_revision(id_=id_)
+        self.assertEqual(revision.assigned_fields(), revision.default_fields())
+        self.assertEqual(revision.type_, dt.ItemType.REVISION)
+
+    def test_get_revisions(self):
+        """Get all revisions."""
+        self.api.add_notebook()  # notebook for the note
+        note_id = self.api.add_note()  # note that gets a new revision
+        self.api.add_revision(note_id, dt.ItemType.NOTE)
+        revisions = self.api.get_revisions()
+        self.assertEqual(len(revisions.items), 1)
+        self.assertFalse(revisions.has_more)
+        for revision in revisions.items:
+            self.assertEqual(revision.assigned_fields(), revision.default_fields())
+
+    def test_get_all_revisions(self):
+        """Get all revisions, unpaginated."""
+        # Small limit and count to create/remove as less as possible items.
+        count, limit = random.randint(1, 10), random.randint(1, 10)
+        self.api.add_notebook()  # notebook for the note
+        note_id = self.api.add_note()  # note that gets a new revision
+        for _ in range(count):
+            self.api.add_revision(note_id, dt.ItemType.NOTE)
+        self.assertEqual(
+            len(self.api.get_revisions(limit=limit).items), min(limit, count)
+        )
+        self.assertEqual(len(self.api.get_all_revisions(limit=limit)), count)
+
+    def test_get_revisions_valid_properties(self):
+        """Try to get specific properties of a revision."""
+        self.api.add_notebook()  # notebook for the note
+        note_id = self.api.add_note()  # note that gets a new revision
+        self.api.add_revision(note_id, dt.ItemType.NOTE)
+        property_combinations = self.get_combinations(dt.RevisionData.fields())
+        for properties in property_combinations:
+            revisions = self.api.get_revisions(fields=",".join(properties))
+            for revision in revisions.items:
+                self.assertEqual(revision.assigned_fields(), set(properties))
 
 
 # TODO: Add more tests for the search parameter.

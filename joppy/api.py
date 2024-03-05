@@ -3,6 +3,7 @@
 import copy
 import json
 import logging
+import time
 from typing import (
     Any,
     Callable,
@@ -244,6 +245,54 @@ class Resource(ApiBase):
         self.put(f"/resources/{id_}", data=data)
 
 
+class Revision(ApiBase):
+    """
+    Revisions are supported since Joplin 2.13.2.
+    See: https://github.com/laurent22/joplin/releases/tag/v2.13.2
+    """
+
+    def add_revision(
+        self, item_id: str, item_type: dt.ItemType, **data: dt.JoplinTypes
+    ) -> str:
+        """Add a revision to an item."""
+        now_unix_seconds = int(time.time())
+        return str(
+            self.post(
+                "/revisions",
+                data={
+                    # There seem to be some undocumented required fields.
+                    "item_id": item_id,
+                    "item_type": item_type.value,
+                    "item_updated_time": now_unix_seconds,
+                    "item_created_time": now_unix_seconds,
+                    **data,
+                },
+            ).json()["id"]
+        )
+
+    def delete_revision(self, id_: str) -> None:
+        """Delete a revision."""
+        self.delete(f"/revisions/{id_}")
+
+    def get_revision(self, id_: str, **query: dt.JoplinTypes) -> dt.RevisionData:
+        """Get the revision with the given ID."""
+        response = dt.RevisionData(**self.get(f"/revisions/{id_}", query=query).json())
+        return response
+
+    def get_revisions(self, **query: dt.JoplinTypes) -> dt.DataList[dt.RevisionData]:
+        """
+        Get revisions, paginated. To get all revisions (unpaginated), use
+        "get_all_revisions()".
+        """
+        response = self.get("/revisions", query=query).json()
+        response["items"] = [dt.RevisionData(**item) for item in response["items"]]
+        return dt.DataList[dt.RevisionData](**response)
+
+    def modify_revision(self, id_: str, **data: dt.JoplinTypes) -> None:
+        """Modify a revision."""
+        self.put(f"/revisions/{id_}", data=data)
+
+
 class Search(ApiBase):
     def search(
         self, **query: dt.JoplinTypes
@@ -319,7 +368,7 @@ class Tag(ApiBase):
         self.put(f"/tags/{id_}", data=data)
 
 
-class Api(Event, Note, Notebook, Ping, Resource, Search, Tag):
+class Api(Event, Note, Notebook, Ping, Resource, Revision, Search, Tag):
     """
     Collects all basic API functions and contains a few more useful methods.
     This should be the only class accessed from the users.
@@ -364,6 +413,12 @@ class Api(Event, Note, Notebook, Ping, Resource, Search, Tag):
             assert resource.id is not None
             self.delete_resource(resource.id)
 
+    def delete_all_revisions(self) -> None:
+        """Delete all revisions."""
+        for revision in self.get_all_revisions():
+            assert revision.id is not None
+            self.delete_revision(revision.id)
+
     def delete_all_tags(self) -> None:
         """Delete all tags."""
         for tag in self.get_all_tags():
@@ -400,6 +455,10 @@ class Api(Event, Note, Notebook, Ping, Resource, Search, Tag):
     def get_all_resources(self, **query: dt.JoplinTypes) -> List[dt.ResourceData]:
         """Get all resources, unpaginated."""
         return self._unpaginate(self.get_resources, **query)
+
+    def get_all_revisions(self, **query: dt.JoplinTypes) -> List[dt.RevisionData]:
+        """Get all revisions, unpaginated."""
+        return self._unpaginate(self.get_revisions, **query)
 
     def get_all_tags(self, **query: dt.JoplinTypes) -> List[dt.TagData]:
         """Get all tags, unpaginated."""
