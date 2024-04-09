@@ -29,6 +29,8 @@ SESSION = requests.Session()
 logging.getLogger("requests").setLevel(logging.WARNING)
 logging.getLogger("urllib3").setLevel(logging.WARNING)
 
+LOGGER = logging.getLogger("joppy")
+
 
 ##############################################################################
 # Base wrapper that manages the requests to the REST API.
@@ -50,7 +52,7 @@ class ApiBase:
         data: Optional[dt.JoplinKwargs] = None,
         files: Optional[Dict[str, Any]] = None,
     ) -> requests.models.Response:
-        logging.debug(
+        LOGGER.debug(
             f"API: {method} request: path={path}, query={query}, data={data}, "
             f"files={files}"
         )
@@ -68,7 +70,7 @@ class ApiBase:
                 json=data,
                 files=files,
             )
-            logging.debug(f"API: response {response.text}")
+            LOGGER.debug(f"API: response {response.text}")
             response.raise_for_status()
         except requests.exceptions.HTTPError as err:
             err.args = err.args + (response.text,)
@@ -294,9 +296,7 @@ class Revision(ApiBase):
 
 
 class Search(ApiBase):
-    def search(
-        self, **query: dt.JoplinTypes
-    ) -> Union[
+    def search(self, **query: dt.JoplinTypes) -> Union[
         dt.DataList[dt.NoteData],
         dt.DataList[dt.NotebookData],
         dt.DataList[dt.ResourceData],

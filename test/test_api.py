@@ -28,6 +28,7 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s]: %(message)s",
     level=logging.DEBUG,
 )
+LOGGER = logging.getLogger("joppy")
 
 
 SLOW_TESTS = bool(os.getenv("SLOW_TESTS", ""))
@@ -70,7 +71,7 @@ class TestBase(unittest.TestCase):
     def setUp(self):
         super().setUp()
 
-        logging.debug("Test: %s", self.id())
+        LOGGER.debug("Test: %s", self.id())
 
         self.api = Api(token=API_TOKEN)
         # Notes get deleted automatically.
@@ -93,7 +94,7 @@ class TestBase(unittest.TestCase):
         for character in exclude:
             characters = characters.replace(character, "")
         random_string = "".join(random.choice(characters) for _ in range(length))
-        logging.debug("Test: random string: %s", random_string)
+        LOGGER.debug("Test: random string: %s", random_string)
         return random_string
 
     @staticmethod

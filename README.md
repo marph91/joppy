@@ -250,6 +250,10 @@ It's possible to configure the test run via some environment variables:
 
 ## :book: Changelog
 
+### Master
+
+- Don't use the root logger for logging.
+
 ### 0.2.2
 
 - Fix adding non-image ressources (<https://github.com/marph91/joppy/issues/24>).
