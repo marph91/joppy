@@ -69,7 +69,7 @@ def wait_for(func: Callable[..., Any], interval: float = 0.5, timeout: int = 5) 
 class JoplinApp:
     """Represents a joplin application."""
 
-    def __init__(self, app_path: str, profile: str = "test_profile"):
+    def __init__(self, app_path: str, profile: str):
         self.xvfb = xvfb = Xvfb()
         xvfb.start()
 

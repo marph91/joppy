@@ -32,7 +32,7 @@ LOGGER = logging.getLogger("joppy")
 
 
 SLOW_TESTS = bool(os.getenv("SLOW_TESTS", ""))
-PROFILE = "test_profile"
+PROFILE = os.path.join(os.getcwd(), "test_profile")
 API_TOKEN = ""  # Don't use the API token from env to avoid data loss.
 APP = None
 
@@ -58,7 +58,7 @@ def setUpModule():  # pylint: disable=invalid-name
     if not API_TOKEN:
         app_path = "./joplin.AppImage"
         setup_joplin.download_joplin(app_path)
-        APP = setup_joplin.JoplinApp(app_path, profile=PROFILE)
+        APP = setup_joplin.JoplinApp(app_path, PROFILE)
         API_TOKEN = APP.api_token
 
 
