@@ -250,7 +250,7 @@ It's possible to configure the test run via some environment variables:
 
 ## :book: Changelog
 
-### Master
+### 0.2.3
 
 - Don't use the root logger for logging.
 - Add support for [revisions](https://joplinapp.org/help/api/references/rest_api/#revisions).
