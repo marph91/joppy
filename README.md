@@ -253,6 +253,7 @@ It's possible to configure the test run via some environment variables:
 ### Master
 
 - Don't use the root logger for logging.
+- Add support for [revisions](https://joplinapp.org/help/api/references/rest_api/#revisions).
 
 ### 0.2.2
 
