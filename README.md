@@ -220,9 +220,19 @@ for resource in api.get_all_resources():
 
 For more usage examples, check the example scripts or [tests](test/test_api.py).
 
-## :newspaper: Example scripts
+## :newspaper: Examples
 
-Before using joppy, you should check the [Joplin plugins](https://joplinapp.org/plugins/). They are probably more convenient. However, if you need a new feature or just want to code in python, you can use joppy. Below are example scripts to showcase how joppy can be used.
+Before using joppy, you should check the [Joplin plugins](https://joplinapp.org/plugins/). They are probably more convenient. However, if you need a new feature or just want to code in python, you can use joppy.
+
+### Apps
+
+| App | Description |
+| --- | --- |
+| [jimmy](https://github.com/marph91/jimmy) | A tool to import your notes to Joplin |
+| [joplin-sticky-notes](https://github.com/marph91/joplin-sticky-notes) | Stick your Joplin notes to the desktop |
+| [joplin-vieweb](https://github.com/joplin-vieweb/django-joplin-vieweb) | A simple web viewer for Joplin |
+
+### Scripts
 
 | Script                                                              | Description                                                                                                                  |
 | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
@@ -231,9 +241,7 @@ Before using joppy, you should check the [Joplin plugins](https://joplinapp.org/
 | [note_stats.py](examples/note_stats.py)                             | Get some simple statistics about your notes, based on [nltk](https://www.nltk.org/).                                         |
 | [note_tree_export.py](examples/note_tree_export.py)                 | Joplin only supports PDF export of a single note. This script allows to export one, multiple or all notebooks to PDF or TXT. |
 | [visualize_note_locations.py](examples/visualize_note_locations.py) | Visualize the locations of your notes.                                                                                       |
-| <https://github.com/marph91/joplin-ui-tests>                        | System tests for the joplin desktop app. Based on selenium.                                                                  |
-| <https://github.com/gri38/django-joplin_vieweb>                     | Web viewer for joplin.                                                                                                       |
-| <https://github.com/BeneKurz/Toodledo2Joplin>                       | Import notes from <https://www.toodledo.com> to Joplin.                                                                      |
+| [joplin-ui-tests](https://github.com/marph91/joplin-ui-tests)       | System tests for the joplin desktop app. Based on selenium.                                                                  |
 
 ## :sunny: Tests
 
