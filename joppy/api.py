@@ -296,7 +296,9 @@ class Revision(ApiBase):
 
 
 class Search(ApiBase):
-    def search(self, **query: dt.JoplinTypes) -> Union[
+    def search(
+        self, **query: dt.JoplinTypes
+    ) -> Union[
         dt.DataList[dt.NoteData],
         dt.DataList[dt.NotebookData],
         dt.DataList[dt.ResourceData],
