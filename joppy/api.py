@@ -77,9 +77,11 @@ class ApiBase:
             raise
         return response
 
-    def delete(self, path: str) -> requests.models.Response:
+    def delete(
+        self, path: str, query: Optional[dt.JoplinKwargs] = None
+    ) -> requests.models.Response:
         """Convenience method to issue a delete request."""
-        return self._request("delete", path)
+        return self._request("delete", path, query=query)
 
     def get(
         self, path: str, query: Optional[dt.JoplinKwargs] = None
@@ -135,9 +137,9 @@ class Note(ApiBase):
         """Add a note."""
         return str(self.post("/notes", data=data).json()["id"])
 
-    def delete_note(self, id_: str) -> None:
+    def delete_note(self, id_: str, **query: dt.JoplinTypes) -> None:
         """Delete a note."""
-        self.delete(f"/notes/{id_}")
+        self.delete(f"/notes/{id_}", query=query)
 
     def get_note(self, id_: str, **query: dt.JoplinTypes) -> dt.NoteData:
         """Get the note with the given ID."""
@@ -175,9 +177,9 @@ class Notebook(ApiBase):
         """Add a notebook."""
         return str(self.post("/folders", data=data).json()["id"])
 
-    def delete_notebook(self, id_: str) -> None:
+    def delete_notebook(self, id_: str, **query: dt.JoplinTypes) -> None:
         """Delete a notebook."""
-        self.delete(f"/folders/{id_}")
+        self.delete(f"/folders/{id_}", query=query)
 
     def get_notebook(self, id_: str, **query: dt.JoplinTypes) -> dt.NotebookData:
         """Get the notebook with the given ID."""
@@ -296,9 +298,7 @@ class Revision(ApiBase):
 
 
 class Search(ApiBase):
-    def search(
-        self, **query: dt.JoplinTypes
-    ) -> Union[
+    def search(self, **query: dt.JoplinTypes) -> Union[
         dt.DataList[dt.NoteData],
         dt.DataList[dt.NotebookData],
         dt.DataList[dt.ResourceData],
@@ -396,18 +396,18 @@ class Api(Event, Note, Notebook, Ping, Resource, Revision, Search, Tag):
         self.modify_note(note_id, body=body_with_attachment)
 
     def delete_all_notes(self) -> None:
-        """Delete all notes."""
+        """Delete all notes permanently."""
         for note in self.get_all_notes():
             assert note.id is not None
-            self.delete_note(note.id)
+            self.delete_note(note.id, permanent=1)
 
     def delete_all_notebooks(self) -> None:
-        """Delete all notebooks."""
+        """Delete all notebooks permanently."""
         for notebook in self.get_all_notebooks():
             # Deleting the root notebooks is sufficient.
             if not notebook.parent_id:
                 assert notebook.id is not None
-                self.delete_notebook(notebook.id)
+                self.delete_notebook(notebook.id, permanent=1)
 
     def delete_all_resources(self) -> None:
         """Delete all resources."""

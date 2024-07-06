@@ -139,6 +139,15 @@ class BaseData:
     def default_fields() -> Set[str]:
         return {"id", "parent_id", "title"}
 
+    def __repr__(self) -> str:
+        # show only fields with values
+        not_none_fields = ", ".join(
+            f"{field.name}={getattr(self, field.name)}"
+            for field in fields(self)
+            if getattr(self, field.name) is not None
+        )
+        return f"{type(self).__name__}({not_none_fields})"
+
 
 @dataclass
 class NoteData(BaseData):

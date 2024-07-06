@@ -235,7 +235,7 @@ class Note(TestBase):
         notes = self.api.get_notes()
         self.assertEqual(len(notes.items), 1)
 
-        self.api.delete_note(id_=id_)
+        self.api.delete_note(id_=id_, permanent=1)
         self.assertEqual(self.api.get_notes().items, [])
 
     def test_get_note(self):
@@ -995,7 +995,7 @@ class ReadmeExamples(TestBase):
             self.api.add_resource_to_note(resource_id=resource_id, note_id=note_id)
 
         # Delete the second note, which creates an orphaned resource.
-        self.api.delete_note(note_id)
+        self.api.delete_note(note_id, permanent=1)
         self.assertEqual(len(self.api.get_all_resources()), 2)
 
         code = self.get_example_code("remove_orphaned_resources")
