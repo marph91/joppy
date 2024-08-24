@@ -10,7 +10,4 @@ jobs:
       - name: Install pip dependencies
         run: pip install -r requirements-dev.txt
       - name: Run linting
-        run: |
-          black --check .
-          flake8 .
-          mypy .
+        run: ./lint.sh
