@@ -372,7 +372,7 @@ class Tag(ApiBase):
         self.put(f"/tags/{id_}", data=data)
 
 
-class Api(Event, Note, Notebook, Ping, Resource, Revision, Search, Tag):
+class ClientApi(Event, Note, Notebook, Ping, Resource, Revision, Search, Tag):
     """
     Collects all basic API functions and contains a few more useful methods.
     This should be the only class accessed from the users.

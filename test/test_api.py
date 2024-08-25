@@ -16,7 +16,7 @@ import requests
 import urllib3
 
 from joppy import tools
-from joppy.api import Api
+from joppy.client_api import ClientApi
 import joppy.data_types as dt
 from . import setup_joplin
 
@@ -73,7 +73,7 @@ class TestBase(unittest.TestCase):
 
         LOGGER.debug("Test: %s", self.id())
 
-        self.api = Api(token=API_TOKEN)
+        self.api = ClientApi(token=API_TOKEN)
         # Notes get deleted automatically.
         self.api.delete_all_notebooks()
         self.api.delete_all_resources()

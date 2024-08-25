@@ -47,10 +47,10 @@ Start joplin and [get your API token](https://joplinapp.org/api/references/rest_
 <summary>Get all notes</summary>
 
 ```python name=get_all_notes
-from joppy.api import Api
+from joppy.client_api import ClientApi
 
 # Create a new Api instance.
-api = Api(token=YOUR_TOKEN)
+api = ClientApi(token=YOUR_TOKEN)
 
 # Get all notes. Note that this method calls get_notes() multiple times to assemble the unpaginated result.
 notes = api.get_all_notes()
@@ -62,11 +62,11 @@ notes = api.get_all_notes()
 <summary>Add a tag to a note</summary>
   
 ```python name=add_tag_to_note
-from joppy.api import Api
+from joppy.client_api import ClientApi
 
 # Create a new Api instance.
 
-api = Api(token=YOUR_TOKEN)
+api = ClientApi(token=YOUR_TOKEN)
 
 # Add a notebook.
 
@@ -92,11 +92,11 @@ api.add_tag_to_note(tag_id=tag_id, note_id=note_id)
 <summary>Add a resource to a note</summary>
 
 ```python name=add_resource_to_note
-from joppy.api import Api
+from joppy.client_api import ClientApi
 from joppy import tools
 
 # Create a new Api instance.
-api = Api(token=YOUR_TOKEN)
+api = ClientApi(token=YOUR_TOKEN)
 
 # Add a notebook.
 notebook_id = api.add_notebook(title="My first notebook")
@@ -124,10 +124,10 @@ Inspired by <https://discourse.joplinapp.org/t/bulk-tag-delete-python-script/549
 ```python name=remove_tags
 import re
 
-from joppy.api import Api
+from joppy.client_api import ClientApi
 
 # Create a new Api instance.
-api = Api(token=YOUR_TOKEN)
+api = ClientApi(token=YOUR_TOKEN)
 
 # Iterate through all tags.
 for tag in api.get_all_tags():
@@ -145,10 +145,10 @@ for tag in api.get_all_tags():
 Reference: <https://discourse.joplinapp.org/t/prune-empty-tags-from-web-clipper/36194>
 
 ```python name=remove_unused_tags
-from joppy.api import Api
+from joppy.client_api import ClientApi
 
 # Create a new Api instance.
-api = Api(token=YOUR_TOKEN)
+api = ClientApi(token=YOUR_TOKEN)
 
 for tag in api.get_all_tags():
     notes_for_tag = api.get_all_notes(tag_id=tag.id)
@@ -167,10 +167,10 @@ Reference: <https://www.reddit.com/r/joplinapp/comments/pozric/batch_remove_spac
 ```python name=remove_spaces_from_tags
 import re
 
-from joppy.api import Api
+from joppy.client_api import ClientApi
 
 # Create a new Api instance.
-api = Api(token=YOUR_TOKEN)
+api = ClientApi(token=YOUR_TOKEN)
 
 # Define the conversion function.
 def to_camel_case(name: str) -> str:
@@ -193,10 +193,10 @@ Note: The note history is not considered. See: <https://discourse.joplinapp.org/
 ```python name=remove_orphaned_resources
 import re
 
-from joppy.api import Api
+from joppy.client_api import ClientApi
 
 # Create a new Api instance.
-api = Api(token=YOUR_TOKEN)
+api = ClientApi(token=YOUR_TOKEN)
 
 # Getting the referenced resource directly doesn't work:
 # https://github.com/laurent22/joplin/issues/4535
@@ -257,6 +257,11 @@ It's possible to configure the test run via some environment variables:
 - `API_TOKEN`: Set this variable if there is already a joplin instance running. **Don't use your default joplin profile!** By default, a joplin instance is started inside xvfb. This takes some time, but works for CI.
 
 ## :book: Changelog
+
+### Master
+
+- Rename the client API. It should be used by `from joppy.client_api import ClientApi` instead of `from joppy.client_api import ClientApi` now.
+- Add support for the server API. It should be used by `from joppy.server_api import ServerApi`.
 
 ### 0.2.3
 
