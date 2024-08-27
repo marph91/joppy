@@ -1,6 +1,6 @@
 # joppy
 
-Python interface for the [Joplin data API](https://joplinapp.org/api/references/rest_api/).
+Python interface for the [Joplin data API](https://joplinapp.org/api/references/rest_api/) (client) and the Joplin server API.
 
 [![build](https://github.com/marph91/joppy/actions/workflows/build.yml/badge.svg)](https://github.com/marph91/joppy/actions/workflows/build.yml)
 [![lint](https://github.com/marph91/joppy/actions/workflows/lint.yml/badge.svg)](https://github.com/marph91/joppy/actions/workflows/lint.yml)
@@ -40,6 +40,8 @@ pip install .
 For details, consult the [implementation](joppy/api.py), [joplin documentation](https://joplinapp.org/api/references/rest_api/) or [create an issue](https://github.com/marph91/joppy/issues).
 
 ## :bulb: Example snippets
+
+### Client API
 
 Start joplin and [get your API token](https://joplinapp.org/api/references/rest_api/#authorisation). Click to expand the examples.
 
@@ -218,7 +220,24 @@ for resource in api.get_all_resources():
 
 </details>
 
-For more usage examples, check the example scripts or [tests](test/test_api.py).
+For more usage examples, check the example scripts or [tests](test/test_client_api.py).
+
+### Server API
+
+The server API should work similarly to the client API in most cases. **Be aware that the server API is experimental and may break at any time. Make sure you have a backup and know how to restore it.**
+
+```python
+from joppy.server_api import ServerApi
+
+# Create a new Api instance.
+api = ServerApi(user="admin@localhost", password="admin", url="http://localhost:22300")
+
+# Add a notebook.
+notebook_id = api.add_notebook(title="My first notebook")
+
+# Add a note in the previously created notebook.
+note_id = api.add_note(title="My first note", body="With some content", parent_id=notebook_id)
+```
 
 ## :newspaper: Examples
 

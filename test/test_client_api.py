@@ -1,15 +1,13 @@
-"""Tests for the joplin python API."""
+"""Tests for the Joplin client python API."""
 
 from datetime import datetime
-import itertools
-import logging
 import mimetypes
 import os
 import random
 import re
 import string
 import tempfile
-from typing import Any, Iterable, Mapping, Tuple
+from typing import Any, Mapping
 import unittest
 
 import requests
@@ -18,20 +16,9 @@ import urllib3
 from joppy import tools
 from joppy.client_api import ClientApi
 import joppy.data_types as dt
-from . import setup_joplin
+from . import common, setup_joplin
 
 
-os.makedirs("test_output", exist_ok=True)
-logging.basicConfig(
-    filename="test_output/test.log",
-    filemode="w",
-    format="%(asctime)s [%(levelname)s]: %(message)s",
-    level=logging.DEBUG,
-)
-LOGGER = logging.getLogger("joppy")
-
-
-SLOW_TESTS = bool(os.getenv("SLOW_TESTS", ""))
 PROFILE = os.path.join(os.getcwd(), "test_profile")
 API_TOKEN = ""  # Don't use the API token from env to avoid data loss.
 APP = None
@@ -57,8 +44,8 @@ def setUpModule():  # pylint: disable=invalid-name
     global API_TOKEN, APP
     if not API_TOKEN:
         app_path = "./joplin.AppImage"
-        setup_joplin.download_joplin(app_path)
-        APP = setup_joplin.JoplinApp(app_path, PROFILE)
+        setup_joplin.download_joplin_client(app_path)
+        APP = setup_joplin.JoplinClient(app_path, PROFILE)
         API_TOKEN = APP.api_token
 
 
@@ -67,56 +54,13 @@ def tearDownModule():  # pylint: disable=invalid-name
         APP.stop()
 
 
-class TestBase(unittest.TestCase):
+class ClientBase(common.Base):
     def setUp(self):
+        self.api = ClientApi(token=API_TOKEN)
         super().setUp()
 
-        LOGGER.debug("Test: %s", self.id())
 
-        self.api = ClientApi(token=API_TOKEN)
-        # Notes get deleted automatically.
-        self.api.delete_all_notebooks()
-        self.api.delete_all_resources()
-        self.api.delete_all_tags()
-        # Delete revisions last to cover all previous deletions.
-        self.api.delete_all_revisions()
-
-    @staticmethod
-    def get_random_id() -> str:
-        """Return a random, valid ID."""
-        # https://stackoverflow.com/a/2782859/7410886
-        return f"{random.randrange(16**32):032x}"
-
-    @staticmethod
-    def get_random_string(length: int = 8, exclude: str = "") -> str:
-        """Return a random string."""
-        characters = string.printable
-        for character in exclude:
-            characters = characters.replace(character, "")
-        random_string = "".join(random.choice(characters) for _ in range(length))
-        LOGGER.debug("Test: random string: %s", random_string)
-        return random_string
-
-    @staticmethod
-    def get_combinations(
-        iterable: Iterable[str], max_combinations: int = 100
-    ) -> Iterable[Tuple[str, ...]]:
-        """Get some combinations of an iterable."""
-        # https://stackoverflow.com/a/10465588
-        # TODO: Randomize fully. For now the combinations are sorted by length.
-        list_ = list(iterable)
-        lengths = list(range(1, len(list_) + 1))
-        random.shuffle(lengths)
-        combinations = itertools.chain.from_iterable(
-            itertools.combinations(list_, r)
-            for r in lengths
-            # shuffle each iteration
-            if random.shuffle(list_) is None
-        )
-        return itertools.islice(combinations, max_combinations)
-
-
-class Event(TestBase):
+class Event(ClientBase):
     def generate_event(self) -> None:
         """Generate an event and wait until it's available."""
         events = self.api.get_events()
@@ -189,7 +133,7 @@ class Event(TestBase):
                 self.assertEqual(event.assigned_fields(), set(properties))
 
 
-class Note(TestBase):
+class Note(ClientBase):
     def test_add(self):
         """Add a note to an existing notebook."""
         parent_id = self.api.add_notebook()
@@ -316,7 +260,7 @@ class Note(TestBase):
         self.assertEqual(note.title, original_title)
 
 
-class Notebook(TestBase):
+class Notebook(ClientBase):
     def test_add(self):
         """Add a notebook."""
         id_ = self.api.add_notebook()
@@ -390,7 +334,7 @@ class Notebook(TestBase):
         self.assertEqual(self.api.get_notebook(id_=second_id).parent_id, "")
 
 
-class Ping(TestBase):
+class Ping(ClientBase):
     def test_ping(self):
         """Ping should return the test string."""
         ping = self.api.ping()
@@ -405,7 +349,7 @@ class Ping(TestBase):
                 self.assertEqual(context.exception.response.status_code, 405)
 
 
-class Resource(TestBase):
+class Resource(ClientBase):
     @with_resource
     def test_add(self, filename):
         """Add a resource."""
@@ -534,7 +478,7 @@ class Resource(TestBase):
         self.assertEqual(resource.title, title)
 
 
-class Revision(TestBase):
+class Revision(ClientBase):
     def test_add(self):
         """Add a revision."""
         self.api.add_notebook()  # notebook for the note
@@ -591,7 +535,7 @@ class Revision(TestBase):
 
 
 # TODO: Add more tests for the search parameter.
-class Search(TestBase):
+class Search(ClientBase):
     def test_empty(self):
         """Search should succeed, even if there is no result item."""
         self.assertEqual(self.api.search(query="*").items, [])
@@ -707,7 +651,7 @@ class Search(TestBase):
         self.assertEqual(len(self.api.search_all(**query)), count)
 
 
-class Tag(TestBase):
+class Tag(ClientBase):
     def test_add_no_note(self):
         """Tags can be added even without notes."""
         id_ = self.api.add_tag()
@@ -804,10 +748,10 @@ class Tag(TestBase):
                 self.assertEqual(tag.assigned_fields(), set(properties))
 
 
-class Fuzz(TestBase):
+class Fuzz(ClientBase):
     def test_random_path(self):
         """API should not crash, even with invalid paths."""
-        for _ in range(1000 if SLOW_TESTS else 10):
+        for _ in range(1000 if common.SLOW_TESTS else 10):
             path = "/" + self.get_random_string(length=random.randint(0, 300))
             method = random.choice(("delete", "get", "post", "put"))
             try:
@@ -820,7 +764,7 @@ class Fuzz(TestBase):
         self.api.ping()
 
 
-class Helper(TestBase):
+class Helper(ClientBase):
     """Tests for the helper functions."""
 
     def test_random_id(self):
@@ -839,7 +783,7 @@ class Helper(TestBase):
         self.assertFalse(dt.is_id_valid("h" + "0" * 31))
 
 
-class Miscellaneous(TestBase):
+class Miscellaneous(ClientBase):
     @with_resource
     def test_same_id_different_type(self, filename):
         """Same IDs can be used if the types are different."""
@@ -851,9 +795,9 @@ class Miscellaneous(TestBase):
         self.api.add_tag(id_=id_)
 
 
-class Regression(TestBase):
+class Regression(ClientBase):
     @unittest.skip("Enable when the bug is fixed.")
-    @unittest.skipIf(not SLOW_TESTS, "Generating the long string is slow.")
+    @unittest.skipIf(not common.SLOW_TESTS, "Generating the long string is slow.")
     def test_long_body(self):
         """
         https://github.com/laurent22/joplin/issues/5543
@@ -884,7 +828,7 @@ class Regression(TestBase):
         """https://github.com/laurent22/joplin/issues/1687"""
 
 
-class ReadmeExamples(TestBase):
+class ReadmeExamples(ClientBase):
     """Check the readme examples for functionality."""
 
     readme_content: str = ""

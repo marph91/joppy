@@ -12,6 +12,7 @@ from typing import (
     Set,
     TypeVar,
 )
+import uuid
 
 
 # Datatypes used by the Joplin API. Needed for arbitrary kwargs.
@@ -20,14 +21,14 @@ JoplinTypes = Union[float, int, str]
 JoplinKwargs = MutableMapping[str, JoplinTypes]
 
 
-class EventChangeType(enum.Enum):
+class EventChangeType(enum.IntEnum):
     # https://joplinapp.org/api/references/rest_api/#properties-4
     CREATED = 1
     UPDATED = 2
     DELETED = 3
 
 
-class ItemType(enum.Enum):
+class ItemType(enum.IntEnum):
     # https://joplinapp.org/api/references/rest_api/#item-type-ids
     NOTE = 1
     FOLDER = 2
@@ -47,7 +48,7 @@ class ItemType(enum.Enum):
     COMMAND = 16
 
 
-class MarkupLanguage(enum.Enum):
+class MarkupLanguage(enum.IntEnum):
     # https://discourse.joplinapp.org/t/api-body-vs-body-html/11697/4
     MARKDOWN = 1
     HTML = 2
@@ -93,10 +94,18 @@ class BaseData:
                 "todo_due",
                 "todo_completed",
             ):
-                casted_value = (
-                    None if value == 0 else datetime.fromtimestamp(value / 1000.0)
-                )
-                setattr(self, field_.name, casted_value)
+                try:
+                    value_int = int(value)
+                    casted_value = (
+                        None
+                        if value_int == 0
+                        else datetime.fromtimestamp(value_int / 1000.0)
+                    )
+                    setattr(self, field_.name, casted_value)
+                except ValueError:
+                    # TODO: This is not spec conform.
+                    casted_value = datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%fZ")
+                    setattr(self, field_.name, casted_value)
             elif field_.name in (
                 "is_conflict",
                 "is_todo",
@@ -104,23 +113,25 @@ class BaseData:
                 "is_shared",
                 "encryption_blob_encrypted",
             ):
-                setattr(self, field_.name, bool(value))
+                setattr(self, field_.name, bool(int(value)))
             elif field_.name == "latitude":
-                if not (-90 <= value <= 90):
+                setattr(self, field_.name, float(value))
+                if not (-90 <= float(value) <= 90):
                     raise ValueError("Invalid latitude:", value)
             elif field_.name == "longitude":
-                if not (-180 <= value <= 180):
+                setattr(self, field_.name, float(value))
+                if not (-180 <= float(value) <= 180):
                     raise ValueError("Invalid longitude:", value)
             elif field_.name == "markup_language":
-                setattr(self, field_.name, MarkupLanguage(value))
+                setattr(self, field_.name, MarkupLanguage(int(value)))
             # elif field_.name == "order":
             # elif field_.name == "crop_rect":
             # elif field_.name == "icon":
             # elif field_.name == "filename":  # "file_extension"
             elif field_.name in ("item_type", "type_"):
-                setattr(self, field_.name, ItemType(value))
+                setattr(self, field_.name, ItemType(int(value)))
             elif field_.name == "type":
-                setattr(self, field_.name, EventChangeType(value))
+                setattr(self, field_.name, EventChangeType(int(value)))
 
     def assigned_fields(self) -> Set[str]:
         # Exclude "type_" for convenience.
@@ -139,7 +150,7 @@ class BaseData:
     def default_fields() -> Set[str]:
         return {"id", "parent_id", "title"}
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         # show only fields with values
         not_none_fields = ", ".join(
             f"{field.name}={getattr(self, field.name)}"
@@ -188,6 +199,44 @@ class NoteData(BaseData):
     image_data_url: Optional[str] = None
     crop_rect: Optional[str] = None
 
+    def serialize(self) -> str:
+        lines = []
+        if self.title is not None:
+            lines.extend([self.title, ""])
+        if self.body is not None:
+            lines.extend([self.body, ""])
+        for field_ in fields(self):
+            match field_.name:
+                case "id":
+                    # ID is always required
+                    if self.id is None:
+                        self.id = uuid.uuid4().hex
+                    lines.append(f"{field_.name}: {self.id}")
+                case "markup_language":
+                    # required to get an editable note
+                    if self.markup_language is None:
+                        self.markup_language = MarkupLanguage.MARKDOWN
+                    lines.append(f"{field_.name}: {self.markup_language}")
+                case "source_application":
+                    if self.source_application is None:
+                        self.source_application = "joppy"
+                    lines.append(f"{field_.name}: {self.source_application}")
+                case "title" | "body":
+                    pass  # handled before
+                case "type_":
+                    self.item_type = ItemType.NOTE
+                    lines.append(f"{field_.name}: {self.item_type}")
+                case "updated_time":
+                    # required, even if empty
+                    value_raw = getattr(self, field_.name)
+                    value = "" if value_raw is None else value_raw
+                    lines.append(f"{field_.name}: {value}")
+                case _:
+                    value_raw = getattr(self, field_.name)
+                    if value_raw is not None:
+                        lines.append(f"{field_.name}: {value_raw}")
+        return "\n".join(lines)
+
 
 @dataclass
 class NotebookData(BaseData):
@@ -208,6 +257,33 @@ class NotebookData(BaseData):
     icon: Optional[str] = None
     user_data: Optional[str] = None
     deleted_time: Optional[datetime] = None
+
+    def serialize(self) -> str:
+        lines = []
+        if self.title is not None:
+            lines.extend([self.title, ""])
+        for field_ in fields(self):
+            match field_.name:
+                case "id":
+                    # ID is always required
+                    if self.id is None:
+                        self.id = uuid.uuid4().hex
+                    lines.append(f"{field_.name}: {self.id}")
+                case "title":
+                    pass  # handled before
+                case "type_":
+                    self.item_type = ItemType.FOLDER
+                    lines.append(f"{field_.name}: {self.item_type}")
+                case "updated_time":
+                    # required, even if empty
+                    value_raw = getattr(self, field_.name)
+                    value = "" if value_raw is None else value_raw
+                    lines.append(f"{field_.name}: {value}")
+                case _:
+                    value_raw = getattr(self, field_.name)
+                    if value_raw is not None:
+                        lines.append(f"{field_.name}: {value_raw}")
+        return "\n".join(lines)
 
 
 @dataclass
@@ -280,6 +356,72 @@ class TagData(BaseData):
     parent_id: Optional[str] = None
     user_data: Optional[str] = None
 
+    def serialize(self) -> str:
+        lines = []
+        if self.title is not None:
+            lines.extend([self.title, ""])
+        for field_ in fields(self):
+            match field_.name:
+                case "id":
+                    # ID is always required
+                    if self.id is None:
+                        self.id = uuid.uuid4().hex
+                    lines.append(f"{field_.name}: {self.id}")
+                case "title":
+                    pass  # handled before
+                case "type_":
+                    self.item_type = ItemType.TAG
+                    lines.append(f"{field_.name}: {self.item_type}")
+                case "updated_time":
+                    # required, even if empty
+                    value_raw = getattr(self, field_.name)
+                    value = "" if value_raw is None else value_raw
+                    lines.append(f"{field_.name}: {value}")
+                case _:
+                    value_raw = getattr(self, field_.name)
+                    if value_raw is not None:
+                        lines.append(f"{field_.name}: {value_raw}")
+        return "\n".join(lines)
+
+
+@dataclass
+class NoteTagData(BaseData):
+    """Links a tag to a note."""
+
+    id: Optional[str] = None
+    note_id: Optional[str] = None
+    tag_id: Optional[str] = None
+    created_time: Optional[datetime] = None
+    updated_time: Optional[datetime] = None
+    user_created_time: Optional[datetime] = None
+    user_updated_time: Optional[datetime] = None
+    encryption_cipher_text: Optional[str] = None
+    encryption_applied: Optional[bool] = None
+    is_shared: Optional[bool] = None
+
+    def serialize(self) -> str:
+        lines = []
+        for field_ in fields(self):
+            match field_.name:
+                case "id":
+                    # ID is always required
+                    if self.id is None:
+                        self.id = uuid.uuid4().hex
+                    lines.append(f"{field_.name}: {self.id}")
+                case "type_":
+                    self.item_type = ItemType.NOTE_TAG
+                    lines.append(f"{field_.name}: {self.item_type}")
+                case "updated_time":
+                    # required, even if empty
+                    value_raw = getattr(self, field_.name)
+                    value = "" if value_raw is None else value_raw
+                    lines.append(f"{field_.name}: {value}")
+                case _:
+                    value_raw = getattr(self, field_.name)
+                    if value_raw is not None:
+                        lines.append(f"{field_.name}: {value_raw}")
+        return "\n".join(lines)
+
 
 @dataclass
 class EventData(BaseData):
@@ -302,6 +444,11 @@ class EventData(BaseData):
     @staticmethod
     def default_fields() -> Set[str]:
         return {"id", "item_type", "item_id", "type", "created_time"}
+
+
+AnyData = Union[
+    EventData, NoteData, NotebookData, NoteTagData, ResourceData, RevisionData, TagData
+]
 
 
 T = TypeVar(

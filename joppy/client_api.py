@@ -6,7 +6,6 @@ import logging
 import time
 from typing import (
     Any,
-    Callable,
     cast,
     Dict,
     List,
@@ -18,6 +17,7 @@ import urllib.parse
 import requests
 
 import joppy.data_types as dt
+from joppy import tools
 
 
 # Use a global session object for better performance.
@@ -33,12 +33,12 @@ LOGGER = logging.getLogger("joppy")
 
 
 ##############################################################################
-# Base wrapper that manages the requests to the REST API.
+# Base wrapper that manages the requests to the client REST API.
 ##############################################################################
 
 
 class ApiBase:
-    """Contains the basic requests of the REST API."""
+    """Contains the basic requests of the client REST API."""
 
     def __init__(self, token: str, url: str = "http://localhost:41184") -> None:
         self.url = url
@@ -429,47 +429,32 @@ class ClientApi(Event, Note, Notebook, Ping, Resource, Revision, Search, Tag):
             assert tag.id is not None
             self.delete_tag(tag.id)
 
-    @staticmethod
-    def _unpaginate(
-        func: Callable[..., dt.DataList[dt.T]], **query: dt.JoplinTypes
-    ) -> List[dt.T]:
-        """Calls an Joplin endpoint until it's response doesn't contain more data."""
-        response = func(**query)
-        items = response.items
-        page = 1  # pages are one based
-        while response.has_more:
-            page += 1
-            query["page"] = page
-            response = func(**query)
-            items.extend(response.items)
-        return items
-
     def get_all_events(self, **query: dt.JoplinTypes) -> List[dt.EventData]:
         """Get all events, unpaginated."""
-        return self._unpaginate(self.get_events, **query)
+        return tools._unpaginate(self.get_events, **query)
 
     def get_all_notes(self, **query: dt.JoplinTypes) -> List[dt.NoteData]:
         """Get all notes, unpaginated."""
-        return self._unpaginate(self.get_notes, **query)
+        return tools._unpaginate(self.get_notes, **query)
 
     def get_all_notebooks(self, **query: dt.JoplinTypes) -> List[dt.NotebookData]:
         """Get all notebooks, unpaginated."""
-        return self._unpaginate(self.get_notebooks, **query)
+        return tools._unpaginate(self.get_notebooks, **query)
 
     def get_all_resources(self, **query: dt.JoplinTypes) -> List[dt.ResourceData]:
         """Get all resources, unpaginated."""
-        return self._unpaginate(self.get_resources, **query)
+        return tools._unpaginate(self.get_resources, **query)
 
     def get_all_revisions(self, **query: dt.JoplinTypes) -> List[dt.RevisionData]:
         """Get all revisions, unpaginated."""
-        return self._unpaginate(self.get_revisions, **query)
+        return tools._unpaginate(self.get_revisions, **query)
 
     def get_all_tags(self, **query: dt.JoplinTypes) -> List[dt.TagData]:
         """Get all tags, unpaginated."""
-        return self._unpaginate(self.get_tags, **query)
+        return tools._unpaginate(self.get_tags, **query)
 
     def search_all(
         self, **query: dt.JoplinTypes
     ) -> List[Union[dt.NoteData, dt.NotebookData, dt.ResourceData, dt.TagData]]:
         """Issue a search and get all results, unpaginated."""
-        return self._unpaginate(self.search, **query)  # type: ignore
+        return tools._unpaginate(self.search, **query)  # type: ignore
