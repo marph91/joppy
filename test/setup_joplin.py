@@ -139,7 +139,7 @@ class JoplinServer:
             # stderr=subprocess.DEVNULL,
         )
 
-        wait_for(api_available, timeout=20)
+        wait_for(api_available, timeout=600)
 
     def stop(self) -> None:
         """Stop the joplin server."""
