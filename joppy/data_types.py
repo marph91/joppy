@@ -206,35 +206,34 @@ class NoteData(BaseData):
         if self.body is not None:
             lines.extend([self.body, ""])
         for field_ in fields(self):
-            match field_.name:
-                case "id":
-                    # ID is always required
-                    if self.id is None:
-                        self.id = uuid.uuid4().hex
-                    lines.append(f"{field_.name}: {self.id}")
-                case "markup_language":
-                    # required to get an editable note
-                    if self.markup_language is None:
-                        self.markup_language = MarkupLanguage.MARKDOWN
-                    lines.append(f"{field_.name}: {self.markup_language}")
-                case "source_application":
-                    if self.source_application is None:
-                        self.source_application = "joppy"
-                    lines.append(f"{field_.name}: {self.source_application}")
-                case "title" | "body":
-                    pass  # handled before
-                case "type_":
-                    self.item_type = ItemType.NOTE
-                    lines.append(f"{field_.name}: {self.item_type}")
-                case "updated_time":
-                    # required, even if empty
-                    value_raw = getattr(self, field_.name)
-                    value = "" if value_raw is None else value_raw
-                    lines.append(f"{field_.name}: {value}")
-                case _:
-                    value_raw = getattr(self, field_.name)
-                    if value_raw is not None:
-                        lines.append(f"{field_.name}: {value_raw}")
+            if field_.name == "id":
+                # ID is always required
+                if self.id is None:
+                    self.id = uuid.uuid4().hex
+                lines.append(f"{field_.name}: {self.id}")
+            elif field_.name == "markup_language":
+                # required to get an editable note
+                if self.markup_language is None:
+                    self.markup_language = MarkupLanguage.MARKDOWN
+                lines.append(f"{field_.name}: {self.markup_language}")
+            elif field_.name == "source_application":
+                if self.source_application is None:
+                    self.source_application = "joppy"
+                lines.append(f"{field_.name}: {self.source_application}")
+            elif field_.name in ("title", "body"):
+                pass  # handled before
+            elif field_.name == "type_":
+                self.item_type = ItemType.NOTE
+                lines.append(f"{field_.name}: {self.item_type}")
+            elif field_.name == "updated_time":
+                # required, even if empty
+                value_raw = getattr(self, field_.name)
+                value = "" if value_raw is None else value_raw
+                lines.append(f"{field_.name}: {value}")
+            else:
+                value_raw = getattr(self, field_.name)
+                if value_raw is not None:
+                    lines.append(f"{field_.name}: {value_raw}")
         return "\n".join(lines)
 
 
@@ -263,26 +262,25 @@ class NotebookData(BaseData):
         if self.title is not None:
             lines.extend([self.title, ""])
         for field_ in fields(self):
-            match field_.name:
-                case "id":
-                    # ID is always required
-                    if self.id is None:
-                        self.id = uuid.uuid4().hex
-                    lines.append(f"{field_.name}: {self.id}")
-                case "title":
-                    pass  # handled before
-                case "type_":
-                    self.item_type = ItemType.FOLDER
-                    lines.append(f"{field_.name}: {self.item_type}")
-                case "updated_time":
-                    # required, even if empty
-                    value_raw = getattr(self, field_.name)
-                    value = "" if value_raw is None else value_raw
-                    lines.append(f"{field_.name}: {value}")
-                case _:
-                    value_raw = getattr(self, field_.name)
-                    if value_raw is not None:
-                        lines.append(f"{field_.name}: {value_raw}")
+            if field_.name == "id":
+                # ID is always required
+                if self.id is None:
+                    self.id = uuid.uuid4().hex
+                lines.append(f"{field_.name}: {self.id}")
+            elif field_.name == "title":
+                pass  # handled before
+            elif field_.name == "type_":
+                self.item_type = ItemType.FOLDER
+                lines.append(f"{field_.name}: {self.item_type}")
+            elif field_.name == "updated_time":
+                # required, even if empty
+                value_raw = getattr(self, field_.name)
+                value = "" if value_raw is None else value_raw
+                lines.append(f"{field_.name}: {value}")
+            else:
+                value_raw = getattr(self, field_.name)
+                if value_raw is not None:
+                    lines.append(f"{field_.name}: {value_raw}")
         return "\n".join(lines)
 
 
@@ -361,26 +359,25 @@ class TagData(BaseData):
         if self.title is not None:
             lines.extend([self.title, ""])
         for field_ in fields(self):
-            match field_.name:
-                case "id":
-                    # ID is always required
-                    if self.id is None:
-                        self.id = uuid.uuid4().hex
-                    lines.append(f"{field_.name}: {self.id}")
-                case "title":
-                    pass  # handled before
-                case "type_":
-                    self.item_type = ItemType.TAG
-                    lines.append(f"{field_.name}: {self.item_type}")
-                case "updated_time":
-                    # required, even if empty
-                    value_raw = getattr(self, field_.name)
-                    value = "" if value_raw is None else value_raw
-                    lines.append(f"{field_.name}: {value}")
-                case _:
-                    value_raw = getattr(self, field_.name)
-                    if value_raw is not None:
-                        lines.append(f"{field_.name}: {value_raw}")
+            if field_.name == "id":
+                # ID is always required
+                if self.id is None:
+                    self.id = uuid.uuid4().hex
+                lines.append(f"{field_.name}: {self.id}")
+            elif field_.name == "title":
+                pass  # handled before
+            elif field_.name == "type_":
+                self.item_type = ItemType.TAG
+                lines.append(f"{field_.name}: {self.item_type}")
+            elif field_.name == "updated_time":
+                # required, even if empty
+                value_raw = getattr(self, field_.name)
+                value = "" if value_raw is None else value_raw
+                lines.append(f"{field_.name}: {value}")
+            else:
+                value_raw = getattr(self, field_.name)
+                if value_raw is not None:
+                    lines.append(f"{field_.name}: {value_raw}")
         return "\n".join(lines)
 
 
@@ -402,24 +399,23 @@ class NoteTagData(BaseData):
     def serialize(self) -> str:
         lines = []
         for field_ in fields(self):
-            match field_.name:
-                case "id":
-                    # ID is always required
-                    if self.id is None:
-                        self.id = uuid.uuid4().hex
-                    lines.append(f"{field_.name}: {self.id}")
-                case "type_":
-                    self.item_type = ItemType.NOTE_TAG
-                    lines.append(f"{field_.name}: {self.item_type}")
-                case "updated_time":
-                    # required, even if empty
-                    value_raw = getattr(self, field_.name)
-                    value = "" if value_raw is None else value_raw
-                    lines.append(f"{field_.name}: {value}")
-                case _:
-                    value_raw = getattr(self, field_.name)
-                    if value_raw is not None:
-                        lines.append(f"{field_.name}: {value_raw}")
+            if field_.name == "id":
+                # ID is always required
+                if self.id is None:
+                    self.id = uuid.uuid4().hex
+                lines.append(f"{field_.name}: {self.id}")
+            elif field_.name == "type_":
+                self.item_type = ItemType.NOTE_TAG
+                lines.append(f"{field_.name}: {self.item_type}")
+            elif field_.name == "updated_time":
+                # required, even if empty
+                value_raw = getattr(self, field_.name)
+                value = "" if value_raw is None else value_raw
+                lines.append(f"{field_.name}: {value}")
+            else:
+                value_raw = getattr(self, field_.name)
+                if value_raw is not None:
+                    lines.append(f"{field_.name}: {value_raw}")
         return "\n".join(lines)
 
 

@@ -33,43 +33,43 @@ def deserialize(body: str) -> Optional[dt.AnyData]:
             metadata[key] = value
         return metadata
 
-    match len(body_splitted):
-        case 1:
-            # metadata only
-            title = None
-            note_body = None
-            metadata = extract_metadata(body_splitted[0])
-        case 2:
-            # title + metadata
-            title = body_splitted[0]
-            note_body = None
-            metadata = extract_metadata(body_splitted[1])
-        case 3:
-            # title + body + metadata
-            title = body_splitted[0]
-            note_body = body_splitted[1]
-            metadata = extract_metadata(body_splitted[2])
-        case _:
-            print("TODO: ", body_splitted)
+    if len(body_splitted) == 1:
+        # metadata only
+        title = None
+        note_body = None
+        metadata = extract_metadata(body_splitted[0])
+    elif len(body_splitted) == 2:
+        # title + metadata
+        title = body_splitted[0]
+        note_body = None
+        metadata = extract_metadata(body_splitted[1])
+    elif len(body_splitted) == 3:
+        # title + body + metadata
+        title = body_splitted[0]
+        note_body = body_splitted[1]
+        metadata = extract_metadata(body_splitted[2])
+    else:
+        print("TODO: ", body_splitted)
+
     if title is not None:
         metadata["title"] = title
     if note_body is not None:
         metadata["body"] = note_body
 
-    match dt.ItemType(int(metadata["type_"])):
-        case dt.ItemType.NOTE:
-            return dt.NoteData(**metadata)
-        case dt.ItemType.FOLDER:
-            return dt.NotebookData(**metadata)
-        case dt.ItemType.TAG:
-            return dt.TagData(**metadata)
-        case dt.ItemType.NOTE_TAG:
-            return dt.NoteTagData(**metadata)
-        case dt.ItemType.REVISION:
-            # ignore revisions for now
-            pass
-        case _:
-            print("TODO: ", dt.ItemType(int(metadata["type_"])))
+    item_type = dt.ItemType(int(metadata["type_"]))
+    if item_type == dt.ItemType.NOTE:
+        return dt.NoteData(**metadata)
+    elif item_type == dt.ItemType.FOLDER:
+        return dt.NotebookData(**metadata)
+    elif item_type == dt.ItemType.TAG:
+        return dt.TagData(**metadata)
+    elif item_type == dt.ItemType.NOTE_TAG:
+        return dt.NoteTagData(**metadata)
+    elif item_type == dt.ItemType.REVISION:
+        # ignore revisions for now
+        pass
+    else:
+        print("TODO: ", dt.ItemType(int(metadata["type_"])))
     return None
 
 
