@@ -2,6 +2,7 @@
 
 import json
 import os
+import shutil
 import stat
 import subprocess
 import time
@@ -130,10 +131,12 @@ class JoplinServer:
             return
 
         # TODO: check if docker is installed and available
+        if shutil.which("docker") is None:
+            raise Exception("Please install docker and try again.")
         self.joplin_process = subprocess.Popen(
             ["docker", "run", "-p", "22300:22300", "joplin/server:latest"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
+            # stdout=subprocess.DEVNULL,
+            # stderr=subprocess.DEVNULL,
         )
 
         wait_for(api_available, timeout=20)
