@@ -96,10 +96,8 @@ class ApiBase:
         user: str = "admin@localhost",
         password: str = "admin",
         url: str = "http://localhost:22300",
-        encryption_key: Optional[str] = None,
     ) -> None:
         self.url = url
-        self.encryption_key = encryption_key  # TODO
 
         # cookie is saved in session and used for the next requests
         self.post("/login", data={"email": user, "password": password})

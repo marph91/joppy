@@ -74,6 +74,11 @@ class BaseData:
     type_: Optional[ItemType] = None
 
     def __post_init__(self) -> None:
+        # detect if data is encrypted
+        encryption_applied = getattr(self, "encryption_applied")
+        if encryption_applied is not None and bool(int(encryption_applied)):
+            raise NotImplementedError("Encryption is not supported")
+
         # Cast the basic joplin API datatypes to more convenient datatypes.
         for field_ in fields(self):
             value = getattr(self, field_.name)
