@@ -76,7 +76,7 @@ class BaseData:
 
     def __post_init__(self) -> None:
         # detect if data is encrypted
-        encryption_applied = getattr(self, "encryption_applied")
+        encryption_applied = getattr(self, "encryption_applied", False)
         if encryption_applied is not None and bool(int(encryption_applied)):
             raise NotImplementedError("Encryption is not supported")
 
