@@ -62,8 +62,8 @@ class Note(ServerBase):
 
     def test_delete(self):
         """Add and then delete a note."""
-        self.api.add_notebook()
-        id_ = self.api.add_note()
+        parent_id = self.api.add_notebook()
+        id_ = self.api.add_note(parent_id)
         notes = self.api.get_notes()
         self.assertEqual(len(notes.items), 1)
 
@@ -87,10 +87,10 @@ class Note(ServerBase):
 
     def test_get_all_notes(self):
         """Get all notes, unpaginated."""
-        self.api.add_notebook()
+        parent_id = self.api.add_notebook()
         count = 20
         for _ in range(count):
-            self.api.add_note()
+            self.api.add_note(parent_id)
         self.assertEqual(len(self.api.get_all_notes()), count)
 
     def test_move(self):
@@ -309,8 +309,8 @@ class Tag(ServerBase):
 
     def test_add_to_note(self):
         """Add a tag to an existing note."""
-        self.api.add_notebook()
-        note_id = self.api.add_note()
+        parent_id = self.api.add_notebook()
+        note_id = self.api.add_note(parent_id)
         tag_id = self.api.add_tag()
         self.api.add_tag_to_note(tag_id=tag_id, note_id=note_id)
 
@@ -323,8 +323,8 @@ class Tag(ServerBase):
 
     def test_add_with_parent(self):
         """Add a tag as child for an existing note."""
-        self.api.add_notebook()
-        parent_id = self.api.add_note()
+        notebook_id = self.api.add_notebook()
+        parent_id = self.api.add_note(notebook_id)
         id_ = self.api.add_tag(parent_id=parent_id)
 
         tags = self.api.get_tags().items
@@ -347,7 +347,6 @@ class Tag(ServerBase):
 
     def test_get_all_tags(self):
         """Get all tags, unpaginated."""
-        # Small limit and count to create/remove as less as possible items.
         count = 20
         for _ in range(count):
             self.api.add_tag()

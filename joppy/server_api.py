@@ -164,9 +164,10 @@ class ApiBase:
 
 
 class Note(ApiBase):
-    def add_note(self, **data: Any) -> str:
+    def add_note(self, parent_id, **data: Any) -> str:
         """Add a note."""
-        note_data = dt.NoteData(**data)
+        # Parent ID is required. Else the notes are created at root.
+        note_data = dt.NoteData(parent_id=parent_id, **data)
         request_data = note_data.serialize()
         assert note_data.id is not None
         self.put(
