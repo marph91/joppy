@@ -182,11 +182,11 @@ class Note(ApiBase):
         self.delete(f"/api/items/root:/{add_suffix(id_)}:")
 
     def get_note(self, id_: str) -> dt.NoteData:
-        response = self.get(f"/api/items/{add_suffix(id_)}/content")
+        response = self.get(f"/api/items/root:/{add_suffix(id_)}:/content")
         return cast(dt.NoteData, deserialize(response.text))
 
     def get_notes(self) -> dt.DataList[dt.NoteData]:
-        response = self.get("/api/items/root:/:/children").json()
+        response = self.get(f"/api/items/root:/:/children").json()
         # TODO: Is this the best practice?
         notes = []
         for item in response["items"]:
@@ -225,11 +225,11 @@ class Notebook(ApiBase):
         self.delete(f"/api/items/root:/{add_suffix(id_)}:")
 
     def get_notebook(self, id_: str) -> dt.NotebookData:
-        response = self.get(f"/api/items/{add_suffix(id_)}/content")
+        response = self.get(f"/api/items/root:/{add_suffix(id_)}:/content")
         return cast(dt.NotebookData, deserialize(response.text))
 
     def get_notebooks(self) -> dt.DataList[dt.NotebookData]:
-        response = self.get("/api/items/root:/:/children").json()
+        response = self.get(f"/api/items/root:/:/children").json()
         # TODO: Is this the best practice?
         notebooks = []
         for item in response["items"]:
@@ -288,7 +288,7 @@ class Resource(ApiBase):
 
     def get_resource(self, id_: str) -> dt.ResourceData:
         """Get metadata about the resource with the given ID."""
-        response = self.get(f"/api/items/{add_suffix(id_)}/content")
+        response = self.get(f"/api/items/root:/{add_suffix(id_)}:/content")
         return cast(dt.ResourceData, deserialize(response.text))
 
     def get_resource_file(self, id_: str) -> bytes:
@@ -323,7 +323,7 @@ class Revision(ApiBase):
 
     def get_revision(self, id_: str, **query: Any) -> dt.RevisionData:
         """Get the revision with the given ID."""
-        response = self.get(f"/api/items/{add_suffix(id_)}/content")
+        response = self.get(f"/api/items/root:/{add_suffix(id_)}:/content")
         return cast(dt.RevisionData, deserialize(response.text))
 
     def get_revisions(self, **query: Any) -> dt.DataList[dt.RevisionData]:
@@ -355,7 +355,7 @@ class Tag(ApiBase):
 
     def get_tag(self, id_: str) -> dt.TagData:
         """Get the tag with the given ID."""
-        response = self.get(f"/api/items/{add_suffix(id_)}/content")
+        response = self.get(f"/api/items/root:/{add_suffix(id_)}:/content")
         return cast(dt.TagData, deserialize(response.text))
 
     def get_tags(self) -> dt.DataList[dt.TagData]:
