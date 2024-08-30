@@ -163,11 +163,6 @@ class ApiBase:
 ##############################################################################
 
 
-# TODO
-class Event(ApiBase):
-    pass
-
-
 class Note(ApiBase):
     def add_note(self, **data: Any) -> str:
         """Add a note."""
@@ -286,11 +281,6 @@ class Revision(ApiBase):
         return dt.DataList(response["has_more"], response["cursor"], revisions)
 
 
-# TODO: Is there a search functionality?
-class Search(ApiBase):
-    pass
-
-
 class Tag(ApiBase):
     def add_tag(self, **data: Any) -> str:
         """Add a tag."""
@@ -338,7 +328,7 @@ class Tag(ApiBase):
         self.put(f"/api/items/root:/{id_server}:/content", data=request_data)
 
 
-class ServerApi(Event, Note, Notebook, Ping, Resource, Revision, Search, Tag):
+class ServerApi(Note, Notebook, Ping, Resource, Revision, Tag):
     """
     Collects all basic API functions and contains a few more useful methods.
     This should be the only class accessed from the users.
@@ -399,11 +389,6 @@ class ServerApi(Event, Note, Notebook, Ping, Resource, Revision, Search, Tag):
         for tag in self.get_all_tags():
             assert tag.id is not None
             self.delete_tag(tag.id)
-
-    # TODO
-    # def get_all_events(self, **query: Any) -> List[dt.EventData]:
-    #     """Get all events, unpaginated."""
-    #     return self._unpaginate(self.get_events, **query)
 
     def get_all_notes(self, **query: Any) -> List[dt.NoteData]:
         """Get all notes, unpaginated."""

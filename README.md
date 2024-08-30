@@ -10,6 +10,13 @@ Python interface for the [Joplin data API](https://joplinapp.org/api/references/
 [![https://img.shields.io/badge/Joplin-3.0.15-blueviolet](https://img.shields.io/badge/Joplin-3.0.15-blueviolet)](https://github.com/laurent22/joplin)
 [![Python version](https://img.shields.io/pypi/pyversions/joppy.svg)](https://pypi.python.org/pypi/joppy/)
 
+## Features
+
+|     | Client API Wrapper | Server API Wrapper |
+| --- | --- | --- |
+| **Supported** | All functions from the [data API](https://joplinapp.org/help/api/references/rest_api/) | Some reverse engineered functions with a similar interface like the client API wrapper. See the example below and the source code for details. |
+| **Not Supported** | -  | - Encryption  <br>- Some functions that were either to complex or I didn't see a use for automation. |
+
 ## :computer: Installation
 
 From pypi:
@@ -27,6 +34,8 @@ pip install .
 ```
 
 ## :wrench: Usage
+
+Please backup your data before use!
 
 ### General function description
 
