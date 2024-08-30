@@ -1,6 +1,6 @@
 import logging
 import pathlib
-from typing import Any, cast, Dict, List, Optional
+from typing import Any, cast, Dict, List, Optional, Union
 
 import requests
 
@@ -61,6 +61,8 @@ def deserialize(body: str) -> Optional[dt.AnyData]:
         return dt.NoteData(**metadata)
     elif item_type == dt.ItemType.FOLDER:
         return dt.NotebookData(**metadata)
+    elif item_type == dt.ItemType.RESOURCE:
+        return dt.ResourceData(**metadata)
     elif item_type == dt.ItemType.TAG:
         return dt.TagData(**metadata)
     elif item_type == dt.ItemType.NOTE_TAG:
@@ -151,7 +153,7 @@ class ApiBase:
         """Convenience method to issue a post request."""
         return self._request("post", path, data=data, files=files)
 
-    def put(self, path: str, data: str) -> requests.models.Response:
+    def put(self, path: str, data: Union[str, bytes]) -> requests.models.Response:
         """Convenience method to issue a put request."""
         return self._request(
             "put", path, data=data, headers={"Content-Type": "application/octet-stream"}
@@ -164,7 +166,7 @@ class ApiBase:
 
 
 class Note(ApiBase):
-    def add_note(self, parent_id, **data: Any) -> str:
+    def add_note(self, parent_id: str, **data: Any) -> str:
         """Add a note."""
         # Parent ID is required. Else the notes are created at root.
         note_data = dt.NoteData(parent_id=parent_id, **data)
@@ -177,7 +179,7 @@ class Note(ApiBase):
 
     def delete_note(self, id_: str) -> None:
         """Delete a note."""
-        self.delete(f"/api/items/{add_suffix(id_)}")
+        self.delete(f"/api/items/root:/{add_suffix(id_)}:")
 
     def get_note(self, id_: str) -> dt.NoteData:
         response = self.get(f"/api/items/{add_suffix(id_)}/content")
@@ -220,7 +222,7 @@ class Notebook(ApiBase):
 
     def delete_notebook(self, id_: str) -> None:
         """Delete a notebook."""
-        self.delete(f"/api/items/{add_suffix(id_)}")
+        self.delete(f"/api/items/root:/{add_suffix(id_)}:")
 
     def get_notebook(self, id_: str) -> dt.NotebookData:
         response = self.get(f"/api/items/{add_suffix(id_)}/content")
@@ -255,15 +257,69 @@ class Ping(ApiBase):
         return self.get("/api/ping")
 
 
-# TODO
 class Resource(ApiBase):
-    pass
+    def add_resource(self, filename: str, **data: Any) -> str:
+        """Add a resource."""
+
+        # add the corresponding md item with metadata
+        title = str(data.pop("title", filename))
+        resource_data = dt.ResourceData(title=title, filename=filename, **data)
+        request_data = resource_data.serialize()
+        assert resource_data.id is not None
+        self.put(
+            f"/api/items/root:/{add_suffix(resource_data.id)}:/content",
+            data=request_data,
+        )
+
+        # add the resource itself
+        self.put(
+            f"/api/items/root:/.resource/{resource_data.id}:/content",
+            data=pathlib.Path(filename).read_bytes(),
+        )
+
+        return resource_data.id
+
+    def delete_resource(self, id_: str) -> None:
+        """Delete a resource."""
+        # metadata
+        self.delete(f"/api/items/root:/{add_suffix(id_)}:")
+        # resource itself
+        self.delete(f"/api/items/root:/.resource/{id_}:")
+
+    def get_resource(self, id_: str) -> dt.ResourceData:
+        """Get metadata about the resource with the given ID."""
+        response = self.get(f"/api/items/{add_suffix(id_)}/content")
+        return cast(dt.ResourceData, deserialize(response.text))
+
+    def get_resource_file(self, id_: str) -> bytes:
+        """Get the resource with the given ID in binary format."""
+        return self.get(f"/api/items/root:/.resource/{id_}:/content").content
+
+    def get_resources(self) -> dt.DataList[dt.ResourceData]:
+        """
+        Get resources, paginated.
+        To get all resources (unpaginated), use "get_all_resources()".
+        """
+        response = self.get("/api/items/root:/:/children").json()
+        # TODO: Is this the best practice?
+        resources = []
+        for item in response["items"]:
+            if item["name"].endswith(".md"):
+                item_complete = self.get_resource(remove_suffix(item["name"]))
+                if isinstance(item_complete, dt.ResourceData):
+                    resources.append(item_complete)
+        return dt.DataList(response["has_more"], response["cursor"], resources)
+
+    def modify_resource(self, id_: str, **data: Any) -> None:
+        """Modify a resource."""
+        # TODO: split in metadata and content?
+        raise NotImplementedError("'modify_resource()' is not yet implemented")
 
 
 class Revision(ApiBase):
     def delete_revision(self, id_: str) -> None:
         """Delete a revision."""
-        self.delete(f"/api/items/{add_suffix(id_)}")
+        self.delete(f"/api/items/root:/{add_suffix(id_)}:")
 
     def get_revision(self, id_: str, **query: Any) -> dt.RevisionData:
         """Get the revision with the given ID."""
@@ -295,7 +351,7 @@ class Tag(ApiBase):
 
     def delete_tag(self, id_: str) -> None:
         """Delete a tag."""
-        self.delete(f"/api/items/{add_suffix(id_)}")
+        self.delete(f"/api/items/root:/{add_suffix(id_)}:")
 
     def get_tag(self, id_: str) -> dt.TagData:
         """Get the tag with the given ID."""
@@ -304,7 +360,7 @@ class Tag(ApiBase):
 
     def get_tags(self) -> dt.DataList[dt.TagData]:
         """
-        Get tags, paginated. If a note is given, return the corresponding tags.
+        Get tags, paginated.
         To get all tags (unpaginated), use "get_all_tags()".
         """
         response = self.get("/api/items/root:/:/children").json()
@@ -346,19 +402,19 @@ class ServerApi(Note, Notebook, Ping, Resource, Revision, Tag):
         )
         return note_tag_data.id
 
-    # TODO
-    # def add_resource_to_note(self, resource_id: str, note_id: str) -> None:
-    #     """Add a resource to a given note."""
-    #     note = self.get_note(id_=note_id, fields="body")
-    #     resource = self.get_resource(id_=resource_id, fields="title,mime")
-    #     # TODO: Use "assertIsNotNone()" when
-    #     # https://github.com/python/mypy/issues/5528 is resolved.
-    #     assert resource.mime is not None
-    #     image_prefix = "!" if resource.mime.startswith("image/") else ""
-    #     body_with_attachment = (
-    #         f"{note.body}\n{image_prefix}[{resource.title}](:/{resource_id})"
-    #     )
-    #     self.modify_note(note_id, body=body_with_attachment)
+    def add_resource_to_note(self, resource_id: str, note_id: str) -> None:
+        """Add a resource to a given note."""
+        note = self.get_note(id_=note_id)
+        resource = self.get_resource(id_=resource_id)
+        # TODO: Use "assertIsNotNone()" when
+        # https://github.com/python/mypy/issues/5528 is resolved.
+        assert resource.mime is not None
+        image_prefix = "!" if resource.mime.startswith("image/") else ""
+        original_body = "" if note.body is None else note.body
+        body_with_attachment = (
+            f"{original_body}\n{image_prefix}[{resource.title}](:/{resource_id})"
+        )
+        self.modify_note(note_id, body=body_with_attachment)
 
     def delete_all_notes(self) -> None:
         """Delete all notes permanently."""
@@ -374,10 +430,9 @@ class ServerApi(Note, Notebook, Ping, Resource, Revision, Tag):
 
     def delete_all_resources(self) -> None:
         """Delete all resources."""
-        pass  # TODO
-        # for resource in self.get_all_resources():
-        #     assert resource.id is not None
-        #     self.delete_resource(resource.id)
+        for resource in self.get_all_resources():
+            assert resource.id is not None
+            self.delete_resource(resource.id)
 
     def delete_all_revisions(self) -> None:
         """Delete all revisions."""
@@ -401,8 +456,7 @@ class ServerApi(Note, Notebook, Ping, Resource, Revision, Tag):
 
     def get_all_resources(self, **query: Any) -> List[dt.ResourceData]:
         """Get all resources, unpaginated."""
-        return []  # TODO
-        # return tools._unpaginate(self.get_resources, **query)
+        return tools._unpaginate(self.get_resources, **query)
 
     def get_all_revisions(self, **query: Any) -> List[dt.RevisionData]:
         """Get all revisions, unpaginated."""

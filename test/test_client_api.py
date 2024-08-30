@@ -6,7 +6,6 @@ import os
 import random
 import re
 import string
-import tempfile
 from typing import Any, Mapping
 import unittest
 
@@ -22,20 +21,6 @@ from . import common, setup_joplin
 PROFILE = os.path.join(os.getcwd(), "test_profile")
 API_TOKEN = ""  # Don't use the API token from env to avoid data loss.
 APP = None
-
-
-def with_resource(func):
-    """Create a dummy resource and return it's filename."""
-
-    def inner_decorator(self, *args, **kwargs):
-        # TODO: Check why TemporaryFile() doesn't work.
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            filename = f"{tmpdirname}/dummy.raw"
-            open(filename, "w").close()
-
-            return func(self, *args, **kwargs, filename=filename)
-
-    return inner_decorator
 
 
 def setUpModule():  # pylint: disable=invalid-name
@@ -350,7 +335,7 @@ class Ping(ClientBase):
 
 
 class Resource(ClientBase):
-    @with_resource
+    @common.with_resource
     def test_add(self, filename):
         """Add a resource."""
         id_ = self.api.add_resource(filename=filename)
@@ -359,7 +344,7 @@ class Resource(ClientBase):
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0].id, id_)
 
-    @with_resource
+    @common.with_resource
     def test_add_to_note(self, filename):
         """Add a resource to an existing note."""
         self.api.add_notebook()
@@ -386,7 +371,7 @@ class Resource(ClientBase):
                     f"\n{image_prefix}[{file_}](:/{resource_id})", note.body
                 )
 
-    @with_resource
+    @common.with_resource
     def test_delete(self, filename):
         """Add and then delete a resource."""
         id_ = self.api.add_resource(filename=filename)
@@ -397,7 +382,7 @@ class Resource(ClientBase):
         self.assertEqual(self.api.get_resources().items, [])
         self.assertEqual(os.listdir(f"{PROFILE}/resources"), [])
 
-    @with_resource
+    @common.with_resource
     def test_get_resource(self, filename):
         """Get metadata about a specific resource."""
         id_ = self.api.add_resource(filename=filename)
@@ -405,7 +390,7 @@ class Resource(ClientBase):
         self.assertEqual(resource.assigned_fields(), resource.default_fields())
         self.assertEqual(resource.type_, dt.ItemType.RESOURCE)
 
-    @with_resource
+    @common.with_resource
     def test_get_resource_file(self, filename):
         """Get a specific resource in binary format."""
         for file_ in ("test/grant_authorization_button.png", filename):
@@ -414,7 +399,7 @@ class Resource(ClientBase):
             with open(file_, "rb") as resource_file:
                 self.assertEqual(resource, resource_file.read())
 
-    @with_resource
+    @common.with_resource
     def test_get_resources(self, filename):
         """Get all resources."""
         self.api.add_resource(filename=filename)
@@ -424,7 +409,7 @@ class Resource(ClientBase):
         for resource in resources.items:
             self.assertEqual(resource.assigned_fields(), resource.default_fields())
 
-    @with_resource
+    @common.with_resource
     def test_get_all_resources(self, filename):
         """Get all resources, unpaginated."""
         # Small limit and count to create/remove as less as possible items.
@@ -436,7 +421,7 @@ class Resource(ClientBase):
         )
         self.assertEqual(len(self.api.get_all_resources(limit=limit)), count)
 
-    @with_resource
+    @common.with_resource
     def test_get_resources_valid_properties(self, filename):
         """Try to get specific properties of a resource."""
         self.api.add_resource(filename=filename)
@@ -446,7 +431,7 @@ class Resource(ClientBase):
             for resource in resources.items:
                 self.assertEqual(resource.assigned_fields(), set(properties))
 
-    @with_resource
+    @common.with_resource
     def test_modify_title(self, filename):
         """Modify a resource title."""
         id_ = self.api.add_resource(filename=filename)
@@ -455,7 +440,7 @@ class Resource(ClientBase):
         self.api.modify_resource(id_=id_, title=new_title)
         self.assertEqual(self.api.get_resource(id_=id_).title, new_title)
 
-    @with_resource
+    @common.with_resource
     def test_check_derived_properties(self, filename):
         """Check the derived properties. I. e. mime type, extension and size."""
         for file_ in ["test/grant_authorization_button.png", filename]:
@@ -469,7 +454,7 @@ class Resource(ClientBase):
             self.assertEqual(resource.file_extension, os.path.splitext(file_)[1][1:])
             self.assertEqual(resource.size, os.path.getsize(file_))
 
-    @with_resource
+    @common.with_resource
     def test_check_property_title(self, filename):
         """Check the title of a resource."""
         title = self.get_random_string()
@@ -558,7 +543,7 @@ class Search(ClientBase):
             self.api.get_notebooks(),
         )
 
-    @with_resource
+    @common.with_resource
     def test_resources(self, filename):
         """Search by resources and search endpoint should yield same results."""
         self.api.add_resource(filename=filename)
@@ -784,7 +769,7 @@ class Helper(ClientBase):
 
 
 class Miscellaneous(ClientBase):
-    @with_resource
+    @common.with_resource
     def test_same_id_different_type(self, filename):
         """Same IDs can be used if the types are different."""
         id_ = self.get_random_id()
@@ -928,7 +913,7 @@ class ReadmeExamples(ClientBase):
             assert tag.title is not None
             self.assertNotIn(" ", tag.title)
 
-    @with_resource
+    @common.with_resource
     def test_remove_orphaned_resources(self, filename):
         self.api.add_notebook()
         for i in range(2):

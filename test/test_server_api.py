@@ -166,136 +166,98 @@ class Ping(ServerBase):
         )
 
 
-# TODO
-# class Resource(ServerBase):
-#     @with_resource
-#     def test_add(self, filename):
-#         """Add a resource."""
-#         id_ = self.api.add_resource(filename=filename)
+class Resource(ServerBase):
+    @common.with_resource
+    def test_add(self, filename):
+        """Add a resource."""
+        id_ = self.api.add_resource(filename=filename)
 
-#         resources = self.api.get_resources().items
-#         self.assertEqual(len(resources), 1)
-#         self.assertEqual(resources[0].id, id_)
+        resources = self.api.get_resources().items
+        self.assertEqual(len(resources), 1)
+        self.assertEqual(resources[0].id, id_)
 
-#     @with_resource
-#     def test_add_to_note(self, filename):
-#         """Add a resource to an existing note."""
-#         self.api.add_notebook()
-#         for file_ in ["test/grant_authorization_button.png", filename]:
-#             with self.subTest(file_=file_):
-#                 note_id = self.api.add_note()
-#                 resource_id = self.api.add_resource(filename=file_)
-#                 self.api.add_resource_to_note(resource_id=resource_id,
-# note_id=note_id)
+    @common.with_resource
+    def test_add_to_note(self, filename):
+        """Add a resource to an existing note."""
+        parent_id = self.api.add_notebook()
+        for file_ in ("test/grant_authorization_button.png", filename):
+            with self.subTest(file_=file_):
+                note_id = self.api.add_note(parent_id)
+                resource_id = self.api.add_resource(filename=file_)
+                self.api.add_resource_to_note(resource_id=resource_id, note_id=note_id)
 
-#                 # Verify the resource is attached to the note.
-#                 resources = self.api.get_resources(
-#                     note_id=note_id, fields="id,mime"
-#                 ).items
-#                 self.assertEqual(len(resources), 1)
-#                 self.assertEqual(resources[0].id, resource_id)
+                # Get the resource
+                resource = self.api.get_resource(id_=resource_id)
 
-#                 # Verify the markdown is correct (prefix "!" for images).
-#                 note = self.api.get_note(id_=note_id, fields="body")
-#                 # TODO: Use "assertIsNotNone()" when
-#                 # https://github.com/python/mypy/issues/5528 is resolved.
-#                 assert resources[0].mime is not None
-#                 image_prefix = "!" if resources[0].mime.startswith("image/") else ""
-#                 self.assertEqual(
-#                     f"\n{image_prefix}[{file_}](:/{resource_id})", note.body
-#                 )
+                # Verify the markdown is correct (prefix "!" for images).
+                note = self.api.get_note(id_=note_id)
+                # TODO: Use "assertIsNotNone()" when
+                # https://github.com/python/mypy/issues/5528 is resolved.
+                assert resource.mime is not None
+                image_prefix = "!" if resource.mime.startswith("image/") else ""
+                self.assertEqual(
+                    f"\n{image_prefix}[{file_}](:/{resource_id})", note.body
+                )
 
-#     @with_resource
-#     def test_delete(self, filename):
-#         """Add and then delete a resource."""
-#         id_ = self.api.add_resource(filename=filename)
-#         resources = self.api.get_resources()
-#         self.assertEqual(len(resources.items), 1)
+    @common.with_resource
+    def test_delete(self, filename):
+        """Add and then delete a resource."""
+        id_ = self.api.add_resource(filename=filename)
+        resources = self.api.get_resources()
+        self.assertEqual(len(resources.items), 1)
 
-#         self.api.delete_resource(id_=id_)
-#         self.assertEqual(self.api.get_resources().items, [])
-#         self.assertEqual(os.listdir(f"{PROFILE}/resources"), [])
+        self.api.delete_resource(id_=id_)
+        self.assertEqual(self.api.get_resources().items, [])
 
-#     @with_resource
-#     def test_get_resource(self, filename):
-#         """Get metadata about a specific resource."""
-#         id_ = self.api.add_resource(filename=filename)
-#         resource = self.api.get_resource(id_=id_)
-#         self.assertEqual(resource.assigned_fields(), resource.default_fields())
-#         self.assertEqual(resource.type_, dt.ItemType.RESOURCE)
+    @common.with_resource
+    def test_get_resource(self, filename):
+        """Get metadata about a specific resource."""
+        id_ = self.api.add_resource(filename=filename)
+        resource = self.api.get_resource(id_=id_)
+        self.assertEqual(resource.type_, dt.ItemType.RESOURCE)
 
-#     @with_resource
-#     def test_get_resource_file(self, filename):
-#         """Get a specific resource in binary format."""
-#         for file_ in ("test/grant_authorization_button.png", filename):
-#             id_ = self.api.add_resource(filename=file_)
-#             resource = self.api.get_resource_file(id_=id_)
-#             with open(file_, "rb") as resource_file:
-#                 self.assertEqual(resource, resource_file.read())
+    @common.with_resource
+    def test_get_resource_file(self, filename):
+        """Get a specific resource in binary format."""
+        for file_ in ("test/grant_authorization_button.png", filename):
+            id_ = self.api.add_resource(filename=file_)
+            resource = self.api.get_resource_file(id_=id_)
+            with open(file_, "rb") as resource_file:
+                self.assertEqual(resource, resource_file.read())
 
-#     @with_resource
-#     def test_get_resources(self, filename):
-#         """Get all resources."""
-#         self.api.add_resource(filename=filename)
-#         resources = self.api.get_resources()
-#         self.assertEqual(len(resources.items), 1)
-#         self.assertFalse(resources.has_more)
-#         for resource in resources.items:
-#             self.assertEqual(resource.assigned_fields(), resource.default_fields())
+    @common.with_resource
+    def test_get_resources(self, filename):
+        """Get all resources."""
+        self.api.add_resource(filename=filename)
+        resources = self.api.get_resources()
+        self.assertEqual(len(resources.items), 1)
+        self.assertFalse(resources.has_more)
 
-#     @with_resource
-#     def test_get_all_resources(self, filename):
-#         """Get all resources, unpaginated."""
-#         # Small limit and count to create/remove as less as possible items.
-#         count, limit = random.randint(1, 10), random.randint(1, 10)
-#         for _ in range(count):
-#             self.api.add_resource(filename=filename)
-#         self.assertEqual(
-#             len(self.api.get_resources(limit=limit).items), min(limit, count)
-#         )
-#         self.assertEqual(len(self.api.get_all_resources(limit=limit)), count)
+    @common.with_resource
+    def test_get_all_resources(self, filename):
+        """Get all resources, unpaginated."""
+        count = 5
+        for _ in range(count):
+            self.api.add_resource(filename=filename)
+        self.assertEqual(len(self.api.get_all_resources()), count)
 
-#     @with_resource
-#     def test_get_resources_valid_properties(self, filename):
-#         """Try to get specific properties of a resource."""
-#         self.api.add_resource(filename=filename)
-#         property_combinations = self.get_combinations(dt.ResourceData.fields())
-#         for properties in property_combinations:
-#             resources = self.api.get_resources(fields=",".join(properties))
-#             for resource in resources.items:
-#                 self.assertEqual(resource.assigned_fields(), set(properties))
+    # TODO
+    #     @common.with_resource
+    #     def test_modify_title(self, filename):
+    #         """Modify a resource title."""
+    #         id_ = self.api.add_resource(filename=filename)
 
-#     @with_resource
-#     def test_modify_title(self, filename):
-#         """Modify a resource title."""
-#         id_ = self.api.add_resource(filename=filename)
+    #         new_title = self.get_random_string()
+    #         self.api.modify_resource(id_=id_, title=new_title)
+    #         self.assertEqual(self.api.get_resource(id_=id_).title, new_title)
 
-#         new_title = self.get_random_string()
-#         self.api.modify_resource(id_=id_, title=new_title)
-#         self.assertEqual(self.api.get_resource(id_=id_).title, new_title)
-
-#     @with_resource
-#     def test_check_derived_properties(self, filename):
-#         """Check the derived properties. I. e. mime type, extension and size."""
-#         for file_ in ["test/grant_authorization_button.png", filename]:
-#             id_ = self.api.add_resource(filename=file_)
-#             resource = self.api.get_resource(id_=id_,
-# fields="mime,file_extension,size")
-#             mime_type, _ = mimetypes.guess_type(file_)
-#             self.assertEqual(
-#                 resource.mime,
-#                 mime_type if mime_type is not None else "application/octet-stream",
-#             )
-#             self.assertEqual(resource.file_extension, os.path.splitext(file_)[1][1:])
-#             self.assertEqual(resource.size, os.path.getsize(file_))
-
-#     @with_resource
-#     def test_check_property_title(self, filename):
-#         """Check the title of a resource."""
-#         title = self.get_random_string()
-#         id_ = self.api.add_resource(filename=filename, title=title)
-#         resource = self.api.get_resource(id_=id_)
-#         self.assertEqual(resource.title, title)
+    @common.with_resource
+    def test_check_property_title(self, filename):
+        """Check the title of a resource."""
+        title = self.get_random_string()
+        id_ = self.api.add_resource(filename=filename, title=title)
+        resource = self.api.get_resource(id_=id_)
+        self.assertEqual(resource.title, title)
 
 
 class Tag(ServerBase):

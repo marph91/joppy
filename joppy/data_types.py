@@ -3,6 +3,7 @@
 from dataclasses import dataclass, field, fields
 from datetime import datetime
 import enum
+import mimetypes
 from typing import (
     Generic,
     List,
@@ -205,9 +206,9 @@ class NoteData(BaseData):
     crop_rect: Optional[str] = None
 
     def serialize(self) -> str:
-        lines = []
-        if self.title is not None:
-            lines.extend([self.title, ""])
+        # title is needed always to prevent problems with body
+        # f. e. when there is a newline at start
+        lines = ["" if self.title is None else self.title, ""]
         if self.body is not None:
             lines.extend([self.body, ""])
         for field_ in fields(self):
@@ -319,6 +320,43 @@ class ResourceData(BaseData):
     @staticmethod
     def default_fields() -> Set[str]:
         return {"id", "title"}
+
+    def serialize(self) -> str:
+        lines = []
+        if self.title is not None:
+            lines.extend([self.title, ""])
+        # TODO: file_extension, size
+        for field_ in fields(self):
+            if field_.name == "id":
+                # ID is always required
+                if self.id is None:
+                    self.id = uuid.uuid4().hex
+                lines.append(f"{field_.name}: {self.id}")
+            elif field_.name == "mime":
+                # mime is always required
+                if self.mime is None:
+                    mime_type, _ = mimetypes.guess_type(self.filename or "")
+                    self.mime = (
+                        mime_type
+                        if mime_type is not None
+                        else "application/octet-stream"
+                    )
+                lines.append(f"{field_.name}: {self.mime}")
+            elif field_.name == "title":
+                pass  # handled before
+            elif field_.name == "type_":
+                self.item_type = ItemType.RESOURCE
+                lines.append(f"{field_.name}: {self.item_type}")
+            elif field_.name == "updated_time":
+                # required, even if empty
+                value_raw = getattr(self, field_.name)
+                value = "" if value_raw is None else value_raw
+                lines.append(f"{field_.name}: {value}")
+            else:
+                value_raw = getattr(self, field_.name)
+                if value_raw is not None:
+                    lines.append(f"{field_.name}: {value_raw}")
+        return "\n".join(lines)
 
 
 @dataclass

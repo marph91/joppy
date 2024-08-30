@@ -3,6 +3,7 @@ import logging
 import os
 import random
 import string
+import tempfile
 from typing import Any, Iterable, Tuple
 import unittest
 
@@ -17,6 +18,20 @@ logging.basicConfig(
 LOGGER = logging.getLogger("joppy")
 
 SLOW_TESTS = bool(os.getenv("SLOW_TESTS", ""))
+
+
+def with_resource(func):
+    """Create a dummy resource and return its filename."""
+
+    def inner_decorator(self, *args, **kwargs):
+        # TODO: Check why TemporaryFile() doesn't work.
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            filename = f"{tmpdirname}/dummy.raw"
+            open(filename, "w").close()
+
+            return func(self, *args, **kwargs, filename=filename)
+
+    return inner_decorator
 
 
 class Base(unittest.TestCase):
