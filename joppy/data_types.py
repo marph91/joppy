@@ -99,16 +99,21 @@ class BaseData:
                 # Exclude integer and empty string IDs.
                 if value and isinstance(value, str) and not is_id_valid(value):
                     raise ValueError("Invalid ID:", value)
-            elif field_.name.endswith("_time") or field_.name in (
-                "todo_due",
-                "todo_completed",
+            elif (
+                field_.name.endswith("_time")
+                or field_.name.endswith("Time")
+                or field_.name
+                in (
+                    "todo_due",
+                    "todo_completed",
+                )
             ):
                 try:
                     value_int = int(value)
                     casted_value = (
                         None
                         if value_int == 0
-                        else datetime.fromtimestamp(value_int / 1000.0)
+                        else datetime.utcfromtimestamp(value_int / 1000.0)
                     )
                     setattr(self, field_.name, casted_value)
                 except ValueError:
