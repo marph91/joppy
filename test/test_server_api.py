@@ -1,5 +1,7 @@
 """Tests for the Joplin server python API."""
 
+import threading
+import time
 from typing import cast
 
 from joppy.server_api import deserialize, ServerApi
@@ -313,6 +315,15 @@ class Tag(ServerBase):
         for _ in range(count):
             self.api.add_tag()
         self.assertEqual(len(self.api.get_all_tags()), count)
+
+
+class User(ServerBase):
+    def test_get_current_user(self):
+        """The current user should be available and have read and write permissions."""
+        current_user = self.api.get_current_user()
+        self.assertIsNotNone(current_user)
+        self.assertTrue(current_user.enabled)
+        self.assertTrue(current_user.can_upload)
 
 
 class Deserialize(ServerBase):
