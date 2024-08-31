@@ -493,6 +493,32 @@ class EventData(BaseData):
         return {"id", "item_type", "item_id", "type", "created_time"}
 
 
+class LockType(enum.IntEnum):
+    NONE = 0
+    SYNC = 1
+    EXCLUSIVE = 2
+
+
+class LockClientType(enum.IntEnum):
+    DESKTOP = 1
+    MOBILE = 2
+    CLI = 3
+
+
+@dataclass
+class LockData(BaseData):
+    """
+    https://joplinapp.org/help/dev/spec/sync_lock#lock-files
+    https://github.com/laurent22/joplin/blob/b617a846964ea49be2ffefd31439e911ad84ed8c/packages/server/src/routes/api/locks.ts
+    """
+
+    id: Optional[str] = None
+    type: Optional[LockType] = None
+    clientId: Optional[str] = None
+    clientType: Optional[LockClientType] = None
+    updatedTime: Optional[datetime] = None
+
+
 @dataclass
 class UserData(BaseData):
     """
@@ -534,6 +560,7 @@ T = TypeVar(
     ResourceData,
     RevisionData,
     TagData,
+    LockData,
     UserData,
     str,
 )

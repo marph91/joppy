@@ -241,11 +241,14 @@ from joppy.server_api import ServerApi
 # Create a new Api instance.
 api = ServerApi(user="admin@localhost", password="admin", url="http://localhost:22300")
 
-# Add a notebook.
-notebook_id = api.add_notebook(title="My first notebook")
+# Acquire a lock.
+with api.sync_lock():
 
-# Add a note in the previously created notebook.
-note_id = api.add_note(title="My first note", body="With some content", parent_id=notebook_id)
+    # Add a notebook.
+    notebook_id = api.add_notebook(title="My first notebook")
+
+    # Add a note in the previously created notebook.
+    note_id = api.add_note(title="My first note", body="With some content", parent_id=notebook_id)
 ```
 
 ## :newspaper: Examples
