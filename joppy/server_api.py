@@ -99,10 +99,11 @@ class ApiBase:
         password: str = "admin",
         url: str = "http://localhost:22300",
     ) -> None:
+        self.user = user
         self.url = url
 
         # cookie is saved in session and used for the next requests
-        self.post("/login", data={"email": user, "password": password})
+        self.post("/login", data={"email": self.user, "password": password})
 
     def _request(
         self,
@@ -186,7 +187,7 @@ class Note(ApiBase):
         return cast(dt.NoteData, deserialize(response.text))
 
     def get_notes(self) -> dt.DataList[dt.NoteData]:
-        response = self.get(f"/api/items/root:/:/children").json()
+        response = self.get("/api/items/root:/:/children").json()
         # TODO: Is this the best practice?
         notes = []
         for item in response["items"]:
@@ -229,7 +230,7 @@ class Notebook(ApiBase):
         return cast(dt.NotebookData, deserialize(response.text))
 
     def get_notebooks(self) -> dt.DataList[dt.NotebookData]:
-        response = self.get(f"/api/items/root:/:/children").json()
+        response = self.get("/api/items/root:/:/children").json()
         # TODO: Is this the best practice?
         notebooks = []
         for item in response["items"]:
@@ -385,7 +386,18 @@ class Tag(ApiBase):
         self.put(f"/api/items/root:/{id_server}:/content", data=request_data)
 
 
-class ServerApi(Note, Notebook, Ping, Resource, Revision, Tag):
+class User(ApiBase):
+    def get_users(self) -> dt.DataList[dt.UserData]:
+        """
+        Get users, paginated.
+        To get all users (unpaginated), use "get_all_users()".
+        """
+        response = self.get("/api/users").json()
+        response["items"] = [dt.UserData(**item) for item in response["items"]]
+        return dt.DataList[dt.UserData](**response)
+
+
+class ServerApi(Note, Notebook, Ping, Resource, Revision, Tag, User):
     """
     Collects all basic API functions and contains a few more useful methods.
     This should be the only class accessed from the users.
@@ -465,3 +477,19 @@ class ServerApi(Note, Notebook, Ping, Resource, Revision, Tag):
     def get_all_tags(self, **query: Any) -> List[dt.TagData]:
         """Get all tags, unpaginated."""
         return tools._unpaginate(self.get_tags, **query)
+
+    def get_all_users(self, **query: Any) -> List[dt.UserData]:
+        """Get all users, unpaginated."""
+        return tools._unpaginate(self.get_users, **query)
+
+    def show_user_permissions(self) -> None:
+        """https://joplinapp.org/help/dev/spec/server_user_status/#user-status"""
+        current_user = None
+        for user in self.get_all_users():
+            if user.email == self.user:
+                current_user = user
+                break
+        if current_user is None:
+            print(f"User {self.user} not found.")
+        else:
+            print(f"{current_user.enabled=}, {current_user.can_upload=}")

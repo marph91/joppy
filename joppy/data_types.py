@@ -56,18 +56,21 @@ class MarkupLanguage(enum.IntEnum):
 
 
 def is_id_valid(id_: str) -> bool:
-    """
-    Check whether a string is a valid id. See:
-    https://joplinapp.org/api/references/rest_api/#creating-a-note-with-a-specific-id.
-    """
-    if len(id_) != 32:
-        return False
-    # https://stackoverflow.com/a/11592279/7410886
-    try:
-        int(id_, 16)
-    except ValueError:
-        return False
-    return True
+    """Check whether a string is a valid id."""
+    if len(id_) == 32:
+        # client ID
+        # https://joplinapp.org/api/references/rest_api/#creating-a-note-with-a-specific-id
+        # https://stackoverflow.com/a/11592279/7410886
+        try:
+            int(id_, 16)
+            return True
+        except ValueError:
+            return False
+    if len(id_) == 22:
+        # server ID
+        # https://joplinapp.org/help/dev/spec/server_items/
+        return True
+    return False
 
 
 @dataclass
@@ -485,13 +488,49 @@ class EventData(BaseData):
         return {"id", "item_type", "item_id", "type", "created_time"}
 
 
+@dataclass
+class UserData(BaseData):
+    """
+    https://joplinapp.org/help/dev/spec/server_user_status/
+    https://github.com/laurent22/joplin/blob/b617a846964ea49be2ffefd31439e911ad84ed8c/packages/server/src/models/UserModel.ts#L117
+    """
+
+    id: Optional[str] = None
+    email: Optional[str] = None
+    password: Optional[str] = None
+    is_admin: Optional[bool] = None
+    full_name: Optional[str] = None
+    created_time: Optional[datetime] = None
+    updated_time: Optional[datetime] = None
+    email_confirmed: Optional[bool] = None
+    must_set_password: Optional[bool] = None
+    account_type: Optional[int] = None  # TODO: enum
+    can_upload: Optional[bool] = None
+    max_item_size: Optional[int] = None
+    max_total_item_size: Optional[int] = None
+    total_item_size: Optional[int] = None
+    can_share_folder: Optional[bool] = None
+    can_share_note: Optional[bool] = None
+    can_receive_folder: Optional[bool] = None
+    enabled: Optional[bool] = None
+    disabled_time: Optional[datetime] = None
+
+
 AnyData = Union[
     EventData, NoteData, NotebookData, NoteTagData, ResourceData, RevisionData, TagData
 ]
 
 
 T = TypeVar(
-    "T", EventData, NoteData, NotebookData, ResourceData, RevisionData, TagData, str
+    "T",
+    EventData,
+    NoteData,
+    NotebookData,
+    ResourceData,
+    RevisionData,
+    TagData,
+    UserData,
+    str,
 )
 
 
