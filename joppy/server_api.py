@@ -582,7 +582,7 @@ class ServerApi(Note, Notebook, Ping, Resource, Revision, Tag, Lock, User):
         self.delete_lock(dt.LockType.SYNC, dt.LockClientType.DESKTOP, self.client_id)
 
     @contextmanager
-    def sync_lock(self):
+    def sync_lock(self) -> Any:
         self.acquire_sync_lock()
         if self.current_sync_lock is None:
             raise Exception("Couldn't aqcuire sync lock")

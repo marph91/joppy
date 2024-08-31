@@ -1,7 +1,5 @@
 """Tests for the Joplin server python API."""
 
-import threading
-import time
 from typing import cast
 
 from joppy.server_api import deserialize, ServerApi
@@ -331,7 +329,8 @@ class Deserialize(ServerBase):
         body = "id: 0e8d296dbef34588b0de060630ad2582\ntype_: 1"
         result = deserialize(body)
 
-        self.assertIsInstance(result, dt.NoteData)
+        # TODO: use assertIsInstance() when mypy understands it
+        assert isinstance(result, dt.NoteData)
         self.assertEqual(result.id, "0e8d296dbef34588b0de060630ad2582")
         self.assertIsNone(result.title)
         self.assertIsNone(result.body)
@@ -340,7 +339,8 @@ class Deserialize(ServerBase):
         body = "note2\n\nid: 0e8d296dbef34588b0de060630ad2582\ntype_: 1"
         result = deserialize(body)
 
-        self.assertIsInstance(result, dt.NoteData)
+        # TODO: use assertIsInstance() when mypy understands it
+        assert isinstance(result, dt.NoteData)
         self.assertEqual(result.id, "0e8d296dbef34588b0de060630ad2582")
         self.assertEqual(result.title, "note2")
         self.assertIsNone(result.body)
@@ -352,7 +352,8 @@ class Deserialize(ServerBase):
         )
         result = deserialize(body)
 
-        self.assertIsInstance(result, dt.NoteData)
+        # TODO: use assertIsInstance() when mypy understands it
+        assert isinstance(result, dt.NoteData)
         self.assertEqual(result.id, "0e8d296dbef34588b0de060630ad2582")
         self.assertEqual(result.title, "note2")
         self.assertEqual(result.body, "body\n\nwith some\n\nnewlines")
