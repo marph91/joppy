@@ -2,7 +2,7 @@
 
 from typing import cast
 
-from joppy.server_api import ServerApi
+from joppy.server_api import deserialize, ServerApi
 import joppy.data_types as dt
 from . import common, setup_joplin
 
@@ -313,3 +313,35 @@ class Tag(ServerBase):
         for _ in range(count):
             self.api.add_tag()
         self.assertEqual(len(self.api.get_all_tags()), count)
+
+
+class Deserialize(ServerBase):
+    def test_note_only_metadata(self):
+        body = "id: 0e8d296dbef34588b0de060630ad2582\ntype_: 1"
+        result = deserialize(body)
+
+        self.assertIsInstance(result, dt.NoteData)
+        self.assertEqual(result.id, "0e8d296dbef34588b0de060630ad2582")
+        self.assertIsNone(result.title)
+        self.assertIsNone(result.body)
+
+    def test_note_title_metadata(self):
+        body = "note2\n\nid: 0e8d296dbef34588b0de060630ad2582\ntype_: 1"
+        result = deserialize(body)
+
+        self.assertIsInstance(result, dt.NoteData)
+        self.assertEqual(result.id, "0e8d296dbef34588b0de060630ad2582")
+        self.assertEqual(result.title, "note2")
+        self.assertIsNone(result.body)
+
+    def test_note_title_body_metadata(self):
+        body = (
+            "note2\n\nbody\n\nwith some\n\nnewlines\n\n"
+            "id: 0e8d296dbef34588b0de060630ad2582\ntype_: 1"
+        )
+        result = deserialize(body)
+
+        self.assertIsInstance(result, dt.NoteData)
+        self.assertEqual(result.id, "0e8d296dbef34588b0de060630ad2582")
+        self.assertEqual(result.title, "note2")
+        self.assertEqual(result.body, "body\n\nwith some\n\nnewlines")

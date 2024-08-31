@@ -21,9 +21,8 @@ LOGGER = logging.getLogger("joppy")
 
 def deserialize(body: str) -> Optional[dt.AnyData]:
     """Deserialize server data from string to a known data type."""
-    # https://github.com/laurent22/joplin/blob/b617a846964ea49be2ffefd31439e911ad84ed8c/packages/lib/models/BaseItem.ts#L549-L596
-    body_splitted = body.split("\n\n")
 
+    # https://github.com/laurent22/joplin/blob/b617a846964ea49be2ffefd31439e911ad84ed8c/packages/lib/models/BaseItem.ts#L549-L596
     def extract_metadata(serialized_metadata: str) -> Dict[Any, Any]:
         metadata = {}
         for line in serialized_metadata.split("\n"):
@@ -33,23 +32,23 @@ def deserialize(body: str) -> Optional[dt.AnyData]:
             metadata[key] = value
         return metadata
 
-    if len(body_splitted) == 1:
+    metadata_splitted = body.rsplit("\n\n", 1)
+    if len(metadata_splitted) == 1:
         # metadata only
         title = None
         note_body = None
-        metadata = extract_metadata(body_splitted[0])
-    elif len(body_splitted) == 2:
-        # title + metadata
-        title = body_splitted[0]
-        note_body = None
-        metadata = extract_metadata(body_splitted[1])
-    elif len(body_splitted) == 3:
-        # title + body + metadata
-        title = body_splitted[0]
-        note_body = body_splitted[1]
-        metadata = extract_metadata(body_splitted[2])
+        metadata = extract_metadata(metadata_splitted[0])
     else:
-        print("TODO: ", body_splitted)
+        metadata = extract_metadata(metadata_splitted[1])
+        title_splitted = metadata_splitted[0].split("\n\n", 1)
+        if len(title_splitted) == 1:
+            # title + metadata
+            title = title_splitted[0]
+            note_body = None
+        else:
+            # title + body + metadata
+            title = title_splitted[0]
+            note_body = title_splitted[1]
 
     if title is not None:
         metadata["title"] = title
