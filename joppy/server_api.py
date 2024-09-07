@@ -119,12 +119,43 @@ class ApiBase:
         self.post("/login", data={"email": self.user, "password": password})
 
         # check for compatible sync version
-        response = self.get("/api/items/root:/info.json:/content")
-        server_info = response.json()
-        if (version := server_info["version"]) != 3:
-            raise NotImplementedError(
-                f"Only server version 3 is supported. Found version {version}."
-            )
+        sync_version = self.get_sync_version()
+        if sync_version is None:
+            LOGGER.warning("Sync version not found. Creating a new file.")
+            # https://joplinapp.org/help/dev/spec/sync#sync-target-properties
+            now = int(time.time() * 1000)
+            sync_target_info = {
+                "version": 3,
+                "e2ee": {"value": False, "updatedTime": now},
+                "activeMasterKeyId": {"value": False, "updatedTime": now},
+                "masterKeys": [],
+                "ppk": {},
+                "appMinVersion": "3.0.0",
+            }
+            self.put("/api/items/root:/info.json:/content", json=sync_target_info)
+        else:
+            if sync_version != 3:
+                raise NotImplementedError(
+                    f"Only server version 3 is supported. Found version {sync_version}."
+                )
+
+    def get_sync_version(self) -> Optional[int]:
+        try:
+            response = self.get("/api/items/root:/info.json:/content")
+            server_info = response.json()
+            return int(server_info["version"])
+        except requests.exceptions.HTTPError as error_json:
+            if error_json.response.status_code == 404:
+                try:
+                    response = self.get("/api/items/root:/.sync/version.txt:/content")
+                    return int(response.text)
+                except requests.exceptions.HTTPError as error_txt:
+                    if error_txt.response.status_code == 404:
+                        return None  # in this case, a new one should be created
+                    else:
+                        raise error_txt
+            else:
+                raise error_json
 
     def _request(
         self,
@@ -133,12 +164,15 @@ class ApiBase:
         query: Optional[dt.JoplinKwargs] = None,
         data: Any = None,
         files: Optional[Dict[str, Any]] = None,
-        json: Any = None,
+        json: Optional[Dict[str, Any]] = None,
         headers: Optional[Dict[str, Any]] = None,
     ) -> requests.models.Response:
         # bypass the lock for info, lock and login requests
         if not (
-            path == "/login" or path.startswith("/api/locks") or "info.json" in path
+            path == "/login"
+            or path.startswith("/api/locks")
+            or "info.json" in path
+            or ".sync/version.txt" in path
         ):
             if self.current_sync_lock is None:
                 raise LockError("No sync lock. Acquire a lock before issuing requests.")
@@ -196,10 +230,19 @@ class ApiBase:
         """Convenience method to issue a post request."""
         return self._request("post", path, data=data, files=files, json=json)
 
-    def put(self, path: str, data: Union[str, bytes]) -> requests.models.Response:
+    def put(
+        self,
+        path: str,
+        data: Optional[Union[str, bytes]] = None,
+        json: Optional[Dict[str, Any]] = None,
+    ) -> requests.models.Response:
         """Convenience method to issue a put request."""
         return self._request(
-            "put", path, data=data, headers={"Content-Type": "application/octet-stream"}
+            "put",
+            path,
+            data=data,
+            json=json,
+            headers={"Content-Type": "application/octet-stream"},
         )
 
     ##############################################################################
