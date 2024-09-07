@@ -289,10 +289,10 @@ It's possible to configure the test run via some environment variables:
 
 ## :book: Changelog
 
-### Master
+### 1.0.0
 
 - Rename the client API. It should be used by `from joppy.client_api import ClientApi` instead of `from joppy.client_api import ClientApi` now.
-- Add support for the server API. It should be used by `from joppy.server_api import ServerApi`.
+- Add support for the server API (<https://github.com/marph91/joppy/pull/27>). It should be used by `from joppy.server_api import ServerApi`.
 
 ### 0.2.3
 
