@@ -1,6 +1,6 @@
 # joppy
 
-Python interface for the [Joplin data API](https://joplinapp.org/api/references/rest_api/).
+Python interface for the [Joplin data API](https://joplinapp.org/api/references/rest_api/) (client) and the Joplin server API.
 
 [![build](https://github.com/marph91/joppy/actions/workflows/build.yml/badge.svg)](https://github.com/marph91/joppy/actions/workflows/build.yml)
 [![lint](https://github.com/marph91/joppy/actions/workflows/lint.yml/badge.svg)](https://github.com/marph91/joppy/actions/workflows/lint.yml)
@@ -9,6 +9,13 @@ Python interface for the [Joplin data API](https://joplinapp.org/api/references/
 
 [![https://img.shields.io/badge/Joplin-3.0.15-blueviolet](https://img.shields.io/badge/Joplin-3.0.15-blueviolet)](https://github.com/laurent22/joplin)
 [![Python version](https://img.shields.io/pypi/pyversions/joppy.svg)](https://pypi.python.org/pypi/joppy/)
+
+## Features
+
+|     | Client API Wrapper | Server API Wrapper |
+| --- | --- | --- |
+| **Supported** | All functions from the [data API](https://joplinapp.org/help/api/references/rest_api/) | Some reverse engineered functions with a similar interface like the client API wrapper. See the example below and the source code for details. |
+| **Not Supported** | -  | - Encryption <br>- Some functions that were either to complex or I didn't see a use for automation. |
 
 ## :computer: Installation
 
@@ -28,6 +35,8 @@ pip install .
 
 ## :wrench: Usage
 
+Please backup your data before use!
+
 ### General function description
 
 - `add_<type>()`: Create a new element.
@@ -41,16 +50,18 @@ For details, consult the [implementation](joppy/api.py), [joplin documentation](
 
 ## :bulb: Example snippets
 
+### Client API
+
 Start joplin and [get your API token](https://joplinapp.org/api/references/rest_api/#authorisation). Click to expand the examples.
 
 <details>
 <summary>Get all notes</summary>
 
 ```python name=get_all_notes
-from joppy.api import Api
+from joppy.client_api import ClientApi
 
 # Create a new Api instance.
-api = Api(token=YOUR_TOKEN)
+api = ClientApi(token=YOUR_TOKEN)
 
 # Get all notes. Note that this method calls get_notes() multiple times to assemble the unpaginated result.
 notes = api.get_all_notes()
@@ -62,11 +73,11 @@ notes = api.get_all_notes()
 <summary>Add a tag to a note</summary>
   
 ```python name=add_tag_to_note
-from joppy.api import Api
+from joppy.client_api import ClientApi
 
 # Create a new Api instance.
 
-api = Api(token=YOUR_TOKEN)
+api = ClientApi(token=YOUR_TOKEN)
 
 # Add a notebook.
 
@@ -92,11 +103,11 @@ api.add_tag_to_note(tag_id=tag_id, note_id=note_id)
 <summary>Add a resource to a note</summary>
 
 ```python name=add_resource_to_note
-from joppy.api import Api
+from joppy.client_api import ClientApi
 from joppy import tools
 
 # Create a new Api instance.
-api = Api(token=YOUR_TOKEN)
+api = ClientApi(token=YOUR_TOKEN)
 
 # Add a notebook.
 notebook_id = api.add_notebook(title="My first notebook")
@@ -124,10 +135,10 @@ Inspired by <https://discourse.joplinapp.org/t/bulk-tag-delete-python-script/549
 ```python name=remove_tags
 import re
 
-from joppy.api import Api
+from joppy.client_api import ClientApi
 
 # Create a new Api instance.
-api = Api(token=YOUR_TOKEN)
+api = ClientApi(token=YOUR_TOKEN)
 
 # Iterate through all tags.
 for tag in api.get_all_tags():
@@ -145,10 +156,10 @@ for tag in api.get_all_tags():
 Reference: <https://discourse.joplinapp.org/t/prune-empty-tags-from-web-clipper/36194>
 
 ```python name=remove_unused_tags
-from joppy.api import Api
+from joppy.client_api import ClientApi
 
 # Create a new Api instance.
-api = Api(token=YOUR_TOKEN)
+api = ClientApi(token=YOUR_TOKEN)
 
 for tag in api.get_all_tags():
     notes_for_tag = api.get_all_notes(tag_id=tag.id)
@@ -167,10 +178,10 @@ Reference: <https://www.reddit.com/r/joplinapp/comments/pozric/batch_remove_spac
 ```python name=remove_spaces_from_tags
 import re
 
-from joppy.api import Api
+from joppy.client_api import ClientApi
 
 # Create a new Api instance.
-api = Api(token=YOUR_TOKEN)
+api = ClientApi(token=YOUR_TOKEN)
 
 # Define the conversion function.
 def to_camel_case(name: str) -> str:
@@ -193,10 +204,10 @@ Note: The note history is not considered. See: <https://discourse.joplinapp.org/
 ```python name=remove_orphaned_resources
 import re
 
-from joppy.api import Api
+from joppy.client_api import ClientApi
 
 # Create a new Api instance.
-api = Api(token=YOUR_TOKEN)
+api = ClientApi(token=YOUR_TOKEN)
 
 # Getting the referenced resource directly doesn't work:
 # https://github.com/laurent22/joplin/issues/4535
@@ -218,7 +229,27 @@ for resource in api.get_all_resources():
 
 </details>
 
-For more usage examples, check the example scripts or [tests](test/test_api.py).
+For more usage examples, check the example scripts or [tests](test/test_client_api.py).
+
+### Server API
+
+The server API should work similarly to the client API in most cases. **Be aware that the server API is experimental and may break at any time. I can't provide any help at sync issues or lost data. Make sure you have a backup and know how to restore it.**
+
+```python
+from joppy.server_api import ServerApi
+
+# Create a new Api instance.
+api = ServerApi(user="admin@localhost", password="admin", url="http://localhost:22300")
+
+# Acquire a lock.
+with api.sync_lock():
+
+    # Add a notebook.
+    notebook_id = api.add_notebook(title="My first notebook")
+
+    # Add a note in the previously created notebook.
+    note_id = api.add_note(title="My first note", body="With some content", parent_id=notebook_id)
+```
 
 ## :newspaper: Examples
 
@@ -257,6 +288,11 @@ It's possible to configure the test run via some environment variables:
 - `API_TOKEN`: Set this variable if there is already a joplin instance running. **Don't use your default joplin profile!** By default, a joplin instance is started inside xvfb. This takes some time, but works for CI.
 
 ## :book: Changelog
+
+### Master
+
+- Rename the client API. It should be used by `from joppy.client_api import ClientApi` instead of `from joppy.client_api import ClientApi` now.
+- Add support for the server API. It should be used by `from joppy.server_api import ServerApi`.
 
 ### 0.2.3
 

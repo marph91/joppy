@@ -2,6 +2,7 @@
 
 import json
 import os
+import shutil
 import stat
 import subprocess
 import time
@@ -11,7 +12,7 @@ import requests
 from xvfbwrapper import Xvfb
 
 
-def download_joplin(destination: str) -> None:
+def download_joplin_client(destination: str) -> None:
     """Download the latest joplin desktop app release if not already done."""
     if not os.path.exists(destination):
         # obtain the version string
@@ -66,8 +67,8 @@ def wait_for(func: Callable[..., Any], interval: float = 0.5, timeout: int = 5) 
     raise TimeoutError(f"Function didn't return a valid value {result}.")
 
 
-class JoplinApp:
-    """Represents a joplin application."""
+class JoplinClient:
+    """Represents a joplin client application."""
 
     def __init__(self, app_path: str, profile: str):
         self.xvfb = xvfb = Xvfb()
@@ -108,3 +109,40 @@ class JoplinApp:
         self.xvfb.stop()
         self.joplin_process.terminate()
         self.joplin_process.wait()
+
+
+class JoplinServer:
+    """Represents a joplin server."""
+
+    def __init__(self) -> None:
+        # Wait until the API is available.
+        def api_available() -> Optional[bool]:
+            try:
+                response = requests.get("http://localhost:22300/api/ping", timeout=5)
+                if response.status_code == 200:
+                    return True
+            except Exception:
+                pass
+            return None
+
+        # check if server is running already
+        if api_available() is not None:
+            self.joplin_process = None
+            return
+
+        if shutil.which("docker") is None:
+            raise Exception("Please install docker and try again.")
+        # TODO: Is caching the container in GHA possible?
+        self.joplin_process = subprocess.Popen(
+            ["docker", "run", "-p", "22300:22300", "joplin/server:latest"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+
+        wait_for(api_available, timeout=600)
+
+    def stop(self) -> None:
+        """Stop the joplin server."""
+        if self.joplin_process is not None:
+            self.joplin_process.terminate()
+            self.joplin_process.wait()
