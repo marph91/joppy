@@ -1,5 +1,6 @@
 """Tests for the Joplin server python API."""
 
+import string
 import time
 from typing import cast
 import unittest
@@ -51,25 +52,6 @@ class Note(ServerBase):
         self.assertEqual(len(notes), 1)
         self.assertEqual(notes[0].id, id_)
         self.assertEqual(notes[0].parent_id, parent_id)
-
-    # TODO
-    # def test_add_attach_image(self):
-    #     """Add a note with an image attached."""
-    #     self.api.add_notebook()
-    #     image_data = tools.encode_base64("test/grant_authorization_button.png")
-    #     note_id = self.api.add_note(
-    #         image_data_url=f"data:image/png;base64,{image_data}"
-    #     )
-
-    #     # Check that there is a resource.
-    #     resources = self.api.get_resources().items
-    #     self.assertEqual(len(resources), 1)
-    #     resource_id = resources[0].id
-
-    #     # Verify the resource is attached to the note.
-    #     resources = self.api.get_resources(note_id=note_id).items
-    #     self.assertEqual(len(resources), 1)
-    #     self.assertEqual(resources[0].id, resource_id)
 
     def test_delete(self):
         """Add and then delete a note."""
@@ -252,20 +234,20 @@ class Resource(ServerBase):
             self.api.add_resource(filename=filename)
         self.assertEqual(len(self.api.get_all_resources()), count)
 
-    # TODO
-    #     @common.with_resource
-    #     def test_modify_title(self, filename):
-    #         """Modify a resource title."""
-    #         id_ = self.api.add_resource(filename=filename)
+    # @common.with_resource
+    # def test_modify_title(self, filename):
+    #     """Modify a resource title."""
+    #     id_ = self.api.add_resource(filename=filename)
 
-    #         new_title = self.get_random_string()
-    #         self.api.modify_resource(id_=id_, title=new_title)
-    #         self.assertEqual(self.api.get_resource(id_=id_).title, new_title)
+    #     new_title = self.get_random_string(exclude=string.whitespace)
+    #     self.api.modify_resource(id_=id_, title=new_title)
+    #     self.assertEqual(self.api.get_resource(id_=id_).title, new_title)
 
     @common.with_resource
     def test_check_property_title(self, filename):
         """Check the title of a resource."""
-        title = self.get_random_string()
+        # newline seems to be stripped from the title
+        title = self.get_random_string(exclude=string.whitespace)
         id_ = self.api.add_resource(filename=filename, title=title)
         resource = self.api.get_resource(id_=id_)
         self.assertEqual(resource.title, title)
@@ -287,10 +269,6 @@ class Tag(ServerBase):
         tag_id = self.api.add_tag()
         self.api.add_tag_to_note(tag_id=tag_id, note_id=note_id)
 
-        # TODO: get_note_tag()
-        # notes = self.api.get_notes(tag_id=tag_id).items
-        # self.assertEqual(len(notes), 1)
-        # self.assertEqual(notes[0].id, note_id)
         tags = self.api.get_all_tags()
         self.assertEqual(len(tags), 1)
 
