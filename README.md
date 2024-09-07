@@ -15,7 +15,7 @@ Python interface for the [Joplin data API](https://joplinapp.org/api/references/
 |     | Client API Wrapper | Server API Wrapper |
 | --- | --- | --- |
 | **Supported** | All functions from the [data API](https://joplinapp.org/help/api/references/rest_api/) | Some reverse engineered functions with a similar interface like the client API wrapper. See the example below and the source code for details. |
-| **Not Supported** | -  | - Encryption  <br>- Some functions that were either to complex or I didn't see a use for automation. |
+| **Not Supported** | -  | - Encryption <br>- Some functions that were either to complex or I didn't see a use for automation. |
 
 ## :computer: Installation
 
@@ -233,7 +233,7 @@ For more usage examples, check the example scripts or [tests](test/test_client_a
 
 ### Server API
 
-The server API should work similarly to the client API in most cases. **Be aware that the server API is experimental and may break at any time. Make sure you have a backup and know how to restore it.**
+The server API should work similarly to the client API in most cases. **Be aware that the server API is experimental and may break at any time. I can't provide any help at sync issues or lost data. Make sure you have a backup and know how to restore it.**
 
 ```python
 from joppy.server_api import ServerApi
