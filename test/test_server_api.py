@@ -1,8 +1,10 @@
 """Tests for the Joplin server python API."""
 
+import time
 from typing import cast
+import unittest
 
-from joppy.server_api import deserialize, ServerApi
+from joppy.server_api import deserialize, LockError, ServerApi
 import joppy.data_types as dt
 from . import common, setup_joplin
 
@@ -28,6 +30,14 @@ class ServerBase(common.Base):
     def setUp(self):
         self.api = cast(ServerApi, API)
         super().setUp()
+
+        self.api._acquire_sync_lock()
+        if self.api.current_sync_lock is None:
+            raise LockError("Couldn't aqcuire sync lock")
+
+    def tearDown(self):
+        super().tearDown()
+        self.api._delete_own_lock()
 
 
 class Note(ServerBase):
@@ -313,6 +323,59 @@ class Tag(ServerBase):
         for _ in range(count):
             self.api.add_tag()
         self.assertEqual(len(self.api.get_all_tags()), count)
+
+
+class Lock(ServerBase):
+    def test_sync_lock_different_id(self):
+        self.assertEqual(len(self.api._get_all_locks()), 1)
+
+        # Acquiring a second sync lock with a different client ID should succeed.
+        second_api = ServerApi()
+        with second_api.sync_lock():
+            self.assertEqual(len(self.api._get_all_locks()), 2)
+        self.assertEqual(len(self.api._get_all_locks()), 1)
+
+    def test_sync_lock_same_id(self):
+        self.assertEqual(len(self.api._get_all_locks()), 1)
+
+        # Acquiring a second sync lock with the same client ID should fail.
+        with self.assertRaises(LockError):
+            second_api = ServerApi()
+            second_api.client_id = self.api.client_id
+            with second_api.sync_lock():
+                self.fail("This should never happen")
+
+        self.assertEqual(len(self.api._get_all_locks()), 1)
+
+    @unittest.skipIf(not common.SLOW_TESTS, "Waiting for the timeout takes some time.")
+    def test_sync_lock_refresh(self):
+        locks = self.api._get_all_locks()
+        self.assertEqual(len(locks), 1)
+        updated_time_before = locks[0].updatedTime
+
+        # refresh interval is not needed -> same lock
+        self.api.get_all_notebooks()
+        locks = self.api._get_all_locks()
+        self.assertEqual(len(locks), 1)
+        self.assertEqual(locks[0].updatedTime, updated_time_before)
+
+        # some arbitrary request to refresh the sync lock
+        time.sleep(self.api.lock_auto_refresh_interval.total_seconds() + 1)
+        self.api.get_all_notebooks()
+
+        locks = self.api._get_all_locks()
+        self.assertEqual(len(locks), 1)
+        self.assertGreater(locks[0].updatedTime, updated_time_before)
+
+    @unittest.skipIf(not common.SLOW_TESTS, "Waiting for the timeout takes some time.")
+    def test_sync_lock_expired(self):
+        locks = self.api._get_all_locks()
+        self.assertEqual(len(locks), 1)
+
+        time.sleep(self.api.lock_ttl.total_seconds() + 1)
+        # lock should be expired after self.api.lock_ttl.total_seconds()
+        with self.assertRaises(LockError):
+            self.api.get_all_notebooks()
 
 
 class User(ServerBase):

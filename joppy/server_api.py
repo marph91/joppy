@@ -93,6 +93,10 @@ def remove_suffix(string: str) -> str:
 ##############################################################################
 
 
+class LockError(Exception):
+    pass
+
+
 class ApiBase:
     """Contains the basic requests of the server REST API."""
 
@@ -109,8 +113,7 @@ class ApiBase:
         # TODO: Where to get it?
         # https://github.com/laurent22/joplin/blob/b617a846964ea49be2ffefd31439e911ad84ed8c/packages/lib/services/synchronizer/LockHandler.ts#L145
         self.lock_ttl = datetime.timedelta(seconds=60 * 3)
-        # TODO
-        # self.lock_auto_refresh_interval = datetime.timedelta(seconds=60)
+        self.lock_auto_refresh_interval = datetime.timedelta(seconds=60)
 
         # cookie is saved in session and used for the next requests
         self.post("/login", data={"email": self.user, "password": password})
@@ -125,6 +128,22 @@ class ApiBase:
         json: Any = None,
         headers: Optional[Dict[str, Any]] = None,
     ) -> requests.models.Response:
+        # bypass the lock for login and lock requests
+        if not (path == "/login" or path.startswith("/api/locks")):
+            if self.current_sync_lock is None:
+                raise LockError("No sync lock. Acquire a lock before issuing requests.")
+            assert self.current_sync_lock.updatedTime is not None  # for mypy
+            if not self._is_lock_active(self.current_sync_lock.updatedTime):
+                raise LockError(
+                    "Sync lock expired. Delete the lock before issuing requests."
+                )
+            elif (
+                self.current_sync_lock.updatedTime + self.lock_auto_refresh_interval
+                < datetime.datetime.utcnow()
+            ):
+                LOGGER.debug("Refreshing sync lock.")
+                self.current_sync_lock = self._add_lock()
+
         LOGGER.debug(f"API: {method} request: path={path}, query={query}, data={data}")
         if query is None:
             query = {}
@@ -162,7 +181,7 @@ class ApiBase:
         path: str,
         data: Optional[dt.JoplinKwargs] = None,
         files: Optional[Dict[str, Any]] = None,
-        json: Optional[dt.JoplinKwargs] = None,
+        json: Optional[Dict[str, Any]] = None,
     ) -> requests.models.Response:
         """Convenience method to issue a post request."""
         return self._request("post", path, data=data, files=files, json=json)
@@ -172,6 +191,99 @@ class ApiBase:
         return self._request(
             "put", path, data=data, headers={"Content-Type": "application/octet-stream"}
         )
+
+    ##############################################################################
+    # Lock functionality
+    ##############################################################################
+
+    def _add_lock(self) -> dt.LockData:
+        """Add or refresh a lock."""
+        data = {
+            "type": dt.LockType.SYNC,
+            "clientId": self.client_id,
+            "clientType": dt.LockClientType.DESKTOP,
+        }
+        response = self.post("/api/locks", json=data)
+        return dt.LockData(**response.json())
+
+    def _delete_lock(
+        self, lock_type: dt.LockType, client_type: dt.LockClientType, client_id: str
+    ) -> None:
+        """
+        Delete a lock.
+        https://joplinapp.org/help/dev/spec/sync_lock#lock-files
+        """
+        self.delete(f"/api/locks/{lock_type}_{client_type}_{client_id}")
+
+    def _get_locks(self) -> dt.DataList[dt.LockData]:
+        """
+        Get locks, paginated.
+        To get all locks (unpaginated), use "_get_all_locks()".
+        """
+        response = self.get("/api/locks").json()
+        response["items"] = [dt.LockData(**item) for item in response["items"]]
+        return dt.DataList[dt.LockData](**response)
+
+    def _get_all_locks(self, **query: Any) -> List[dt.LockData]:
+        """Get all locks, unpaginated."""
+        return tools._unpaginate(self._get_locks, **query)
+
+    def _is_lock_active(self, updated_time: datetime.datetime) -> bool:
+        return updated_time + self.lock_ttl > datetime.datetime.utcnow()
+
+    def _acquire_sync_lock(self, tries: int = 1) -> None:
+        """
+        Acquire a sync lock.
+        https://joplinapp.org/help/dev/spec/sync_lock#acquiring-a-sync-lock
+        """
+        # TODO: check sync target version
+        # https://joplinapp.org/help/dev/spec/sync_lock#sync-target-migration
+
+        def is_locked(
+            check_lock_types: Tuple[dt.LockType, ...] = (
+                dt.LockType.SYNC,
+                dt.LockType.EXCLUSIVE,
+            ),
+        ) -> bool:
+            # https://github.com/laurent22/joplin/blob/b617a846964ea49be2ffefd31439e911ad84ed8c/packages/lib/services/synchronizer/LockHandler.ts#L72-L75
+            for lock in self._get_all_locks():
+                if lock.type not in check_lock_types:
+                    continue
+                assert lock.updatedTime is not None
+                if self._is_lock_active(lock.updatedTime):
+                    if lock.type == dt.LockType.EXCLUSIVE:
+                        return True
+                    elif (
+                        lock.type == dt.LockType.SYNC
+                        and lock.clientId == self.client_id
+                    ):
+                        return True
+                    # If there is no exclusive lock and no lock with our ID,
+                    # sync is allowed.
+            return False
+
+        for delay in range(tries):
+            if not is_locked():
+                self.current_sync_lock = self._add_lock()
+                if is_locked(check_lock_types=(dt.LockType.EXCLUSIVE,)):
+                    # avoid race conditions
+                    self._delete_own_lock()
+                else:
+                    return
+            time.sleep(delay)
+            LOGGER.debug("sync target is still locked")
+
+    def _delete_own_lock(self) -> None:
+        self.current_sync_lock = None
+        self._delete_lock(dt.LockType.SYNC, dt.LockClientType.DESKTOP, self.client_id)
+
+    @contextmanager
+    def sync_lock(self) -> Any:
+        self._acquire_sync_lock()
+        if self.current_sync_lock is None:
+            raise LockError("Couldn't aqcuire sync lock")
+        yield
+        self._delete_own_lock()
 
 
 ##############################################################################
@@ -401,36 +513,6 @@ class Tag(ApiBase):
         self.put(f"/api/items/root:/{id_server}:/content", data=request_data)
 
 
-class Lock(ApiBase):
-    def add_lock(self, **data: Any) -> dt.LockData:
-        """Add or refresh a lock."""
-        data = {
-            "type": dt.LockType.SYNC,
-            "clientId": self.client_id,
-            "clientType": dt.LockClientType.DESKTOP,
-        }
-        response = self.post("/api/locks", json=data)
-        return dt.LockData(**response.json())
-
-    def delete_lock(
-        self, lock_type: dt.LockType, client_type: dt.LockClientType, client_id: str
-    ) -> None:
-        """
-        Delete a lock.
-        https://joplinapp.org/help/dev/spec/sync_lock#lock-files
-        """
-        self.delete(f"/api/locks/{lock_type}_{client_type}_{client_id}")
-
-    def get_locks(self) -> dt.DataList[dt.LockData]:
-        """
-        Get locks, paginated.
-        To get all locks (unpaginated), use "get_all_locks()".
-        """
-        response = self.get("/api/locks").json()
-        response["items"] = [dt.LockData(**item) for item in response["items"]]
-        return dt.DataList[dt.LockData](**response)
-
-
 class User(ApiBase):
     def get_users(self) -> dt.DataList[dt.UserData]:
         """
@@ -442,7 +524,7 @@ class User(ApiBase):
         return dt.DataList[dt.UserData](**response)
 
 
-class ServerApi(Note, Notebook, Ping, Resource, Revision, Tag, Lock, User):
+class ServerApi(Note, Notebook, Ping, Resource, Revision, Tag, User):
     """
     Collects all basic API functions and contains a few more useful methods.
     This should be the only class accessed from the users.
@@ -523,10 +605,6 @@ class ServerApi(Note, Notebook, Ping, Resource, Revision, Tag, Lock, User):
         """Get all tags, unpaginated."""
         return tools._unpaginate(self.get_tags, **query)
 
-    def get_all_locks(self, **query: Any) -> List[dt.LockData]:
-        """Get all locks, unpaginated."""
-        return tools._unpaginate(self.get_locks, **query)
-
     def get_all_users(self, **query: Any) -> List[dt.UserData]:
         """Get all users, unpaginated."""
         return tools._unpaginate(self.get_users, **query)
@@ -539,52 +617,3 @@ class ServerApi(Note, Notebook, Ping, Resource, Revision, Tag, Lock, User):
                 current_user = user
                 break
         return current_user
-
-    def acquire_sync_lock(self, tries: int = 1) -> None:
-        """
-        Acquire a sync lock.
-        https://joplinapp.org/help/dev/spec/sync_lock#acquiring-a-sync-lock
-        """
-        # TODO: check sync target version
-        # https://joplinapp.org/help/dev/spec/sync_lock#sync-target-migration
-        # TODO: align to
-        # https://joplinapp.org/help/dev/spec/sync_lock#acquiring-a-sync-lock
-
-        def is_locked(
-            check_lock_types: Tuple[dt.LockType, ...] = (
-                dt.LockType.SYNC,
-                dt.LockType.EXCLUSIVE,
-            ),
-        ) -> bool:
-            # https://github.com/laurent22/joplin/blob/b617a846964ea49be2ffefd31439e911ad84ed8c/packages/lib/services/synchronizer/LockHandler.ts#L72-L75
-            for lock in self.get_all_locks():
-                # Simplification: Don't distinguish between sync and exclusive locks.
-                if lock.type not in check_lock_types:
-                    continue
-                assert lock.updatedTime is not None
-                if lock.updatedTime + self.lock_ttl > datetime.datetime.utcnow():
-                    return True  # any of the locks is still locked
-            return False
-
-        for delay in range(tries):
-            if not is_locked():
-                self.current_sync_lock = self.add_lock()
-                if is_locked(check_lock_types=(dt.LockType.EXCLUSIVE,)):
-                    # avoid race conditions
-                    self.delete_own_lock()
-                else:
-                    return
-            time.sleep(delay)
-            LOGGER.debug("sync target is still locked")
-
-    def delete_own_lock(self) -> None:
-        self.current_sync_lock = None
-        self.delete_lock(dt.LockType.SYNC, dt.LockClientType.DESKTOP, self.client_id)
-
-    @contextmanager
-    def sync_lock(self) -> Any:
-        self.acquire_sync_lock()
-        if self.current_sync_lock is None:
-            raise Exception("Couldn't aqcuire sync lock")
-        yield
-        self.delete_own_lock()
