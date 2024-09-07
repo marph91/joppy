@@ -118,6 +118,14 @@ class ApiBase:
         # cookie is saved in session and used for the next requests
         self.post("/login", data={"email": self.user, "password": password})
 
+        # check for compatible sync version
+        response = self.get("/api/items/root:/info.json:/content")
+        server_info = response.json()
+        if (version := server_info["version"]) != 3:
+            raise NotImplementedError(
+                f"Only server version 3 is supported. Found version {version}."
+            )
+
     def _request(
         self,
         method: str,
@@ -128,8 +136,10 @@ class ApiBase:
         json: Any = None,
         headers: Optional[Dict[str, Any]] = None,
     ) -> requests.models.Response:
-        # bypass the lock for login and lock requests
-        if not (path == "/login" or path.startswith("/api/locks")):
+        # bypass the lock for info, lock and login requests
+        if not (
+            path == "/login" or path.startswith("/api/locks") or "info.json" in path
+        ):
             if self.current_sync_lock is None:
                 raise LockError("No sync lock. Acquire a lock before issuing requests.")
             assert self.current_sync_lock.updatedTime is not None  # for mypy
@@ -597,7 +607,7 @@ class ServerApi(Note, Notebook, Ping, Resource, Revision, Tag, User):
         """Get all resources, unpaginated."""
         return tools._unpaginate(self.get_resources)
 
-    def get_all_revisions(self,) -> List[dt.RevisionData]:
+    def get_all_revisions(self) -> List[dt.RevisionData]:
         """Get all revisions, unpaginated."""
         return tools._unpaginate(self.get_revisions)
 
