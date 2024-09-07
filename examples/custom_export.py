@@ -16,7 +16,7 @@ from pathlib import Path
 import re
 from typing import List
 
-from joppy.api import Api
+from joppy.client_api import ClientApi
 import joppy.data_types as dt
 
 
@@ -128,7 +128,7 @@ def create_files(api, tree, output_dir: Path):
         for resource in item.child_resources:
             resource_binary = api.get_resource_file(id_=resource.id)
             with open(
-                current_directory / replacements(resource.title), "wb"
+                current_directory / replacements(resource.title or resource.id), "wb"
             ) as outfile:
                 outfile.write(resource_binary)
 
@@ -137,7 +137,7 @@ def main():
     args = parse_args()
 
     # Obtain the notes via joplin API.
-    api = Api(token=args.api_token)
+    api = ClientApi(token=args.api_token)
 
     tree = create_hierarchy(api)
     create_files(api, tree, Path(args.output_folder))

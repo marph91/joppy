@@ -11,10 +11,10 @@ Reference:
 
 import os
 
-from joppy.api import Api
+from joppy.client_api import ClientApi
 
 # Create a new Api instance.
-api = Api(token=os.getenv("API_TOKEN"))
+api = ClientApi(token=os.getenv("API_TOKEN"))
 
 # Iterate through all notes.
 location_keys = ["longitude", "latitude", "altitude"]

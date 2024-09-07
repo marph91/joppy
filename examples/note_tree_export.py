@@ -22,7 +22,7 @@ import os
 import tempfile
 from pathlib import Path
 
-from joppy.api import Api
+from joppy.client_api import ClientApi
 
 
 # "frozen", because the class needs to be hashable for creating the tree.
@@ -182,7 +182,9 @@ def main():
         nargs="+",
         help="Title of the root notebooks. By default all notebooks are selected.",
     )
-    parser.add_argument("--output", help="Path to the output file.")
+    parser.add_argument(
+        "--output", help="Path to the output file.", default="note_tree.txt"
+    )
     args = parser.parse_args()
 
     output_format = Path(args.output).suffix
@@ -190,7 +192,7 @@ def main():
         raise ValueError(f"Unsupported format '{output_format}'")
 
     # Obtain the notebooks and notes via joplin API.
-    api = Api(token=os.getenv("API_TOKEN"))
+    api = ClientApi(token=os.getenv("API_TOKEN"))
     item_tree = get_item_tree(api)
 
     if args.notebooks:

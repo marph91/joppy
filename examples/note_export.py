@@ -19,7 +19,7 @@ import os
 from pathlib import Path
 import tempfile
 
-from joppy.api import Api
+from joppy.client_api import ClientApi
 import pypandoc
 
 
@@ -48,7 +48,7 @@ def main():
     args = parse_args()
 
     # Obtain the notes via joplin API.
-    api = Api(token=os.getenv("API_TOKEN"))
+    api = ClientApi(token=os.getenv("API_TOKEN"))
     notes = api.get_all_notes(fields="id,title")
 
     # Find notes with matching titles.

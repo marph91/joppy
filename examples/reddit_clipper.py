@@ -7,7 +7,7 @@ Usage: API_TOKEN=XYZ python reddit_clipper.py
 import os
 
 from bs4 import BeautifulSoup
-from joppy.api import Api
+from joppy.client_api import ClientApi
 from markdownify import markdownify as md
 import requests
 
@@ -56,7 +56,7 @@ def parse_reddit_page(url):
 def create_joplin_note(note_title, note_body, destination_notebook):
     # Get the token from the environment or hardcode it here.
     # https://joplinapp.org/api/references/rest_api/#authorisation
-    joplin_api = Api(token=os.getenv("API_TOKEN"))
+    joplin_api = ClientApi(token=os.getenv("API_TOKEN"))
 
     # Search the parent notebook in Joplin.
     notebook_candidates = joplin_api.search(

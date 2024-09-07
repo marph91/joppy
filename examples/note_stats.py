@@ -9,7 +9,7 @@ import string
 import os
 
 from bs4 import BeautifulSoup
-from joppy.api import Api
+from joppy.client_api import ClientApi
 from markdown import Markdown
 import nltk
 from nltk.corpus import stopwords
@@ -44,11 +44,14 @@ def analyze_text(text: str):
         # normalize to lower case
         word.lower()
         for word in tokens
-        if word not in ("...", "''", "``", "--", "++") and
+        if word not in ("...", "''", "``", "--", "++")
+        and
         # punctuation
-        word not in string.punctuation and
+        word not in string.punctuation
+        and
         # single character words
-        len(word) > 1 and
+        len(word) > 1
+        and
         # words containing at least one digit
         not any(character.isdigit() for character in word)
     ]
@@ -74,7 +77,7 @@ def main():
         nltk.download()
 
     # get all notes from joplin
-    api = Api(token=os.getenv("API_TOKEN"))
+    api = ClientApi(token=os.getenv("API_TOKEN"))
     notes = api.get_all_notes(fields="id,title,body")
     print("Notes:", len(notes))
 

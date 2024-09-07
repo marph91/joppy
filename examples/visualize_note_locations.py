@@ -6,12 +6,12 @@ Usage: API_TOKEN=XYZ python visualize_note_locations.py
 
 import os
 
-from joppy.api import Api
+from joppy.client_api import ClientApi
 import pandas as pd
 import plotly.express as px
 
 
-api = Api(token=os.getenv("API_TOKEN"))
+api = ClientApi(token=os.getenv("API_TOKEN"))
 notes = api.get_all_notes(fields="id,title,latitude,longitude")
 print("Notes:", len(notes))
 
