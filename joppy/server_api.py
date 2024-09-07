@@ -215,18 +215,18 @@ class ApiBase:
         """
         self.delete(f"/api/locks/{lock_type}_{client_type}_{client_id}")
 
-    def _get_locks(self) -> dt.DataList[dt.LockData]:
+    def _get_locks(self, **query: dt.JoplinTypes) -> dt.DataList[dt.LockData]:
         """
         Get locks, paginated.
         To get all locks (unpaginated), use "_get_all_locks()".
         """
-        response = self.get("/api/locks").json()
+        response = self.get("/api/locks", query=query).json()
         response["items"] = [dt.LockData(**item) for item in response["items"]]
         return dt.DataList[dt.LockData](**response)
 
-    def _get_all_locks(self, **query: Any) -> List[dt.LockData]:
+    def _get_all_locks(self) -> List[dt.LockData]:
         """Get all locks, unpaginated."""
-        return tools._unpaginate(self._get_locks, **query)
+        return tools._unpaginate(self._get_locks)
 
     def _is_lock_active(self, updated_time: datetime.datetime) -> bool:
         return updated_time + self.lock_ttl > datetime.datetime.utcnow()
@@ -313,8 +313,8 @@ class Note(ApiBase):
         response = self.get(f"/api/items/root:/{add_suffix(id_)}:/content")
         return cast(dt.NoteData, deserialize(response.text))
 
-    def get_notes(self) -> dt.DataList[dt.NoteData]:
-        response = self.get("/api/items/root:/:/children").json()
+    def get_notes(self, **query: dt.JoplinTypes) -> dt.DataList[dt.NoteData]:
+        response = self.get("/api/items/root:/:/children", query=query).json()
         # TODO: Is this the best practice?
         notes = []
         for item in response["items"]:
@@ -356,8 +356,8 @@ class Notebook(ApiBase):
         response = self.get(f"/api/items/root:/{add_suffix(id_)}:/content")
         return cast(dt.NotebookData, deserialize(response.text))
 
-    def get_notebooks(self) -> dt.DataList[dt.NotebookData]:
-        response = self.get("/api/items/root:/:/children").json()
+    def get_notebooks(self, **query: dt.JoplinTypes) -> dt.DataList[dt.NotebookData]:
+        response = self.get("/api/items/root:/:/children", query=query).json()
         # TODO: Is this the best practice?
         notebooks = []
         for item in response["items"]:
@@ -423,12 +423,12 @@ class Resource(ApiBase):
         """Get the resource with the given ID in binary format."""
         return self.get(f"/api/items/root:/.resource/{id_}:/content").content
 
-    def get_resources(self) -> dt.DataList[dt.ResourceData]:
+    def get_resources(self, **query: dt.JoplinTypes) -> dt.DataList[dt.ResourceData]:
         """
         Get resources, paginated.
         To get all resources (unpaginated), use "get_all_resources()".
         """
-        response = self.get("/api/items/root:/:/children").json()
+        response = self.get("/api/items/root:/:/children", query=query).json()
         # TODO: Is this the best practice?
         resources = []
         for item in response["items"]:
@@ -449,13 +449,13 @@ class Revision(ApiBase):
         """Delete a revision."""
         self.delete(f"/api/items/root:/{add_suffix(id_)}:")
 
-    def get_revision(self, id_: str, **query: Any) -> dt.RevisionData:
+    def get_revision(self, id_: str) -> dt.RevisionData:
         """Get the revision with the given ID."""
         response = self.get(f"/api/items/root:/{add_suffix(id_)}:/content")
         return cast(dt.RevisionData, deserialize(response.text))
 
     def get_revisions(self, **query: Any) -> dt.DataList[dt.RevisionData]:
-        response = self.get("/api/items/root:/:/children").json()
+        response = self.get("/api/items/root:/:/children", query=query).json()
         # TODO: Is this the best practice?
         revisions = []
         for item in response["items"]:
@@ -486,12 +486,12 @@ class Tag(ApiBase):
         response = self.get(f"/api/items/root:/{add_suffix(id_)}:/content")
         return cast(dt.TagData, deserialize(response.text))
 
-    def get_tags(self) -> dt.DataList[dt.TagData]:
+    def get_tags(self, **query: dt.JoplinTypes) -> dt.DataList[dt.TagData]:
         """
         Get tags, paginated.
         To get all tags (unpaginated), use "get_all_tags()".
         """
-        response = self.get("/api/items/root:/:/children").json()
+        response = self.get("/api/items/root:/:/children", query=query).json()
         # TODO: Is this the best practice?
         tags = []
         for item in response["items"]:
@@ -514,12 +514,12 @@ class Tag(ApiBase):
 
 
 class User(ApiBase):
-    def get_users(self) -> dt.DataList[dt.UserData]:
+    def get_users(self, **query: dt.JoplinTypes) -> dt.DataList[dt.UserData]:
         """
         Get users, paginated.
         To get all users (unpaginated), use "get_all_users()".
         """
-        response = self.get("/api/users").json()
+        response = self.get("/api/users", query=query).json()
         response["items"] = [dt.UserData(**item) for item in response["items"]]
         return dt.DataList[dt.UserData](**response)
 
@@ -585,29 +585,29 @@ class ServerApi(Note, Notebook, Ping, Resource, Revision, Tag, User):
             assert tag.id is not None
             self.delete_tag(tag.id)
 
-    def get_all_notes(self, **query: Any) -> List[dt.NoteData]:
+    def get_all_notes(self) -> List[dt.NoteData]:
         """Get all notes, unpaginated."""
-        return tools._unpaginate(self.get_notes, **query)
+        return tools._unpaginate(self.get_notes)
 
-    def get_all_notebooks(self, **query: Any) -> List[dt.NotebookData]:
+    def get_all_notebooks(self) -> List[dt.NotebookData]:
         """Get all notebooks, unpaginated."""
-        return tools._unpaginate(self.get_notebooks, **query)
+        return tools._unpaginate(self.get_notebooks)
 
-    def get_all_resources(self, **query: Any) -> List[dt.ResourceData]:
+    def get_all_resources(self) -> List[dt.ResourceData]:
         """Get all resources, unpaginated."""
-        return tools._unpaginate(self.get_resources, **query)
+        return tools._unpaginate(self.get_resources)
 
-    def get_all_revisions(self, **query: Any) -> List[dt.RevisionData]:
+    def get_all_revisions(self,) -> List[dt.RevisionData]:
         """Get all revisions, unpaginated."""
-        return tools._unpaginate(self.get_revisions, **query)
+        return tools._unpaginate(self.get_revisions)
 
-    def get_all_tags(self, **query: Any) -> List[dt.TagData]:
+    def get_all_tags(self) -> List[dt.TagData]:
         """Get all tags, unpaginated."""
-        return tools._unpaginate(self.get_tags, **query)
+        return tools._unpaginate(self.get_tags)
 
-    def get_all_users(self, **query: Any) -> List[dt.UserData]:
+    def get_all_users(self) -> List[dt.UserData]:
         """Get all users, unpaginated."""
-        return tools._unpaginate(self.get_users, **query)
+        return tools._unpaginate(self.get_users)
 
     def get_current_user(self) -> Optional[dt.UserData]:
         """https://joplinapp.org/help/dev/spec/server_user_status/#user-status"""

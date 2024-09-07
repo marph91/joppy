@@ -98,7 +98,7 @@ class Note(ServerBase):
     def test_get_all_notes(self):
         """Get all notes, unpaginated."""
         parent_id = self.api.add_notebook()
-        count = 20
+        count = 101  # pagination seems to start at 100 items
         for _ in range(count):
             self.api.add_note(parent_id)
         self.assertEqual(len(self.api.get_all_notes()), count)
@@ -150,7 +150,7 @@ class Notebook(ServerBase):
 
     def test_get_all_notebooks(self):
         """Get all notebooks, unpaginated."""
-        count = 20
+        count = 101
         for _ in range(count):
             self.api.add_notebook()
         self.assertEqual(len(self.api.get_all_notebooks()), count)
@@ -319,7 +319,7 @@ class Tag(ServerBase):
 
     def test_get_all_tags(self):
         """Get all tags, unpaginated."""
-        count = 20
+        count = 101
         for _ in range(count):
             self.api.add_tag()
         self.assertEqual(len(self.api.get_all_tags()), count)
