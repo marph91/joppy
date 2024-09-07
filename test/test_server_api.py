@@ -29,7 +29,8 @@ def tearDownModule():  # pylint: disable=invalid-name
 class ServerBase(common.Base):
     def setUp(self):
         self.api = cast(ServerApi, API)
-        super().setUp()
+        with self.api.sync_lock():  # needed for clearing all data
+            super().setUp()
 
         self.api._acquire_sync_lock()
         if self.api.current_sync_lock is None:

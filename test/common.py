@@ -42,13 +42,12 @@ class Base(unittest.TestCase):
 
         LOGGER.debug("Test: %s", self.id())
 
-        with self.api.sync_lock():
-            self.api.delete_all_notebooks()
-            self.api.delete_all_notes()
-            self.api.delete_all_resources()
-            self.api.delete_all_tags()
-            # Delete revisions last to cover all previous deletions.
-            self.api.delete_all_revisions()
+        self.api.delete_all_notebooks()
+        self.api.delete_all_notes()
+        self.api.delete_all_resources()
+        self.api.delete_all_tags()
+        # Delete revisions last to cover all previous deletions.
+        self.api.delete_all_revisions()
 
     @staticmethod
     def get_random_id() -> str:
