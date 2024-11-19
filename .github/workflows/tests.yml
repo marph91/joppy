@@ -47,3 +47,4 @@ jobs:
         with:
           name: test_output_${{ matrix.python-version }}
           path: test_output/
+          overwrite: true
