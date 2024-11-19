@@ -16,9 +16,9 @@ jobs:
     env:
       SLOW_TESTS: 1
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install system dependencies
@@ -35,15 +35,15 @@ jobs:
           coverage report
           coverage xml
       - name: Publish Code Coverage Results
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v5
         with:
           files: ./test_output/coverage.xml
       - name: Publish Unit Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v1
+        uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           files: test_output/test_results.xml
       - name: Archive all collected test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test_output
           path: test_output/
