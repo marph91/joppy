@@ -45,5 +45,5 @@ jobs:
       - name: Archive all collected test results
         uses: actions/upload-artifact@v4
         with:
-          name: test_output
+          name: test_output_${{ matrix.python-version }}
           path: test_output/
