@@ -120,17 +120,18 @@ def create_files(api, tree, output_dir: Path):
         create_files(api, item.child_items, current_directory)
 
         for note in item.child_notes:
-            with open(
-                (current_directory / replacements(note.title)).with_suffix(".md"), "w"
-            ) as outfile:
-                outfile.write(note.body)
+            note_path = (current_directory / replacements(note.title)).with_suffix(
+                ".md"
+            )
+            note_path.write_text(note.body, encoding="utf-8")
 
         for resource in item.child_resources:
+            # TODO: do this first and replace resource paths in the note body
             resource_binary = api.get_resource_file(id_=resource.id)
-            with open(
-                current_directory / replacements(resource.title or resource.id), "wb"
-            ) as outfile:
-                outfile.write(resource_binary)
+            resource_path = current_directory / replacements(
+                resource.title or resource.id
+            )
+            resource_path.write_bytes(resource_binary)
 
 
 def main():

@@ -183,7 +183,7 @@ def main():
         help="Title of the root notebooks. By default all notebooks are selected.",
     )
     parser.add_argument(
-        "--output", help="Path to the output file.", default="note_tree.txt"
+        "--output", type=Path, help="Path to the output file.", default="note_tree.txt"
     )
     args = parser.parse_args()
 
@@ -216,13 +216,14 @@ def main():
                     html = html.replace(f'href=":/{resource.id}"', "")
                 elif resource.mime.startswith("image"):
                     resource_binary = api.get_resource_file(resource.id)
-                    resource_path = str(Path(tmpdirname) / resource.id)
-                    with open(resource_path, "wb") as outfile:
-                        outfile.write(resource_binary)
+                    resource_path = Path(tmpdirname) / resource.id
+                    resource_path.write_bytes(resource_binary)
                     # Replace joplin's local link with the path to the just
                     # downloaded resource. Use the "file:///" protocol:
                     # https://stackoverflow.com/a/18246357/7410886
-                    html = html.replace(f":/{resource.id}", f"file:///{resource_path}")
+                    html = html.replace(
+                        f":/{resource.id}", f"file:///{str(resource_path)}"
+                    )
 
             # Replace remaining note links.
             # - Joplin ID: ":/"
@@ -230,8 +231,7 @@ def main():
             html = html.replace('href=":/', 'href="#')
 
             if output_format == ".html":
-                with open(args.output, "w") as outfile:
-                    outfile.write(html)
+                args.output.write_text(html, encoding="utf-8")
             else:
                 from weasyprint import CSS, HTML
 
@@ -241,8 +241,7 @@ def main():
 
     if output_format == ".txt":
         txt_tree = item_tree_to_txt(sorted_item_tree)
-        with open(args.output, "w") as outfile:
-            outfile.write(txt_tree)
+        args.output.write_text(txt_tree, encoding="utf-8")
 
 
 if __name__ == "__main__":
