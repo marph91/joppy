@@ -160,10 +160,16 @@ def item_tree_to_txt(item_tree):
 
 
 def sort_item_tree(item_tree):
-    """Sort all items based on their title."""
+    """
+    Sort all items:
+    1. Notes before notebooks
+    2. Alphabetically by title
+    """
+    def sort_function(item):
+        return isinstance(item[0], Notebook), item[0].title
     return {
         key: sort_item_tree(value) if isinstance(value, dict) else value
-        for key, value in sorted(item_tree.items(), key=lambda item: item[0].title)
+        for key, value in sorted(item_tree.items(), key=sort_function)
     }
 
 
