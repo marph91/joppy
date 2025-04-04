@@ -113,6 +113,8 @@ class BaseData:
                     casted_value = (
                         None
                         if value_int == 0
+                        # TODO: Replace by "fromtimestamp()" when
+                        # minimum Python version is 3.11.
                         else datetime.utcfromtimestamp(value_int / 1000.0)
                     )
                     setattr(self, field_.name, casted_value)

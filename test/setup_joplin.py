@@ -76,6 +76,7 @@ class JoplinClient:
 
         configure_webclipper_autostart(profile)
         self.joplin_process = subprocess.Popen(
+            # for local run "--no-sandbox" may be needed
             [app_path, "--profile", profile, "--no-welcome"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,

@@ -8,7 +8,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install pip dependencies
-        run: pip install build twine
+        run: |
+          pip install build twine
+          # avoid "Invalid Distribution Metadata"
+          # https://github.com/pypa/twine/issues/1216#issuecomment-2606531615
+          pip install --upgrade packaging
       - name: Build binary wheel and source tarball
         run: |
           python -m build --sdist --wheel --outdir dist

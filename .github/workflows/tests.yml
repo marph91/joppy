@@ -11,7 +11,7 @@ jobs:
       matrix:
         # Available versions:
         # https://github.com/actions/runner-images/blob/main/images/linux/Ubuntu2004-Readme.md#python
-        python-version: ["3.8", "3.11"]
+        python-version: ["3.9", "3.13"]
       fail-fast: false
     env:
       SLOW_TESTS: 1
