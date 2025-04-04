@@ -1,7 +1,7 @@
 """Typing support for Joplin's data API."""
 
 from dataclasses import dataclass, field, fields
-import datetime as dt
+from datetime import datetime
 import enum
 import mimetypes
 from typing import (
@@ -113,14 +113,12 @@ class BaseData:
                     casted_value = (
                         None
                         if value_int == 0
-                        else dt.datetime.fromtimestamp(
-                            value_int / 1000.0, dt.UTC
-                        ).replace(tzinfo=None)
+                        else datetime.utcfromtimestamp(value_int / 1000.0)
                     )
                     setattr(self, field_.name, casted_value)
                 except ValueError:
                     # TODO: This is not spec conform.
-                    casted_value = dt.datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%fZ")
+                    casted_value = datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%fZ")
                     setattr(self, field_.name, casted_value)
             elif field_.name in (
                 "is_conflict",
@@ -184,8 +182,8 @@ class NoteData(BaseData):
     parent_id: Optional[str] = None
     title: Optional[str] = None
     body: Optional[str] = None
-    created_time: Optional[dt.datetime] = None
-    updated_time: Optional[dt.datetime] = None
+    created_time: Optional[datetime] = None
+    updated_time: Optional[datetime] = None
     is_conflict: Optional[bool] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None
@@ -193,14 +191,14 @@ class NoteData(BaseData):
     author: Optional[str] = None
     source_url: Optional[str] = None
     is_todo: Optional[bool] = None
-    todo_due: Optional[dt.datetime] = None
-    todo_completed: Optional[dt.datetime] = None
+    todo_due: Optional[datetime] = None
+    todo_completed: Optional[datetime] = None
     source: Optional[str] = None
     source_application: Optional[str] = None
     application_data: Optional[str] = None
     order: Optional[float] = None
-    user_created_time: Optional[dt.datetime] = None
-    user_updated_time: Optional[dt.datetime] = None
+    user_created_time: Optional[datetime] = None
+    user_updated_time: Optional[datetime] = None
     encryption_cipher_text: Optional[str] = None
     encryption_applied: Optional[bool] = None
     markup_language: Optional[MarkupLanguage] = None
@@ -209,7 +207,7 @@ class NoteData(BaseData):
     conflict_original_id: Optional[str] = None
     master_key_id: Optional[str] = None
     user_data: Optional[str] = None
-    deleted_time: Optional[dt.datetime] = None
+    deleted_time: Optional[datetime] = None
     body_html: Optional[str] = None
     base_url: Optional[str] = None
     image_data_url: Optional[str] = None
@@ -259,10 +257,10 @@ class NotebookData(BaseData):
 
     id: Optional[str] = None
     title: Optional[str] = None
-    created_time: Optional[dt.datetime] = None
-    updated_time: Optional[dt.datetime] = None
-    user_created_time: Optional[dt.datetime] = None
-    user_updated_time: Optional[dt.datetime] = None
+    created_time: Optional[datetime] = None
+    updated_time: Optional[datetime] = None
+    user_created_time: Optional[datetime] = None
+    user_updated_time: Optional[datetime] = None
     encryption_cipher_text: Optional[str] = None
     encryption_applied: Optional[bool] = None
     parent_id: Optional[str] = None
@@ -271,7 +269,7 @@ class NotebookData(BaseData):
     master_key_id: Optional[str] = None
     icon: Optional[str] = None
     user_data: Optional[str] = None
-    deleted_time: Optional[dt.datetime] = None
+    deleted_time: Optional[datetime] = None
 
     def serialize(self) -> str:
         lines = []
@@ -308,10 +306,10 @@ class ResourceData(BaseData):
     title: Optional[str] = None
     mime: Optional[str] = None
     filename: Optional[str] = None
-    created_time: Optional[dt.datetime] = None
-    updated_time: Optional[dt.datetime] = None
-    user_created_time: Optional[dt.datetime] = None
-    user_updated_time: Optional[dt.datetime] = None
+    created_time: Optional[datetime] = None
+    updated_time: Optional[datetime] = None
+    user_created_time: Optional[datetime] = None
+    user_updated_time: Optional[datetime] = None
     file_extension: Optional[str] = None
     encryption_cipher_text: Optional[str] = None
     encryption_applied: Optional[bool] = None
@@ -321,7 +319,7 @@ class ResourceData(BaseData):
     share_id: Optional[str] = None
     master_key_id: Optional[str] = None
     user_data: Optional[str] = None
-    blob_updated_time: Optional[dt.datetime] = None
+    blob_updated_time: Optional[datetime] = None
     ocr_text: Optional[str] = None
     ocr_details: Optional[str] = None
     ocr_status: Optional[int] = None
@@ -377,14 +375,14 @@ class RevisionData(BaseData):
     parent_id: Optional[str] = None
     item_type: Optional[ItemType] = None
     item_id: Optional[str] = None
-    item_updated_time: Optional[dt.datetime] = None
+    item_updated_time: Optional[datetime] = None
     title_diff: Optional[str] = None
     body_diff: Optional[str] = None
     metadata_diff: Optional[str] = None
     encryption_cipher_text: Optional[str] = None
     encryption_applied: Optional[bool] = None
-    updated_time: Optional[dt.datetime] = None
-    created_time: Optional[dt.datetime] = None
+    updated_time: Optional[datetime] = None
+    created_time: Optional[datetime] = None
 
     @staticmethod
     def default_fields() -> Set[str]:
@@ -397,10 +395,10 @@ class TagData(BaseData):
 
     id: Optional[str] = None
     title: Optional[str] = None
-    created_time: Optional[dt.datetime] = None
-    updated_time: Optional[dt.datetime] = None
-    user_created_time: Optional[dt.datetime] = None
-    user_updated_time: Optional[dt.datetime] = None
+    created_time: Optional[datetime] = None
+    updated_time: Optional[datetime] = None
+    user_created_time: Optional[datetime] = None
+    user_updated_time: Optional[datetime] = None
     encryption_cipher_text: Optional[str] = None
     encryption_applied: Optional[bool] = None
     is_shared: Optional[bool] = None
@@ -441,10 +439,10 @@ class NoteTagData(BaseData):
     id: Optional[str] = None
     note_id: Optional[str] = None
     tag_id: Optional[str] = None
-    created_time: Optional[dt.datetime] = None
-    updated_time: Optional[dt.datetime] = None
-    user_created_time: Optional[dt.datetime] = None
-    user_updated_time: Optional[dt.datetime] = None
+    created_time: Optional[datetime] = None
+    updated_time: Optional[datetime] = None
+    user_created_time: Optional[datetime] = None
+    user_updated_time: Optional[datetime] = None
     encryption_cipher_text: Optional[str] = None
     encryption_applied: Optional[bool] = None
     is_shared: Optional[bool] = None
@@ -480,7 +478,7 @@ class EventData(BaseData):
     item_type: Optional[ItemType] = None
     item_id: Optional[int] = None
     type: Optional[EventChangeType] = None
-    created_time: Optional[dt.datetime] = None
+    created_time: Optional[datetime] = None
     # source: Optional[int] = None
     # before_change_item: Optional[str] = None
 
@@ -518,7 +516,7 @@ class LockData(BaseData):
     type: Optional[LockType] = None
     clientId: Optional[str] = None
     clientType: Optional[LockClientType] = None
-    updatedTime: Optional[dt.datetime] = None
+    updatedTime: Optional[datetime] = None
 
 
 @dataclass
@@ -533,8 +531,8 @@ class UserData(BaseData):
     password: Optional[str] = None
     is_admin: Optional[bool] = None
     full_name: Optional[str] = None
-    created_time: Optional[dt.datetime] = None
-    updated_time: Optional[dt.datetime] = None
+    created_time: Optional[datetime] = None
+    updated_time: Optional[datetime] = None
     email_confirmed: Optional[bool] = None
     must_set_password: Optional[bool] = None
     account_type: Optional[int] = None  # TODO: enum
@@ -546,7 +544,7 @@ class UserData(BaseData):
     can_share_note: Optional[bool] = None
     can_receive_folder: Optional[bool] = None
     enabled: Optional[bool] = None
-    disabled_time: Optional[dt.datetime] = None
+    disabled_time: Optional[datetime] = None
 
 
 AnyData = Union[
