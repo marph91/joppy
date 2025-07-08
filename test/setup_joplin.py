@@ -74,8 +74,8 @@ class JoplinClient:
         self.joplin_process = subprocess.Popen(
             # For Ubuntu > 20.04, "--no-sandbox" is needed.
             [str(app_path), "--profile", str(profile), "--no-welcome", "--no-sandbox"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
 
         # Get the api token from the settings file. Might break at some time,
@@ -84,9 +84,15 @@ class JoplinClient:
             settings = json.loads(
                 (profile / "settings.json").read_text(encoding="utf-8")
             )
-            assert settings.get("clipperServer.autoStart", False), (
-                "Webclipper should be active"
-            )
+            print(settings)
+            if self.joplin_process.poll() is not None:
+                # Joplin app is not running anymore.
+                # https://docs.python.org/3/library/subprocess.html#subprocess.Popen.poll
+                stdout, stderr = self.joplin_process.communicate()
+                print(stdout, stderr)
+            assert settings.get(
+                "clipperServer.autoStart", False
+            ), "Webclipper should be active"
             api_token: Optional[str] = settings.get("api.token")
             return api_token
 
@@ -109,7 +115,8 @@ class JoplinClient:
         """Stop the joplin app and the corresponding xvfb."""
         self.xvfb.stop()
         self.joplin_process.terminate()
-        self.joplin_process.wait()
+        self.joplin_process.communicate(timeout=5)
+        self.joplin_process.wait(timeout=5)
 
 
 class JoplinServer:
@@ -146,4 +153,4 @@ class JoplinServer:
         """Stop the joplin server."""
         if self.joplin_process is not None:
             self.joplin_process.terminate()
-            self.joplin_process.wait()
+            self.joplin_process.wait(timeout=5)
