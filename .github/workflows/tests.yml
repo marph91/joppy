@@ -22,7 +22,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt update &&
-          sudo apt install --yes xvfb python3-tk
+          sudo apt install --yes xvfb python3-tk libfuse2
       - name: Install pip dependencies
         run: pip install -r requirements-dev.txt
       - name: Run tests
