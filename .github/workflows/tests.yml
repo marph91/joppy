@@ -4,13 +4,11 @@ on: [push]
 
 jobs:
   container:
-    # Workaround for missing python 3.6:
-    # https://github.com/actions/setup-python/issues/544#issuecomment-1320295576
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         # Available versions:
-        # https://github.com/actions/runner-images/blob/main/images/linux/Ubuntu2004-Readme.md#python
+        # https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md#python
         python-version: ["3.9", "3.13"]
       fail-fast: false
     env:
