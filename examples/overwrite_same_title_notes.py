@@ -5,7 +5,7 @@ Match the Joplin note titles with the Markdown filenames.
 Requirements: pip install joppy
 Usage: python overwrite_same_title_notes.py path/to/markdown/folder --api-token XYZ
 
-Reference: https://discourse.joplinapp.org/t/overwrite-existing-note-and-preserve-existing-links/45897
+Reference: https://discourse.joplinapp.org/t/overwrite-existing-note-and-preserve-existing-links/45897  # noqa
 """
 
 import argparse
@@ -53,7 +53,8 @@ def main():
                 note_to_replace = candidates[0]
             case too_many:
                 logging.warning(
-                    f'Found {too_many} Joplin notes for Markdown file "{file_.stem}". Selecting the first one.'
+                    f'Found {too_many} Joplin notes for Markdown file "{file_.stem}". '
+                    "Selecting the first one."
                 )
                 note_to_replace = candidates[0]
 

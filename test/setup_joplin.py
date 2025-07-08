@@ -13,7 +13,7 @@ import requests
 from xvfbwrapper import Xvfb
 
 
-def download_joplin_client(destination: Path):
+def download_joplin_client(destination: Path) -> None:
     """Download the latest joplin desktop app release if not already done."""
     if not destination.exists():
         # obtain the version string
@@ -36,7 +36,7 @@ def download_joplin_client(destination: Path):
         os.chmod(destination, os.stat(destination).st_mode | stat.S_IEXEC)
 
 
-def configure_webclipper_autostart(profile: Path):
+def configure_webclipper_autostart(profile: Path) -> None:
     """
     Configure the webclipper to start at the first autostart.
     See: https://discourse.joplinapp.org/t/how-to-start-webclipper-headless/20789/4
