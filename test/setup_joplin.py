@@ -20,7 +20,7 @@ def download_joplin_client(destination: str) -> None:
         #    "https://api.github.com/repos/laurent22/joplin/releases"
         # )
         # latest_version = response.json()[0]["name"].lstrip("v")
-        latest_version = "3.3.3"
+        latest_version = "3.3.13"
         print(f"Testing with Joplin version {latest_version}.")
 
         # download the binary
@@ -76,8 +76,8 @@ class JoplinClient:
 
         configure_webclipper_autostart(profile)
         self.joplin_process = subprocess.Popen(
-            # for local run "--no-sandbox" may be needed
-            [app_path, "--profile", profile, "--no-welcome"],
+            # For Ubuntu > 20.04, "--no-sandbox" is needed.
+            [app_path, "--profile", profile, "--no-welcome", "--no-sandbox"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )

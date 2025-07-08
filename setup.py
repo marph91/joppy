@@ -14,7 +14,7 @@ setup(
     long_description=(pathlib.Path(__file__).parent / "README.md").read_text(),
     long_description_content_type="text/markdown",
     url="https://github.com/marph91/joppy",
-    author="Martin Dörfelt",
+    author="Marph",
     author_email="martin.d@andix.de",
     license="Mozilla Public License version 2.0",
     # https://pypi.org/classifiers
