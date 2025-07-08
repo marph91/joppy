@@ -3,6 +3,7 @@
 from datetime import datetime
 import mimetypes
 import os
+from pathlib import Path
 import random
 import re
 import string
@@ -18,7 +19,7 @@ import joppy.data_types as dt
 from . import common, setup_joplin
 
 
-PROFILE = os.path.join(os.getcwd(), "test_profile")
+PROFILE = Path().cwd() / "test_profile"
 API_TOKEN = ""  # Don't use the API token from env to avoid data loss.
 APP = None
 
@@ -28,7 +29,7 @@ def setUpModule():  # pylint: disable=invalid-name
     # testsuite.
     global API_TOKEN, APP
     if not API_TOKEN:
-        app_path = "./joplin.AppImage"
+        app_path = Path().cwd() / "joplin.AppImage"
         setup_joplin.download_joplin_client(app_path)
         APP = setup_joplin.JoplinClient(app_path, PROFILE)
         API_TOKEN = APP.api_token
@@ -380,7 +381,7 @@ class Resource(ClientBase):
 
         self.api.delete_resource(id_=id_)
         self.assertEqual(self.api.get_resources().items, [])
-        self.assertEqual(os.listdir(f"{PROFILE}/resources"), [])
+        self.assertEqual(list((PROFILE / "resources").iterdir()), [])
 
     @common.with_resource
     def test_get_resource(self, filename):

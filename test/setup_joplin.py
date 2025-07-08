@@ -2,6 +2,7 @@
 
 import json
 import os
+from pathlib import Path
 import shutil
 import stat
 import subprocess
@@ -12,9 +13,9 @@ import requests
 from xvfbwrapper import Xvfb
 
 
-def download_joplin_client(destination: str) -> None:
+def download_joplin_client(destination: Path):
     """Download the latest joplin desktop app release if not already done."""
-    if not os.path.exists(destination):
+    if not destination.exists():
         # obtain the version string
         # response = requests.get(
         #    "https://api.github.com/repos/laurent22/joplin/releases"
@@ -29,31 +30,26 @@ def download_joplin_client(destination: str) -> None:
             f"Joplin-{latest_version}.AppImage"
         )
         response.raise_for_status()
-        with open(destination, "wb") as outfile:
-            outfile.write(response.content)
+        destination.write_bytes(response.content)
     if not os.access(destination, os.X_OK):
         # add the executable flag
         os.chmod(destination, os.stat(destination).st_mode | stat.S_IEXEC)
 
 
-def configure_webclipper_autostart(profile: str) -> None:
+def configure_webclipper_autostart(profile: Path):
     """
     Configure the webclipper to start at the first autostart.
     See: https://discourse.joplinapp.org/t/how-to-start-webclipper-headless/20789/4
     """
-    webclipper_setting = "clipperServer.autoStart"
-    settings_file = f"{profile}/settings.json"
+    profile.mkdir(parents=True, exist_ok=True)
 
-    os.makedirs(profile, exist_ok=True)
-    if os.path.exists(settings_file):
-        with open(settings_file) as infile:
-            settings = json.loads(infile.read())
-        if settings.get(webclipper_setting, False):
-            return  # autostart is already activated
-
-    # set webclipper autostart setting
-    with open(settings_file, "w") as outfile:
-        json.dump({webclipper_setting: True, "locale": "en_US"}, outfile)
+    settings_file = profile / "settings.json"
+    if settings_file.exists():
+        settings = json.loads(settings_file.read_text(encoding="utf-8"))
+    else:
+        settings = {}
+    settings.update({"clipperServer.autoStart": True, "locale": "en_US"})
+    settings_file.write_text(json.dumps(settings), encoding="utf-8")
 
 
 def wait_for(func: Callable[..., Any], interval: float = 0.5, timeout: int = 5) -> Any:
@@ -70,14 +66,14 @@ def wait_for(func: Callable[..., Any], interval: float = 0.5, timeout: int = 5) 
 class JoplinClient:
     """Represents a joplin client application."""
 
-    def __init__(self, app_path: str, profile: str):
+    def __init__(self, app_path: Path, profile: Path):
         self.xvfb = xvfb = Xvfb()
         xvfb.start()
 
         configure_webclipper_autostart(profile)
         self.joplin_process = subprocess.Popen(
             # For Ubuntu > 20.04, "--no-sandbox" is needed.
-            [app_path, "--profile", profile, "--no-welcome", "--no-sandbox"],
+            [str(app_path), "--profile", str(profile), "--no-welcome", "--no-sandbox"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
@@ -85,8 +81,12 @@ class JoplinClient:
         # Get the api token from the settings file. Might break at some time,
         # but is the most convenient for now.
         def get_token() -> Optional[str]:
-            with open(f"{profile}/settings.json") as infile:
-                settings = json.loads(infile.read())
+            settings = json.loads(
+                (profile / "settings.json").read_text(encoding="utf-8")
+            )
+            assert settings.get("clipperServer.autoStart", False), (
+                "Webclipper should be active"
+            )
             api_token: Optional[str] = settings.get("api.token")
             return api_token
 
