@@ -84,7 +84,6 @@ class JoplinClient:
             settings = json.loads(
                 (profile / "settings.json").read_text(encoding="utf-8")
             )
-            print(settings)
             if self.joplin_process.poll() is not None:
                 # Joplin app is not running anymore.
                 # https://docs.python.org/3/library/subprocess.html#subprocess.Popen.poll
