@@ -4,7 +4,7 @@ Convert notebooks and notes to HTML, PDF or TXT.
 Requirements (for pdf export): pip install joppy markdown pymdown-extensions weasyprint
 
 Usage:
-- API_TOKEN=XYZ python note_tree_export.py --output note_tree.txt
+- API_TOKEN=XYZ python note_tree_export.py --notebooks "My Notebook" --output note_tree.txt
 - python note_tree_export.py --help
 
 Known issues:
@@ -191,6 +191,7 @@ def main():
     parser.add_argument(
         "--output", type=Path, help="Path to the output file.", default="note_tree.txt"
     )
+    parser.add_argument("--api-token", default=os.getenv("API_TOKEN"))
     args = parser.parse_args()
 
     output_format = Path(args.output).suffix
@@ -198,7 +199,7 @@ def main():
         raise ValueError(f"Unsupported format '{output_format}'")
 
     # Obtain the notebooks and notes via joplin API.
-    api = ClientApi(token=os.getenv("API_TOKEN"))
+    api = ClientApi(token=args.api_token)
     item_tree = get_item_tree(api)
 
     if args.notebooks:
