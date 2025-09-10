@@ -525,7 +525,7 @@ class LockData(BaseData):
 class UserData(BaseData):
     """
     https://joplinapp.org/help/dev/spec/server_user_status/
-    https://github.com/laurent22/joplin/blob/b617a846964ea49be2ffefd31439e911ad84ed8c/packages/server/src/models/UserModel.ts#L117
+    https://github.com/laurent22/joplin/blob/fc516d05b3c9564a54fd0fbb9a1886739190bba0/packages/server/src/services/database/types.ts#L246
     """
 
     id: Optional[str] = None
@@ -547,6 +547,9 @@ class UserData(BaseData):
     can_receive_folder: Optional[bool] = None
     enabled: Optional[bool] = None
     disabled_time: Optional[datetime] = None
+    is_external: Optional[bool] = None
+    sso_auth_code: Optional[str] = None
+    sso_auth_code_expire_at: Optional[datetime] = None
 
 
 AnyData = Union[
