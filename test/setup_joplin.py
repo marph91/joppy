@@ -21,7 +21,7 @@ def download_joplin_client(destination: Path) -> None:
         #    "https://api.github.com/repos/laurent22/joplin/releases"
         # )
         # latest_version = response.json()[0]["name"].lstrip("v")
-        latest_version = "3.3.13"
+        latest_version = "3.4.12"
         print(f"Testing with Joplin version {latest_version}.")
 
         # download the binary
@@ -89,9 +89,9 @@ class JoplinClient:
                 # https://docs.python.org/3/library/subprocess.html#subprocess.Popen.poll
                 stdout, stderr = self.joplin_process.communicate()
                 print(stdout, stderr)
-            assert settings.get(
-                "clipperServer.autoStart", False
-            ), "Webclipper should be active"
+            assert settings.get("clipperServer.autoStart", False), (
+                "Webclipper should be active"
+            )
             api_token: Optional[str] = settings.get("api.token")
             return api_token
 
