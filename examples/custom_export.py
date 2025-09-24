@@ -115,23 +115,42 @@ def create_files(api, tree, output_dir: Path):
     """
     output_dir.mkdir(exist_ok=True)
 
+
     for item in tree:
+        note_links = []
         current_directory = output_dir / replacements(item.data.title)
+
         create_files(api, item.child_items, current_directory)
+
+        attach_path = current_directory / "_resources"
+
+        attach_path.mkdir(exist_ok=True)
+
+
+        for resource in item.child_resources:
+            resource_binary = api.get_resource_file(id_=resource.id)
+            resource_path = attach_path / replacements(
+                resource.title or resource.id
+            )
+            filename = str(resource_path).split('/')[-1]
+            note_links.append((f":/{resource.id}", f'_resources/{filename}'))
+            try:
+                resource_path.write_bytes(resource_binary)
+            except Exception as error:
+                print(error)
 
         for note in item.child_notes:
             note_path = (current_directory / replacements(note.title)).with_suffix(
                 ".md"
             )
-            note_path.write_text(note.body, encoding="utf-8")
+            note_body = note.body
+            for needle, replacer in note_links:
+                note_body = note_body.replace(needle, replacer)
+            try:
+                note_path.write_text(note_body, encoding="utf-8")
+            except Exception as error:
+                print(error)
 
-        for resource in item.child_resources:
-            # TODO: do this first and replace resource paths in the note body
-            resource_binary = api.get_resource_file(id_=resource.id)
-            resource_path = current_directory / replacements(
-                resource.title or resource.id
-            )
-            resource_path.write_bytes(resource_binary)
 
 
 def main():
