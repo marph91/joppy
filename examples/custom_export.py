@@ -132,7 +132,7 @@ def create_files(api, tree, output_dir: Path):
             resource_path = attach_path / replacements(
                 resource.title or resource.id
             )
-            filename = str(resource_path).split('/')[-1]
+            filename = resource_path.name
             note_links.append((f":/{resource.id}", f'_resources/{filename}'))
             try:
                 resource_path.write_bytes(resource_binary)
