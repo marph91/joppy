@@ -672,8 +672,6 @@ class Tag(ClientBase):
 
     def test_add_duplicated_name(self):
         """Tag names have to be unique."""
-        # Note: Tags are always lower case:
-        # https://discourse.joplinapp.org/t/tags-lower-case-only/4220
         # Note: Whitespace chars are substituted.
         tag_name = self.get_random_string(exclude=string.whitespace)
 
@@ -682,7 +680,7 @@ class Tag(ClientBase):
             self.api.add_tag(title=tag_name)
         self.assertEqual(context.exception.response.status_code, 500)
         self.assertIn(
-            f'Internal Server Error: The tag "{tag_name.lower()}" already exists',
+            f'Internal Server Error: The tag "{tag_name}" already exists',
             context.exception.response.json()["error"],
         )
 
@@ -899,7 +897,8 @@ class ReadmeExamples(ClientBase):
         # All tags starting with "!" should be removed.
         tags = self.api.get_all_tags()
         self.assertEqual(len(tags), 1)
-        self.assertEqual(tags[0].title, "title")  # tags are always lower case
+        # tags can be upper case since https://github.com/laurent22/joplin/pull/12931
+        self.assertEqual(tags[0].title, "Title")
 
     def test_remove_spaces_from_tags(self):
         self.api.add_tag(title="tag with spaces")
