@@ -9,7 +9,7 @@ jobs:
       matrix:
         # Available versions:
         # https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md#python
-        python-version: ["3.9", "3.13"]
+        python-version: ["3.10", "3.14"]
       fail-fast: false
     env:
       SLOW_TESTS: 1
