@@ -21,7 +21,7 @@ def download_joplin_client(destination: Path) -> None:
         #    "https://api.github.com/repos/laurent22/joplin/releases"
         # )
         # latest_version = response.json()[0]["name"].lstrip("v")
-        latest_version = "3.5.7"
+        latest_version = "3.5.12"
         print(f"Testing with Joplin version {latest_version}.")
 
         # download the binary
@@ -95,7 +95,7 @@ class JoplinClient:
             api_token: Optional[str] = settings.get("api.token")
             return api_token
 
-        self.api_token = wait_for(get_token, timeout=20)
+        self.api_token = wait_for(get_token, timeout=30)
 
         # Wait until the API is available.
         # TODO: hardcoded url
