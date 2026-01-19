@@ -64,7 +64,10 @@ from joppy.client_api import ClientApi
 api = ClientApi(token=YOUR_TOKEN)
 
 # Get all notes. Note that this method calls get_notes() multiple times to assemble the unpaginated result.
-notes = api.get_all_notes()
+notes = api.get_all_notes(fields="title,id,parent_id,body")
+
+for note in notes:
+    print(note)
 ```
 
 </details>
