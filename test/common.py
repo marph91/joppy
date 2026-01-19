@@ -4,8 +4,11 @@ import os
 import random
 import string
 import tempfile
-from typing import Any, Iterable, Tuple
+from typing import Iterable, Tuple
 import unittest
+
+from joppy.client_api import ClientApi
+from joppy.server_api import ServerApi
 
 
 os.makedirs("test_output", exist_ok=True)
@@ -35,7 +38,7 @@ def with_resource(func):
 
 
 class Base(unittest.TestCase):
-    api: Any
+    api: ClientApi | ServerApi
 
     def setUp(self) -> None:
         super().setUp()

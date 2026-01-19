@@ -41,6 +41,8 @@ def tearDownModule():  # pylint: disable=invalid-name
 
 
 class ClientBase(common.Base):
+    api: ClientApi
+
     def setUp(self):
         self.api = ClientApi(token=API_TOKEN)
         super().setUp()

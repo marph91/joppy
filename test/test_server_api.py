@@ -28,6 +28,8 @@ def tearDownModule():  # pylint: disable=invalid-name
 
 
 class ServerBase(common.Base):
+    api: ServerApi
+
     def setUp(self):
         self.api = cast(ServerApi, API)
         with self.api.sync_lock():  # needed for clearing all data
@@ -330,12 +332,14 @@ class Lock(ServerBase):
     def test_sync_lock_refresh(self):
         locks = self.api._get_all_locks()
         self.assertEqual(len(locks), 1)
+        assert locks[0].updatedTime is not None
         updated_time_before = locks[0].updatedTime
 
         # refresh interval is not needed -> same lock
         self.api.get_all_notebooks()
         locks = self.api._get_all_locks()
         self.assertEqual(len(locks), 1)
+        assert locks[0].updatedTime is not None
         self.assertEqual(locks[0].updatedTime, updated_time_before)
 
         # some arbitrary request to refresh the sync lock
@@ -344,6 +348,7 @@ class Lock(ServerBase):
 
         locks = self.api._get_all_locks()
         self.assertEqual(len(locks), 1)
+        assert locks[0].updatedTime is not None
         self.assertGreater(locks[0].updatedTime, updated_time_before)
 
     @unittest.skipIf(not common.SLOW_TESTS, "Waiting for the timeout takes some time.")
@@ -361,7 +366,8 @@ class User(ServerBase):
     def test_get_current_user(self):
         """The current user should be available and have read and write permissions."""
         current_user = self.api.get_current_user()
-        self.assertIsNotNone(current_user)
+        assert current_user is not None
+        # TODO: Use self.assertIsNotNone(current_user) when mypy supports it.
         self.assertTrue(current_user.enabled)
         self.assertTrue(current_user.can_upload)
 
