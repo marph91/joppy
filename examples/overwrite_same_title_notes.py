@@ -38,7 +38,6 @@ def main():
 
     # Scan through the source folder and get all Markdown files.
     for file_ in args.source_folder.rglob("*.md"):
-
         # Search for the filename in Joplin.
         candidates = api.search_all(query=f'title:"{file_.stem}"')
 

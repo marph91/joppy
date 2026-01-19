@@ -165,8 +165,10 @@ def sort_item_tree(item_tree):
     1. Notes before notebooks
     2. Alphabetically by title
     """
+
     def sort_function(item):
         return isinstance(item[0], Notebook), item[0].title
+
     return {
         key: sort_item_tree(value) if isinstance(value, dict) else value
         for key, value in sorted(item_tree.items(), key=sort_function)
