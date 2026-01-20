@@ -292,6 +292,8 @@ It's possible to configure the test run via some environment variables:
 
 ## :book: Changelog
 
+The changelog for versions greater than 1.0.0 can be found at the [releases page](https://github.com/marph91/joppy/releases).
+
 ### 1.0.0
 
 - Rename the client API. It should be used by `from joppy.client_api import ClientApi` instead of `from joppy.client_api import ClientApi` now.
