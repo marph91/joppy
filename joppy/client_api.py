@@ -52,8 +52,9 @@ class ApiBase:
         data: Optional[dt.JoplinKwargs] = None,
         files: Optional[Dict[str, Any]] = None,
     ) -> requests.models.Response:
+        log_query = {k: ('***REDACTED***' if k == 'token' else v) for k, v in query.items()}
         LOGGER.debug(
-            f"API: {method} request: path={path}, query={query}, data={data}, "
+            f"API: {method} request: path={path}, query={log_query}, data={data}, "
             f"files={files}"
         )
         if data is not None and "id_" in data:
