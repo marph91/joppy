@@ -141,7 +141,9 @@ def item_tree_to_html(item_tree):
             html_parts.extend(sub_tree_to_html(value, next_level))
         return html_parts
 
-    return "".join(sub_tree_to_html(item_tree))
+    prefix = ["<!DOCTYPE html><html><head><meta charset='utf-8'></head><body>"]
+    postfix = ["<body></html>"]
+    return "".join(prefix + sub_tree_to_html(item_tree) + postfix)
 
 
 def item_tree_to_txt(item_tree):

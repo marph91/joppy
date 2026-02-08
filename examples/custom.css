@@ -12,16 +12,16 @@ figure > figcaption {
   text-align: center;
 }
 
-/* checkboxes: https://github.com/Kozea/WeasyPrint/issues/328#issuecomment-1491862802 */
-input[type="checkbox"]:not(:checked)::before {
-  content: "\2610";
-  color: black;
-  font-size: 18px;
+/* checkboxes on a single line */
+li:has(input[type="checkbox"]) {
+  display: flex;
+  align-items: flex-start;
+  margin-right: 0.5em;
+  margin-top: 0.2em;
 }
-input[checked]::before {
-  content: "\2611";
-  color: black;
-  font-size: 18px;
+li > input[type="checkbox"] {
+  margin-right: 0.5em;
+  margin-top: 0.2em;
 }
 
 /* table style */
