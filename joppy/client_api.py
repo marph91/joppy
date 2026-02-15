@@ -54,9 +54,7 @@ class ApiBase:
     ) -> requests.models.Response:
         if query is None:
             query = {}
-        log_query = {
-            k: ("***" if k == "token" else v) for k, v in query.items()
-        }
+        log_query = {k: ("***" if k == "token" else v) for k, v in query.items()}
         LOGGER.debug(
             f"API: {method} request: path={path}, query={log_query}, data={data}, "
             f"files={files}"
