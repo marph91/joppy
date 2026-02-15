@@ -52,7 +52,11 @@ class ApiBase:
         data: Optional[dt.JoplinKwargs] = None,
         files: Optional[Dict[str, Any]] = None,
     ) -> requests.models.Response:
-        log_query = {k: ('***REDACTED***' if k == 'token' else v) for k, v in query.items()}
+        if query is None:
+            query = {}
+        log_query = {
+            k: ("***" if k == "token" else v) for k, v in query.items()
+        }
         LOGGER.debug(
             f"API: {method} request: path={path}, query={log_query}, data={data}, "
             f"files={files}"
@@ -60,8 +64,6 @@ class ApiBase:
         if data is not None and "id_" in data:
             # "id" is a reserved keyword in python, so don't use it.
             data["id"] = data.pop("id_")
-        if query is None:
-            query = {}
         query["token"] = self.token  # TODO: extending the dict may have side effects
         query_str = "&".join([f"{key}={val}" for key, val in query.items()])
 
