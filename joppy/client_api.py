@@ -260,7 +260,7 @@ class Revision(ApiBase):
         self, item_id: str, item_type: dt.ItemType, **data: dt.JoplinTypes
     ) -> str:
         """Add a revision to an item."""
-        now_unix_seconds = int(time.time())
+        now_unix_ms = int(time.time() * 1000)
         return str(
             self.post(
                 "/revisions",
@@ -268,8 +268,8 @@ class Revision(ApiBase):
                     # There seem to be some undocumented required fields.
                     "item_id": item_id,
                     "item_type": item_type.value,
-                    "item_updated_time": now_unix_seconds,
-                    "item_created_time": now_unix_seconds,
+                    "item_updated_time": now_unix_ms,
+                    "item_created_time": now_unix_ms,
                     **data,
                 },
             ).json()["id"]
