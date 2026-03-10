@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name="joppy",
-    version="1.0.1",
+    version="1.0.2",
     packages=["joppy"],
     # https://stackoverflow.com/a/70386281/7410886
     package_data={
@@ -28,6 +28,6 @@ setup(
         "Programming Language :: Python :: 3.14",
         "Typing :: Typed",
     ],
-    python_requires=">=3.7",
+    python_requires=">=3.10",
     install_requires=["requests"],
 )
