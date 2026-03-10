@@ -170,6 +170,23 @@ class Note(ClientBase):
         self.api.delete_note(id_=id_, permanent=1)
         self.assertEqual(self.api.get_notes().items, [])
 
+    def test_delete_revisions(self):
+        """Add note revision and afterwards delete them."""
+        self.api.add_notebook()
+        note_id = self.api.add_note()
+
+        number_of_revisions = 5
+        for _ in range(number_of_revisions):
+            self.api.add_revision(note_id, dt.ItemType.NOTE)
+
+        revisions = self.api.get_revisions().items
+        self.assertEqual(len(revisions), number_of_revisions)
+
+        self.api.delete_note_revisions(note_id)
+
+        revisions = self.api.get_revisions().items
+        self.assertEqual(len(revisions), 0)
+
     def test_get_note(self):
         """Get a specific note."""
         self.api.add_notebook()

@@ -142,6 +142,10 @@ class Note(ApiBase):
         """Delete a note."""
         self.delete(f"/notes/{id_}", query=query)
 
+    def delete_note_revisions(self, id_: str, **query: dt.JoplinTypes) -> None:
+        """Delete all revisions of a note."""
+        self.delete(f"/notes/{id_}/revisions", query=query)
+
     def get_note(self, id_: str, **query: dt.JoplinTypes) -> dt.NoteData:
         """Get the note with the given ID."""
         response = dt.NoteData(**self.get(f"/notes/{id_}", query=query).json())
