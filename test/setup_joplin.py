@@ -114,8 +114,8 @@ class JoplinClient:
         """Stop the joplin app and the corresponding xvfb."""
         self.xvfb.stop()
         self.joplin_process.terminate()
-        self.joplin_process.communicate(timeout=5)
-        self.joplin_process.wait(timeout=5)
+        self.joplin_process.communicate(timeout=10)
+        self.joplin_process.wait(timeout=10)
 
 
 class JoplinServer:
