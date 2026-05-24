@@ -113,9 +113,15 @@ class JoplinClient:
     def stop(self) -> None:
         """Stop the joplin app and the corresponding xvfb."""
         self.xvfb.stop()
-        self.joplin_process.terminate()
-        self.joplin_process.communicate(timeout=10)
-        self.joplin_process.wait(timeout=10)
+        try:
+            # try graceful shutdown first
+            self.joplin_process.terminate()
+            self.joplin_process.communicate(timeout=5)
+        except subprocess.TimeoutExpired:
+            # forcibly stop the process as last resort
+            self.joplin_process.kill()
+            self.joplin_process.communicate()
+        self.joplin_process.wait(timeout=5)
 
 
 class JoplinServer:
