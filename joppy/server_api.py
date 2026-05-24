@@ -201,9 +201,10 @@ class ApiBase:
                 json=json,
                 headers=headers,
             )
-            # Joplin's REST API always returns UTF-8, but the item /content
-            # endpoint omits the charset from the Content-Type header. Without
-            # it requests falls back to charset detection and mis-decodes
+            # Joplin's REST API always returns UTF-8:
+            # https://joplinapp.org/help/api/references/rest_api/#about-the-property-types
+            # But responses may omit the charset from the Content-Type header.
+            # Without it requests falls back to charset detection and mis-decodes
             # `response.text`, corrupting note bodies (mojibake). Pin it.
             response.encoding = "utf-8"
             LOGGER.debug(f"API: response {response.text}")

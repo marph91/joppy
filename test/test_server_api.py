@@ -110,6 +110,24 @@ class Note(ServerBase):
         self.assertEqual(note.body, original_body)
         self.assertEqual(note.title, original_title)
 
+    def test_utf8_roundtrip(self):
+        """
+        Check that non-ascii chars survive a roundtrip.
+        See https://github.com/marph91/joppy/pull/36.
+        """
+        string_with_non_ascii_chars = "äöü—"
+
+        parent_id = self.api.add_notebook()
+        note_id = self.api.add_note(
+            parent_id,
+            title=string_with_non_ascii_chars,
+            body=string_with_non_ascii_chars,
+        )
+
+        note = self.api.get_note(id_=note_id)
+        self.assertEqual(note.title, string_with_non_ascii_chars)
+        self.assertEqual(note.body, string_with_non_ascii_chars)
+
 
 class Notebook(ServerBase):
     def test_add(self):
