@@ -550,6 +550,7 @@ class UserData(BaseData):
     is_external: Optional[bool] = None
     sso_auth_code: Optional[str] = None
     sso_auth_code_expire_at: Optional[datetime] = None
+    totp_secret: Optional[str] = None
 
 
 AnyData = Union[
