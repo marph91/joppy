@@ -1,6 +1,6 @@
 import pathlib
-from setuptools import setup
 
+from setuptools import setup
 
 setup(
     name="joppy",
@@ -21,13 +21,12 @@ setup(
     classifiers=[
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3.13",
         "Programming Language :: Python :: 3.14",
         "Typing :: Typed",
     ],
-    python_requires=">=3.10",
+    python_requires=">=3.11",
     install_requires=["requests"],
 )

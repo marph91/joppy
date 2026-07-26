@@ -1,16 +1,15 @@
-from contextlib import contextmanager
 import datetime
 import logging
 import pathlib
 import time
-from typing import Any, cast, Dict, List, Optional, Tuple, Union
 import uuid
+from contextlib import contextmanager
+from typing import Any, cast
 
 import requests
 
 import joppy.data_types as dt
 from joppy import tools
-
 
 # Use a global session object for better performance.
 # Define it globally to avoid "ResourceWarning".
@@ -23,11 +22,11 @@ logging.getLogger("urllib3").setLevel(logging.WARNING)
 LOGGER = logging.getLogger("joppy")
 
 
-def deserialize(body: str) -> Optional[dt.AnyData]:
+def deserialize(body: str) -> dt.AnyData | None:
     """Deserialize server data from string to a known data type."""
 
     # https://github.com/laurent22/joplin/blob/b617a846964ea49be2ffefd31439e911ad84ed8c/packages/lib/models/BaseItem.ts#L549-L596
-    def extract_metadata(serialized_metadata: str) -> Dict[Any, Any]:
+    def extract_metadata(serialized_metadata: str) -> dict[Any, Any]:
         metadata = {}
         for line in serialized_metadata.split("\n"):
             key, value = line.split(": ", 1)
@@ -109,7 +108,7 @@ class ApiBase:
         self.user = user
         self.url = url
         self.client_id = uuid.uuid4().hex
-        self.current_sync_lock: Optional[dt.LockData] = None
+        self.current_sync_lock: dt.LockData | None = None
         # TODO: Where to get it?
         # https://github.com/laurent22/joplin/blob/b617a846964ea49be2ffefd31439e911ad84ed8c/packages/lib/services/synchronizer/LockHandler.ts#L145
         self.lock_ttl = datetime.timedelta(seconds=60 * 3)
@@ -139,7 +138,7 @@ class ApiBase:
                     f"Only server version 3 is supported. Found version {sync_version}."
                 )
 
-    def get_sync_version(self) -> Optional[int]:
+    def get_sync_version(self) -> int | None:
         try:
             response = self.get("/api/items/root:/info.json:/content")
             server_info = response.json()
@@ -153,19 +152,19 @@ class ApiBase:
                     if error_txt.response.status_code == 404:
                         return None  # in this case, a new one should be created
                     else:
-                        raise error_txt
+                        raise
             else:
-                raise error_json
+                raise
 
     def _request(
         self,
         method: str,
         path: str,
-        query: Optional[dt.JoplinKwargs] = None,
+        query: dt.JoplinKwargs | None = None,
         data: Any = None,
-        files: Optional[Dict[str, Any]] = None,
-        json: Optional[Dict[str, Any]] = None,
-        headers: Optional[Dict[str, Any]] = None,
+        files: dict[str, Any] | None = None,
+        json: dict[str, Any] | None = None,
+        headers: dict[str, Any] | None = None,
     ) -> requests.models.Response:
         # bypass the lock for info, lock and login requests
         if not (
@@ -183,7 +182,7 @@ class ApiBase:
                 )
             elif (
                 self.current_sync_lock.updatedTime + self.lock_auto_refresh_interval
-                < datetime.datetime.utcnow()
+                < datetime.datetime.now(datetime.UTC)
             ):
                 LOGGER.debug("Refreshing sync lock.")
                 self.current_sync_lock = self._add_lock()
@@ -215,13 +214,13 @@ class ApiBase:
         return response
 
     def delete(
-        self, path: str, query: Optional[dt.JoplinKwargs] = None
+        self, path: str, query: dt.JoplinKwargs | None = None
     ) -> requests.models.Response:
         """Convenience method to issue a delete request."""
         return self._request("delete", path, query=query)
 
     def get(
-        self, path: str, query: Optional[dt.JoplinKwargs] = None
+        self, path: str, query: dt.JoplinKwargs | None = None
     ) -> requests.models.Response:
         """Convenience method to issue a get request."""
         return self._request("get", path, query=query)
@@ -229,9 +228,9 @@ class ApiBase:
     def post(
         self,
         path: str,
-        data: Optional[dt.JoplinKwargs] = None,
-        files: Optional[Dict[str, Any]] = None,
-        json: Optional[Dict[str, Any]] = None,
+        data: dt.JoplinKwargs | None = None,
+        files: dict[str, Any] | None = None,
+        json: dict[str, Any] | None = None,
     ) -> requests.models.Response:
         """Convenience method to issue a post request."""
         return self._request("post", path, data=data, files=files, json=json)
@@ -239,8 +238,8 @@ class ApiBase:
     def put(
         self,
         path: str,
-        data: Optional[Union[str, bytes]] = None,
-        json: Optional[Dict[str, Any]] = None,
+        data: str | bytes | None = None,
+        json: dict[str, Any] | None = None,
     ) -> requests.models.Response:
         """Convenience method to issue a put request."""
         return self._request(
@@ -283,12 +282,12 @@ class ApiBase:
         response["items"] = [dt.LockData(**item) for item in response["items"]]
         return dt.DataList[dt.LockData](**response)
 
-    def _get_all_locks(self) -> List[dt.LockData]:
+    def _get_all_locks(self) -> list[dt.LockData]:
         """Get all locks, unpaginated."""
         return tools._unpaginate(self._get_locks)
 
     def _is_lock_active(self, updated_time: datetime.datetime) -> bool:
-        return updated_time + self.lock_ttl > datetime.datetime.utcnow()
+        return updated_time + self.lock_ttl > datetime.datetime.now(datetime.UTC)
 
     def _acquire_sync_lock(self, tries: int = 1) -> None:
         """
@@ -299,7 +298,7 @@ class ApiBase:
         # https://joplinapp.org/help/dev/spec/sync_lock#sync-target-migration
 
         def is_locked(
-            check_lock_types: Tuple[dt.LockType, ...] = (
+            check_lock_types: tuple[dt.LockType, ...] = (
                 dt.LockType.SYNC,
                 dt.LockType.EXCLUSIVE,
             ),
@@ -309,16 +308,16 @@ class ApiBase:
                 if lock.type not in check_lock_types:
                     continue
                 assert lock.updatedTime is not None
-                if self._is_lock_active(lock.updatedTime):
-                    if lock.type == dt.LockType.EXCLUSIVE:
-                        return True
-                    elif (
+                if self._is_lock_active(lock.updatedTime) and (
+                    lock.type == dt.LockType.EXCLUSIVE
+                    or (
                         lock.type == dt.LockType.SYNC
                         and lock.clientId == self.client_id
-                    ):
-                        return True
-                    # If there is no exclusive lock and no lock with our ID,
-                    # sync is allowed.
+                    )
+                ):
+                    return True
+                # If there is no exclusive lock and no lock with our ID,
+                # sync is allowed.
             return False
 
         for delay in range(tries):
@@ -644,31 +643,31 @@ class ServerApi(Note, Notebook, Ping, Resource, Revision, Tag, User):
             assert tag.id is not None
             self.delete_tag(tag.id)
 
-    def get_all_notes(self) -> List[dt.NoteData]:
+    def get_all_notes(self) -> list[dt.NoteData]:
         """Get all notes, unpaginated."""
         return tools._unpaginate(self.get_notes)
 
-    def get_all_notebooks(self) -> List[dt.NotebookData]:
+    def get_all_notebooks(self) -> list[dt.NotebookData]:
         """Get all notebooks, unpaginated."""
         return tools._unpaginate(self.get_notebooks)
 
-    def get_all_resources(self) -> List[dt.ResourceData]:
+    def get_all_resources(self) -> list[dt.ResourceData]:
         """Get all resources, unpaginated."""
         return tools._unpaginate(self.get_resources)
 
-    def get_all_revisions(self) -> List[dt.RevisionData]:
+    def get_all_revisions(self) -> list[dt.RevisionData]:
         """Get all revisions, unpaginated."""
         return tools._unpaginate(self.get_revisions)
 
-    def get_all_tags(self) -> List[dt.TagData]:
+    def get_all_tags(self) -> list[dt.TagData]:
         """Get all tags, unpaginated."""
         return tools._unpaginate(self.get_tags)
 
-    def get_all_users(self) -> List[dt.UserData]:
+    def get_all_users(self) -> list[dt.UserData]:
         """Get all users, unpaginated."""
         return tools._unpaginate(self.get_users)
 
-    def get_current_user(self) -> Optional[dt.UserData]:
+    def get_current_user(self) -> dt.UserData | None:
         """https://joplinapp.org/help/dev/spec/server_user_status/#user-status"""
         current_user = None
         for user in self.get_all_users():

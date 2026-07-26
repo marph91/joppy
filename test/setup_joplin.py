@@ -2,12 +2,13 @@
 
 import json
 import os
-from pathlib import Path
 import shutil
 import stat
 import subprocess
 import time
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from pathlib import Path
+from typing import Any
 
 import requests
 from xvfbwrapper import Xvfb
@@ -21,7 +22,7 @@ def download_joplin_client(destination: Path) -> None:
         #    "https://api.github.com/repos/laurent22/joplin/releases"
         # )
         # latest_version = response.json()[0]["name"].lstrip("v")
-        latest_version = "3.6.4"
+        latest_version = "3.7.9"
         print(f"Testing with Joplin version {latest_version}.")
 
         # download the binary
@@ -80,7 +81,7 @@ class JoplinClient:
 
         # Get the api token from the settings file. Might break at some time,
         # but is the most convenient for now.
-        def get_token() -> Optional[str]:
+        def get_token() -> str | None:
             settings = json.loads(
                 (profile / "settings.json").read_text(encoding="utf-8")
             )
@@ -92,20 +93,20 @@ class JoplinClient:
             assert settings.get("clipperServer.autoStart", False), (
                 "Webclipper should be active"
             )
-            api_token: Optional[str] = settings.get("api.token")
+            api_token: str | None = settings.get("api.token")
             return api_token
 
         self.api_token = wait_for(get_token, timeout=30)
 
         # Wait until the API is available.
         # TODO: hardcoded url
-        def api_available() -> Optional[bool]:
+        def api_available() -> bool | None:
             try:
                 response = requests.get("http://localhost:41184/ping", timeout=5)
                 if response.status_code == 200:
                     return True
-            except Exception:
-                pass
+            except Exception:  # noqa: BLE001  # we want to catch all exceptions
+                return None
             return None
 
         wait_for(api_available, timeout=20)
@@ -129,13 +130,13 @@ class JoplinServer:
 
     def __init__(self) -> None:
         # Wait until the API is available.
-        def api_available() -> Optional[bool]:
+        def api_available() -> bool | None:
             try:
                 response = requests.get("http://localhost:22300/api/ping", timeout=5)
                 if response.status_code == 200:
                     return True
-            except Exception:
-                pass
+            except Exception:  # noqa: BLE001  # we want to catch all exceptions
+                return None
             return None
 
         # check if server is running already
@@ -144,7 +145,7 @@ class JoplinServer:
             return
 
         if shutil.which("docker") is None:
-            raise Exception("Please install docker and try again.")
+            raise RuntimeError("Please install docker and try again.")
         # TODO: Is caching the container in GHA possible?
         self.joplin_process = subprocess.Popen(
             ["docker", "run", "-p", "22300:22300", "joplin/server:latest"],

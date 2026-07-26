@@ -7,7 +7,7 @@ Python interface for the [Joplin data API](https://joplinapp.org/api/references/
 [![tests](https://github.com/marph91/joppy/actions/workflows/tests.yml/badge.svg)](https://github.com/marph91/joppy/actions/workflows/tests.yml)
 [![codecov](https://codecov.io/gh/marph91/joppy/branch/master/graph/badge.svg?token=97E6IX792A)](https://codecov.io/gh/marph91/joppy)
 
-[![https://img.shields.io/badge/Joplin-3.6.4-blueviolet](https://img.shields.io/badge/Joplin-3.6.4-blueviolet)](https://github.com/laurent22/joplin)
+[![https://img.shields.io/badge/Joplin-3.7.9-blueviolet](https://img.shields.io/badge/Joplin-3.7.9-blueviolet)](https://github.com/laurent22/joplin)
 [![Python version](https://img.shields.io/pypi/pyversions/joppy.svg)](https://pypi.python.org/pypi/joppy/)
 
 ## Features
@@ -88,7 +88,9 @@ notebook_id = api.add_notebook(title="My first notebook")
 
 # Add a note in the previously created notebook.
 
-note_id = api.add_note(title="My first note", body="With some content", parent_id=notebook_id)
+note_id = api.add_note(
+    title="My first note", body="With some content", parent_id=notebook_id
+)
 
 # Add a tag, that is not yet attached to a note.
 
@@ -97,7 +99,6 @@ tag_id = api.add_tag(title="introduction")
 # Link the tag to the note.
 
 api.add_tag_to_note(tag_id=tag_id, note_id=note_id)
-
 ````
 
 </details>
@@ -145,7 +146,6 @@ api = ClientApi(token=YOUR_TOKEN)
 
 # Iterate through all tags.
 for tag in api.get_all_tags():
-
     # Delete all tags that match the regex. I. e. start with "!".
     if re.search("^!", tag.title) is not None:
         api.delete_tag(tag.id)
@@ -186,10 +186,12 @@ from joppy.client_api import ClientApi
 # Create a new Api instance.
 api = ClientApi(token=YOUR_TOKEN)
 
+
 # Define the conversion function.
 def to_camel_case(name: str) -> str:
     name = re.sub(r"(_|-)+", " ", name).title().replace(" ", "")
     return "".join([name[0].lower(), name[1:]])
+
 
 # Iterate through all tags and apply the conversion.
 for tag in api.get_all_tags():
@@ -246,12 +248,13 @@ api = ServerApi(user="admin@localhost", password="admin", url="http://localhost:
 
 # Acquire a lock.
 with api.sync_lock():
-
     # Add a notebook.
     notebook_id = api.add_notebook(title="My first notebook")
 
     # Add a note in the previously created notebook.
-    note_id = api.add_note(title="My first note", body="With some content", parent_id=notebook_id)
+    note_id = api.add_note(
+        title="My first note", body="With some content", parent_id=notebook_id
+    )
 ```
 
 ## :newspaper: Examples

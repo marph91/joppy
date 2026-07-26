@@ -4,12 +4,11 @@ import os
 import random
 import string
 import tempfile
-from typing import Iterable, Tuple
 import unittest
+from collections.abc import Iterable
 
 from joppy.client_api import ClientApi
 from joppy.server_api import ServerApi
-
 
 os.makedirs("test_output", exist_ok=True)
 logging.basicConfig(
@@ -71,7 +70,7 @@ class Base(unittest.TestCase):
     @staticmethod
     def get_combinations(
         iterable: Iterable[str], max_combinations: int = 100
-    ) -> Iterable[Tuple[str, ...]]:
+    ) -> Iterable[tuple[str, ...]]:
         """Get some combinations of an iterable."""
         # https://stackoverflow.com/a/10465588
         # TODO: Randomize fully. For now the combinations are sorted by length.

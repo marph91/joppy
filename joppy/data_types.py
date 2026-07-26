@@ -1,23 +1,15 @@
 """Typing support for Joplin's data API."""
 
-from dataclasses import dataclass, field, fields
-from datetime import datetime
+import datetime as dt
 import enum
 import mimetypes
-from typing import (
-    Generic,
-    List,
-    MutableMapping,
-    Optional,
-    Union,
-    Set,
-    TypeVar,
-)
 import uuid
-
+from collections.abc import MutableMapping
+from dataclasses import dataclass, field, fields
+from typing import Generic, TypeVar
 
 # Datatypes used by the Joplin API. Needed for arbitrary kwargs.
-JoplinTypes = Union[float, int, str]
+JoplinTypes = float | int | str
 # Kwargs mapping of the datatypes.
 JoplinKwargs = MutableMapping[str, JoplinTypes]
 
@@ -66,16 +58,14 @@ def is_id_valid(id_: str) -> bool:
             return True
         except ValueError:
             return False
-    if len(id_) == 22:
-        # server ID
-        # https://joplinapp.org/help/dev/spec/server_items/
-        return True
-    return False
+    # server ID
+    # https://joplinapp.org/help/dev/spec/server_items/
+    return len(id_) == 22
 
 
 @dataclass
 class BaseData:
-    type_: Optional[ItemType] = None
+    type_: ItemType | None = None
 
     def __post_init__(self) -> None:
         # detect if data is encrypted
@@ -115,12 +105,12 @@ class BaseData:
                         if value_int == 0
                         # TODO: Replace by "fromtimestamp()" when
                         # minimum Python version is 3.11.
-                        else datetime.utcfromtimestamp(value_int / 1000.0)
+                        else dt.datetime.fromtimestamp(value_int / 1000.0, tz=dt.UTC)
                     )
                     setattr(self, field_.name, casted_value)
                 except ValueError:
                     # TODO: This is not spec conform.
-                    casted_value = datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%fZ")
+                    casted_value = dt.datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%f").replace(tzinfo=dt.UTC)
                     setattr(self, field_.name, casted_value)
             elif field_.name in (
                 "is_conflict",
@@ -149,21 +139,21 @@ class BaseData:
             elif field_.name == "type":
                 setattr(self, field_.name, EventChangeType(int(value)))
 
-    def assigned_fields(self) -> Set[str]:
+    def assigned_fields(self) -> set[str]:
         # Exclude "type_" for convenience.
-        return set(
+        return {
             field_.name
             for field_ in fields(self)
             if getattr(self, field_.name) is not None and field_.name != "type_"
-        )
+        }
 
     @classmethod
-    def fields(cls) -> Set[str]:
+    def fields(cls) -> set[str]:
         # Exclude "type_" for convenience.
-        return set(field_.name for field_ in fields(cls) if field_.name != "type_")
+        return {field_.name for field_ in fields(cls) if field_.name != "type_"}
 
     @staticmethod
-    def default_fields() -> Set[str]:
+    def default_fields() -> set[str]:
         return {"id", "parent_id", "title"}
 
     def __str__(self) -> str:
@@ -180,40 +170,40 @@ class BaseData:
 class NoteData(BaseData):
     """https://joplinapp.org/api/references/rest_api/#notes"""
 
-    id: Optional[str] = None
-    parent_id: Optional[str] = None
-    title: Optional[str] = None
-    body: Optional[str] = None
-    created_time: Optional[datetime] = None
-    updated_time: Optional[datetime] = None
-    is_conflict: Optional[bool] = None
-    latitude: Optional[float] = None
-    longitude: Optional[float] = None
-    altitude: Optional[float] = None
-    author: Optional[str] = None
-    source_url: Optional[str] = None
-    is_todo: Optional[bool] = None
-    todo_due: Optional[datetime] = None
-    todo_completed: Optional[datetime] = None
-    source: Optional[str] = None
-    source_application: Optional[str] = None
-    application_data: Optional[str] = None
-    order: Optional[float] = None
-    user_created_time: Optional[datetime] = None
-    user_updated_time: Optional[datetime] = None
-    encryption_cipher_text: Optional[str] = None
-    encryption_applied: Optional[bool] = None
-    markup_language: Optional[MarkupLanguage] = None
-    is_shared: Optional[bool] = None
-    share_id: Optional[str] = None
-    conflict_original_id: Optional[str] = None
-    master_key_id: Optional[str] = None
-    user_data: Optional[str] = None
-    deleted_time: Optional[datetime] = None
-    body_html: Optional[str] = None
-    base_url: Optional[str] = None
-    image_data_url: Optional[str] = None
-    crop_rect: Optional[str] = None
+    id: str | None = None
+    parent_id: str | None = None
+    title: str | None = None
+    body: str | None = None
+    created_time: dt.datetime | None = None
+    updated_time: dt.datetime | None = None
+    is_conflict: bool | None = None
+    latitude: float | None = None
+    longitude: float | None = None
+    altitude: float | None = None
+    author: str | None = None
+    source_url: str | None = None
+    is_todo: bool | None = None
+    todo_due: dt.datetime | None = None
+    todo_completed: dt.datetime | None = None
+    source: str | None = None
+    source_application: str | None = None
+    application_data: str | None = None
+    order: float | None = None
+    user_created_time: dt.datetime | None = None
+    user_updated_time: dt.datetime | None = None
+    encryption_cipher_text: str | None = None
+    encryption_applied: bool | None = None
+    markup_language: MarkupLanguage | None = None
+    is_shared: bool | None = None
+    share_id: str | None = None
+    conflict_original_id: str | None = None
+    master_key_id: str | None = None
+    user_data: str | None = None
+    deleted_time: dt.datetime | None = None
+    body_html: str | None = None
+    base_url: str | None = None
+    image_data_url: str | None = None
+    crop_rect: str | None = None
 
     def serialize(self) -> str:
         # title is needed always to prevent problems with body
@@ -257,21 +247,21 @@ class NoteData(BaseData):
 class NotebookData(BaseData):
     """https://joplinapp.org/api/references/rest_api/#folders"""
 
-    id: Optional[str] = None
-    title: Optional[str] = None
-    created_time: Optional[datetime] = None
-    updated_time: Optional[datetime] = None
-    user_created_time: Optional[datetime] = None
-    user_updated_time: Optional[datetime] = None
-    encryption_cipher_text: Optional[str] = None
-    encryption_applied: Optional[bool] = None
-    parent_id: Optional[str] = None
-    is_shared: Optional[bool] = None
-    share_id: Optional[str] = None
-    master_key_id: Optional[str] = None
-    icon: Optional[str] = None
-    user_data: Optional[str] = None
-    deleted_time: Optional[datetime] = None
+    id: str | None = None
+    title: str | None = None
+    created_time: dt.datetime | None = None
+    updated_time: dt.datetime | None = None
+    user_created_time: dt.datetime | None = None
+    user_updated_time: dt.datetime | None = None
+    encryption_cipher_text: str | None = None
+    encryption_applied: bool | None = None
+    parent_id: str | None = None
+    is_shared: bool | None = None
+    share_id: str | None = None
+    master_key_id: str | None = None
+    icon: str | None = None
+    user_data: str | None = None
+    deleted_time: dt.datetime | None = None
 
     def serialize(self) -> str:
         lines = []
@@ -304,31 +294,31 @@ class NotebookData(BaseData):
 class ResourceData(BaseData):
     """https://joplinapp.org/api/references/rest_api/#resources"""
 
-    id: Optional[str] = None
-    title: Optional[str] = None
-    mime: Optional[str] = None
-    filename: Optional[str] = None
-    created_time: Optional[datetime] = None
-    updated_time: Optional[datetime] = None
-    user_created_time: Optional[datetime] = None
-    user_updated_time: Optional[datetime] = None
-    file_extension: Optional[str] = None
-    encryption_cipher_text: Optional[str] = None
-    encryption_applied: Optional[bool] = None
-    encryption_blob_encrypted: Optional[bool] = None
-    size: Optional[int] = None
-    is_shared: Optional[bool] = None
-    share_id: Optional[str] = None
-    master_key_id: Optional[str] = None
-    user_data: Optional[str] = None
-    blob_updated_time: Optional[datetime] = None
-    ocr_text: Optional[str] = None
-    ocr_details: Optional[str] = None
-    ocr_status: Optional[int] = None
-    ocr_error: Optional[str] = None
+    id: str | None = None
+    title: str | None = None
+    mime: str | None = None
+    filename: str | None = None
+    created_time: dt.datetime | None = None
+    updated_time: dt.datetime | None = None
+    user_created_time: dt.datetime | None = None
+    user_updated_time: dt.datetime | None = None
+    file_extension: str | None = None
+    encryption_cipher_text: str | None = None
+    encryption_applied: bool | None = None
+    encryption_blob_encrypted: bool | None = None
+    size: int | None = None
+    is_shared: bool | None = None
+    share_id: str | None = None
+    master_key_id: str | None = None
+    user_data: str | None = None
+    blob_updated_time: dt.datetime | None = None
+    ocr_text: str | None = None
+    ocr_details: str | None = None
+    ocr_status: int | None = None
+    ocr_error: str | None = None
 
     @staticmethod
-    def default_fields() -> Set[str]:
+    def default_fields() -> set[str]:
         return {"id", "title"}
 
     def serialize(self) -> str:
@@ -373,21 +363,21 @@ class ResourceData(BaseData):
 class RevisionData(BaseData):
     """https://joplinapp.org/help/api/references/rest_api/#revisions"""
 
-    id: Optional[str] = None
-    parent_id: Optional[str] = None
-    item_type: Optional[ItemType] = None
-    item_id: Optional[str] = None
-    item_updated_time: Optional[datetime] = None
-    title_diff: Optional[str] = None
-    body_diff: Optional[str] = None
-    metadata_diff: Optional[str] = None
-    encryption_cipher_text: Optional[str] = None
-    encryption_applied: Optional[bool] = None
-    updated_time: Optional[datetime] = None
-    created_time: Optional[datetime] = None
+    id: str | None = None
+    parent_id: str | None = None
+    item_type: ItemType | None = None
+    item_id: str | None = None
+    item_updated_time: dt.datetime | None = None
+    title_diff: str | None = None
+    body_diff: str | None = None
+    metadata_diff: str | None = None
+    encryption_cipher_text: str | None = None
+    encryption_applied: bool | None = None
+    updated_time: dt.datetime | None = None
+    created_time: dt.datetime | None = None
 
     @staticmethod
-    def default_fields() -> Set[str]:
+    def default_fields() -> set[str]:
         return {"id"}
 
 
@@ -395,17 +385,17 @@ class RevisionData(BaseData):
 class TagData(BaseData):
     """https://joplinapp.org/api/references/rest_api/#tags"""
 
-    id: Optional[str] = None
-    title: Optional[str] = None
-    created_time: Optional[datetime] = None
-    updated_time: Optional[datetime] = None
-    user_created_time: Optional[datetime] = None
-    user_updated_time: Optional[datetime] = None
-    encryption_cipher_text: Optional[str] = None
-    encryption_applied: Optional[bool] = None
-    is_shared: Optional[bool] = None
-    parent_id: Optional[str] = None
-    user_data: Optional[str] = None
+    id: str | None = None
+    title: str | None = None
+    created_time: dt.datetime | None = None
+    updated_time: dt.datetime | None = None
+    user_created_time: dt.datetime | None = None
+    user_updated_time: dt.datetime | None = None
+    encryption_cipher_text: str | None = None
+    encryption_applied: bool | None = None
+    is_shared: bool | None = None
+    parent_id: str | None = None
+    user_data: str | None = None
 
     def serialize(self) -> str:
         lines = []
@@ -438,16 +428,16 @@ class TagData(BaseData):
 class NoteTagData(BaseData):
     """Links a tag to a note."""
 
-    id: Optional[str] = None
-    note_id: Optional[str] = None
-    tag_id: Optional[str] = None
-    created_time: Optional[datetime] = None
-    updated_time: Optional[datetime] = None
-    user_created_time: Optional[datetime] = None
-    user_updated_time: Optional[datetime] = None
-    encryption_cipher_text: Optional[str] = None
-    encryption_applied: Optional[bool] = None
-    is_shared: Optional[bool] = None
+    id: str | None = None
+    note_id: str | None = None
+    tag_id: str | None = None
+    created_time: dt.datetime | None = None
+    updated_time: dt.datetime | None = None
+    user_created_time: dt.datetime | None = None
+    user_updated_time: dt.datetime | None = None
+    encryption_cipher_text: str | None = None
+    encryption_applied: bool | None = None
+    is_shared: bool | None = None
 
     def serialize(self) -> str:
         lines = []
@@ -476,11 +466,11 @@ class NoteTagData(BaseData):
 class EventData(BaseData):
     """https://joplinapp.org/api/references/rest_api/#events"""
 
-    id: Optional[int] = None
-    item_type: Optional[ItemType] = None
-    item_id: Optional[int] = None
-    type: Optional[EventChangeType] = None
-    created_time: Optional[datetime] = None
+    id: int | None = None
+    item_type: ItemType | None = None
+    item_id: int | None = None
+    type: EventChangeType | None = None
+    created_time: dt.datetime | None = None
     # source: Optional[int] = None
     # before_change_item: Optional[str] = None
 
@@ -491,7 +481,7 @@ class EventData(BaseData):
             self.id = int(self.id)
 
     @staticmethod
-    def default_fields() -> Set[str]:
+    def default_fields() -> set[str]:
         return {"id", "item_type", "item_id", "type", "created_time"}
 
 
@@ -514,11 +504,11 @@ class LockData(BaseData):
     https://github.com/laurent22/joplin/blob/b617a846964ea49be2ffefd31439e911ad84ed8c/packages/server/src/routes/api/locks.ts
     """
 
-    id: Optional[str] = None
-    type: Optional[LockType] = None
-    clientId: Optional[str] = None
-    clientType: Optional[LockClientType] = None
-    updatedTime: Optional[datetime] = None
+    id: str | None = None
+    type: LockType | None = None
+    clientId: str | None = None
+    clientType: LockClientType | None = None
+    updatedTime: dt.datetime | None = None
 
 
 @dataclass
@@ -528,34 +518,40 @@ class UserData(BaseData):
     https://github.com/laurent22/joplin/blob/fc516d05b3c9564a54fd0fbb9a1886739190bba0/packages/server/src/services/database/types.ts#L246
     """
 
-    id: Optional[str] = None
-    email: Optional[str] = None
-    password: Optional[str] = None
-    is_admin: Optional[bool] = None
-    full_name: Optional[str] = None
-    created_time: Optional[datetime] = None
-    updated_time: Optional[datetime] = None
-    email_confirmed: Optional[bool] = None
-    must_set_password: Optional[bool] = None
-    account_type: Optional[int] = None  # TODO: enum
-    can_upload: Optional[bool] = None
-    max_item_size: Optional[int] = None
-    max_total_item_size: Optional[int] = None
-    total_item_size: Optional[int] = None
-    can_share_folder: Optional[bool] = None
-    can_share_note: Optional[bool] = None
-    can_receive_folder: Optional[bool] = None
-    enabled: Optional[bool] = None
-    disabled_time: Optional[datetime] = None
-    is_external: Optional[bool] = None
-    sso_auth_code: Optional[str] = None
-    sso_auth_code_expire_at: Optional[datetime] = None
-    totp_secret: Optional[str] = None
+    id: str | None = None
+    email: str | None = None
+    password: str | None = None
+    is_admin: bool | None = None
+    full_name: str | None = None
+    created_time: dt.datetime | None = None
+    updated_time: dt.datetime | None = None
+    email_confirmed: bool | None = None
+    must_set_password: bool | None = None
+    account_type: int | None = None  # TODO: enum
+    can_upload: bool | None = None
+    max_item_size: int | None = None
+    max_total_item_size: int | None = None
+    total_item_size: int | None = None
+    can_share_folder: bool | None = None
+    can_share_note: bool | None = None
+    can_receive_folder: bool | None = None
+    enabled: bool | None = None
+    disabled_time: dt.datetime | None = None
+    is_external: bool | None = None
+    sso_auth_code: str | None = None
+    sso_auth_code_expire_at: dt.datetime | None = None
+    totp_secret: str | None = None
 
 
-AnyData = Union[
-    EventData, NoteData, NotebookData, NoteTagData, ResourceData, RevisionData, TagData
-]
+AnyData = (
+    EventData
+    | NoteData
+    | NotebookData
+    | NoteTagData
+    | ResourceData
+    | RevisionData
+    | TagData
+)
 
 
 T = TypeVar(
@@ -575,8 +571,8 @@ T = TypeVar(
 @dataclass
 class DataList(Generic[T]):
     has_more: bool
-    cursor: Optional[int] = None
-    items: List[T] = field(default_factory=list)
+    cursor: int | None = None
+    items: list[T] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         # Cast the basic joplin API datatypes to more convenient datatypes.

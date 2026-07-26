@@ -2,13 +2,13 @@
 
 import string
 import time
-from typing import cast
 import unittest
+from typing import cast
 
-from joppy.server_api import deserialize, LockError, ServerApi
 import joppy.data_types as dt
-from . import common, setup_joplin
+from joppy.server_api import LockError, ServerApi, deserialize
 
+from . import common, setup_joplin
 
 API = None
 SERVER = None

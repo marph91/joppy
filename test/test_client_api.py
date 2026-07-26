@@ -1,23 +1,24 @@
 """Tests for the Joplin client python API."""
 
-from datetime import datetime
+import datetime
 import mimetypes
 import os
-from pathlib import Path
 import random
 import re
 import string
-from typing import Any, Mapping
 import unittest
+from collections.abc import Mapping
+from pathlib import Path
+from typing import Any
 
 import requests
 import urllib3
 
+import joppy.data_types as dt
 from joppy import tools
 from joppy.client_api import ClientApi
-import joppy.data_types as dt
-from . import common, setup_joplin
 
+from . import common, setup_joplin
 
 PROFILE = Path().cwd() / "test_profile"
 API_TOKEN = ""  # Don't use the API token from env to avoid data loss.
@@ -87,7 +88,7 @@ class Event(ClientBase):
 
     def test_get_events_by_cursor(self):
         """Get all events by specifying a cursor of 0."""
-        previous_created_time = datetime(2000, 1, 1)
+        previous_created_time = datetime.datetime(2000, 1, 1, tzinfo=datetime.UTC)
         previous_id = 0
 
         self.generate_event()
@@ -889,13 +890,13 @@ class ReadmeExamples(ClientBase):
         # Execute the example code. The local variables are stored in "locals_dict".
         code = self.get_example_code("get_all_notes")
         locals_dict: Mapping[str, Any] = {}
-        exec(code, None, locals_dict)
+        exec(code, None, locals_dict)  # noqa: S102
 
         self.assertEqual(len(locals_dict["notes"]), note_count)
 
     def test_add_tag_to_note(self):
         code = self.get_example_code("add_tag_to_note")
-        exec(code)
+        exec(code)  # noqa: S102
 
         tags = self.api.get_all_tags()
         self.assertEqual(len(tags), 1)
@@ -907,7 +908,7 @@ class ReadmeExamples(ClientBase):
     def test_add_resource_to_note(self):
         code = self.get_example_code("add_resource_to_note")
         code = code.replace("path/to/image.png", "test/grant_authorization_button.png")
-        exec(code)
+        exec(code)  # noqa: S102
 
         notes = self.api.get_all_notes()
         self.assertEqual(len(notes), 2)
@@ -927,7 +928,7 @@ class ReadmeExamples(ClientBase):
         self.api.add_tag(title="!_third_title")
 
         code = self.get_example_code("remove_tags")
-        exec(code)
+        exec(code)  # noqa: S102
 
         # All tags starting with "!" should be removed.
         tags = self.api.get_all_tags()
@@ -940,7 +941,7 @@ class ReadmeExamples(ClientBase):
         self.api.add_tag(title="another tag with spaces")
 
         code = self.get_example_code("remove_spaces_from_tags")
-        exec(code)
+        exec(code)  # noqa: S102
 
         all_tags = self.api.get_all_tags()
         self.assertEqual(len(all_tags), 2)
@@ -963,7 +964,7 @@ class ReadmeExamples(ClientBase):
         self.assertEqual(len(self.api.get_all_resources()), 2)
 
         code = self.get_example_code("remove_orphaned_resources")
-        exec(code)
+        exec(code)  # noqa: S102
 
         # The resource without reference should be deleted.
         resources = self.api.get_all_resources()

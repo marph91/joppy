@@ -4,21 +4,16 @@ import copy
 import json
 import logging
 import time
+import urllib.parse
 from typing import (
     Any,
     cast,
-    Dict,
-    List,
-    Optional,
-    Union,
 )
-import urllib.parse
 
 import requests
 
 import joppy.data_types as dt
 from joppy import tools
-
 
 # Use a global session object for better performance.
 # Define it globally to avoid "ResourceWarning".
@@ -48,9 +43,9 @@ class ApiBase:
         self,
         method: str,
         path: str,
-        query: Optional[dt.JoplinKwargs] = None,
-        data: Optional[dt.JoplinKwargs] = None,
-        files: Optional[Dict[str, Any]] = None,
+        query: dt.JoplinKwargs | None = None,
+        data: dt.JoplinKwargs | None = None,
+        files: dict[str, Any] | None = None,
     ) -> requests.models.Response:
         if query is None:
             query = {}
@@ -85,13 +80,13 @@ class ApiBase:
         return response
 
     def delete(
-        self, path: str, query: Optional[dt.JoplinKwargs] = None
+        self, path: str, query: dt.JoplinKwargs | None = None
     ) -> requests.models.Response:
         """Convenience method to issue a delete request."""
         return self._request("delete", path, query=query)
 
     def get(
-        self, path: str, query: Optional[dt.JoplinKwargs] = None
+        self, path: str, query: dt.JoplinKwargs | None = None
     ) -> requests.models.Response:
         """Convenience method to issue a get request."""
         return self._request("get", path, query=query)
@@ -99,14 +94,14 @@ class ApiBase:
     def post(
         self,
         path: str,
-        data: Optional[dt.JoplinKwargs] = None,
-        files: Optional[Dict[str, Any]] = None,
+        data: dt.JoplinKwargs | None = None,
+        files: dict[str, Any] | None = None,
     ) -> requests.models.Response:
         """Convenience method to issue a post request."""
         return self._request("post", path, data=data, files=files)
 
     def put(
-        self, path: str, data: Optional[dt.JoplinKwargs] = None
+        self, path: str, data: dt.JoplinKwargs | None = None
     ) -> requests.models.Response:
         """Convenience method to issue a put request."""
         return self._request("put", path, data=data)
@@ -159,9 +154,9 @@ class Note(ApiBase):
 
     def get_notes(
         self,
-        notebook_id: Optional[str] = None,
-        resource_id: Optional[str] = None,
-        tag_id: Optional[str] = None,
+        notebook_id: str | None = None,
+        resource_id: str | None = None,
+        tag_id: str | None = None,
         **query: dt.JoplinTypes,
     ) -> dt.DataList[dt.NoteData]:
         """
@@ -244,7 +239,7 @@ class Resource(ApiBase):
         return self.get(f"/resources/{id_}/file").content
 
     def get_resources(
-        self, note_id: Optional[str] = None, **query: dt.JoplinTypes
+        self, note_id: str | None = None, **query: dt.JoplinTypes
     ) -> dt.DataList[dt.ResourceData]:
         """
         Get resources, paginated. If a note ID is given, return the corresponding
@@ -311,13 +306,13 @@ class Revision(ApiBase):
 class Search(ApiBase):
     def search(
         self, **query: dt.JoplinTypes
-    ) -> Union[
-        dt.DataList[dt.NoteData],
-        dt.DataList[dt.NotebookData],
-        dt.DataList[dt.ResourceData],
-        dt.DataList[dt.TagData],
-        dt.DataList[str],
-    ]:
+    ) -> (
+        dt.DataList[dt.NoteData]
+        | dt.DataList[dt.NotebookData]
+        | dt.DataList[dt.ResourceData]
+        | dt.DataList[dt.TagData]
+        | dt.DataList[str]
+    ):
         """Issue a search."""
         # Copy the dict, because its content gets changed.
         outer_query = copy.deepcopy(query)
@@ -346,7 +341,7 @@ class Search(ApiBase):
 
 
 class Tag(ApiBase):
-    def add_tag(self, tag_id: Optional[str] = None, **data: dt.JoplinTypes) -> str:
+    def add_tag(self, tag_id: str | None = None, **data: dt.JoplinTypes) -> str:
         """
         Add a tag. If a tag is given, add the tag to a note.
         The data has to contain the note ID.
@@ -356,7 +351,7 @@ class Tag(ApiBase):
         # "note_id" and "tag_id", which are undocumented.
         return str(self.post(f"/tags{note}", data=data).json()["id"])
 
-    def delete_tag(self, id_: str, note_id: Optional[str] = None) -> None:
+    def delete_tag(self, id_: str, note_id: str | None = None) -> None:
         """Delete a tag. If a note is given, remove the tag from this note."""
         note = "" if note_id is None else f"/notes/{note_id}"
         self.delete(f"/tags/{id_}{note}")
@@ -367,7 +362,7 @@ class Tag(ApiBase):
         return response
 
     def get_tags(
-        self, note_id: Optional[str] = None, **query: dt.JoplinTypes
+        self, note_id: str | None = None, **query: dt.JoplinTypes
     ) -> dt.DataList[dt.TagData]:
         """
         Get tags, paginated. If a note is given, return the corresponding tags.
@@ -440,32 +435,32 @@ class ClientApi(Event, Note, Notebook, Ping, Resource, Revision, Search, Tag):
             assert tag.id is not None
             self.delete_tag(tag.id)
 
-    def get_all_events(self, **query: dt.JoplinTypes) -> List[dt.EventData]:
+    def get_all_events(self, **query: dt.JoplinTypes) -> list[dt.EventData]:
         """Get all events, unpaginated."""
         return tools._unpaginate(self.get_events, **query)
 
-    def get_all_notes(self, **query: dt.JoplinTypes) -> List[dt.NoteData]:
+    def get_all_notes(self, **query: dt.JoplinTypes) -> list[dt.NoteData]:
         """Get all notes, unpaginated."""
         return tools._unpaginate(self.get_notes, **query)
 
-    def get_all_notebooks(self, **query: dt.JoplinTypes) -> List[dt.NotebookData]:
+    def get_all_notebooks(self, **query: dt.JoplinTypes) -> list[dt.NotebookData]:
         """Get all notebooks, unpaginated."""
         return tools._unpaginate(self.get_notebooks, **query)
 
-    def get_all_resources(self, **query: dt.JoplinTypes) -> List[dt.ResourceData]:
+    def get_all_resources(self, **query: dt.JoplinTypes) -> list[dt.ResourceData]:
         """Get all resources, unpaginated."""
         return tools._unpaginate(self.get_resources, **query)
 
-    def get_all_revisions(self, **query: dt.JoplinTypes) -> List[dt.RevisionData]:
+    def get_all_revisions(self, **query: dt.JoplinTypes) -> list[dt.RevisionData]:
         """Get all revisions, unpaginated."""
         return tools._unpaginate(self.get_revisions, **query)
 
-    def get_all_tags(self, **query: dt.JoplinTypes) -> List[dt.TagData]:
+    def get_all_tags(self, **query: dt.JoplinTypes) -> list[dt.TagData]:
         """Get all tags, unpaginated."""
         return tools._unpaginate(self.get_tags, **query)
 
     def search_all(
         self, **query: dt.JoplinTypes
-    ) -> List[Union[dt.NoteData, dt.NotebookData, dt.ResourceData, dt.TagData]]:
+    ) -> list[dt.NoteData | dt.NotebookData | dt.ResourceData | dt.TagData]:
         """Issue a search and get all results, unpaginated."""
         return tools._unpaginate(self.search, **query)  # type: ignore

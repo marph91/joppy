@@ -1,7 +1,7 @@
 """Helper functions for the API."""
 
 import base64
-from typing import Callable, List
+from collections.abc import Callable
 
 import joppy.data_types as dt
 
@@ -14,7 +14,7 @@ def encode_base64(filepath: str) -> str:
 
 def _unpaginate(
     func: Callable[..., dt.DataList[dt.T]], **query: dt.JoplinTypes
-) -> List[dt.T]:
+) -> list[dt.T]:
     """Calls an Joplin endpoint until it's response doesn't contain more data."""
     response = func(**query)
     items = response.items

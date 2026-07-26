@@ -1,10 +1,10 @@
 # tests
-coverage==7.13.5
-requests==2.33.1
+coverage==7.15.2
+requests==2.34.2
 unittest-xml-reporting==4.0.0
-xvfbwrapper==0.2.23
+xvfbwrapper==0.2.29
 # linting
-ruff==0.15.12
-mypy==1.20.2
+ruff==0.16.0
+mypy==2.3.0
 # TODO: Use "--install-types" when https://github.com/python/mypy/issues/10600 is solved.
-types-requests==2.33.0.20260503
+types-requests==2.33.0.20260712
